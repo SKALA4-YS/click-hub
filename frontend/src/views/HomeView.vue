@@ -42,11 +42,7 @@ const followingProjects = computed(() => filterByCategory(mockFollowingProjects)
       </template>
     </SiteSection>
 
-    <SiteSection
-      v-if="auth.isLoggedIn"
-      title="내가 팔로잉한 개발자"
-      :items="followingProjects"
-    >
+    <SiteSection v-if="auth.isLoggedIn" title="내가 팔로잉한 개발자" :items="followingProjects">
       <template #default="{ item }">
         <SiteCard :project="item" />
       </template>
@@ -54,8 +50,12 @@ const followingProjects = computed(() => filterByCategory(mockFollowingProjects)
 
     <!-- 로그인 전엔 섹션 자체를 숨기지 않고, 로그인하면 뭘 볼 수 있는지 안내한다 -->
     <section v-else class="flex flex-col gap-4">
-      <h2 class="font-headline text-xl font-bold text-heading-light dark:text-heading-dark">내가 팔로잉한 개발자</h2>
-      <div class="flex flex-col items-center gap-3 rounded-xl border border-divider/20 py-12 text-center dark:border-divider/25">
+      <h2 class="font-headline text-xl font-bold text-heading-light dark:text-heading-dark">
+        내가 팔로잉한 개발자
+      </h2>
+      <div
+        class="flex flex-col items-center gap-3 rounded-xl border border-divider/20 py-12 text-center dark:border-divider/25"
+      >
         <p class="text-sm text-body-light dark:text-body-dark">
           로그인하면 구독한 제작자가 새로 올린 프로젝트를 여기서 바로 볼 수 있어요.
         </p>
@@ -76,7 +76,9 @@ const followingProjects = computed(() => filterByCategory(mockFollowingProjects)
     title="프로젝트 등록하기"
   >
     <svg viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6">
-      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+      <path
+        d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
+      />
     </svg>
   </RouterLink>
 </template>

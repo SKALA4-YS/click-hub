@@ -20,12 +20,15 @@ const modelValue = defineModel({ default: null })
 </script>
 
 <template>
-  <div class="flex gap-2 overflow-x-auto pb-1">
+  <div class="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="프로젝트 카테고리">
     <button
       v-for="category in categories"
       :key="category.slug ?? 'all'"
       type="button"
-      class="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors"
+      role="tab"
+      :aria-label="`${category.label} 카테고리`"
+      :aria-selected="modelValue === category.slug"
+      class="shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors"
       :class="
         modelValue === category.slug
           ? 'bg-primary-600 text-white'
