@@ -17,6 +17,9 @@ export const useAuthStore = defineStore('auth', {
     completeOnboarding({ goals, categories, techStacks }) {
       this.onboarding = { goals, categories, techStacks, completed_at: new Date().toISOString() }
     },
+    skipOnboarding() {
+      this.onboarding = { skipped: true, completed_at: new Date().toISOString() }
+    },
     logout() {
       this.user = null
       this.onboarding = null

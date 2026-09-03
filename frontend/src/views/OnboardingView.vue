@@ -28,6 +28,11 @@ function complete() {
   })
   router.push('/')
 }
+
+function skip() {
+  auth.skipOnboarding()
+  router.push('/')
+}
 </script>
 
 <template>
@@ -101,12 +106,21 @@ function complete() {
       </div>
     </section>
 
-    <button
-      type="button"
-      class="rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700"
-      @click="complete"
-    >
-      설정 완료하고 시작하기
-    </button>
+    <div class="flex items-center gap-4">
+      <button
+        type="button"
+        class="rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700"
+        @click="complete"
+      >
+        설정 완료하고 시작하기
+      </button>
+      <button
+        type="button"
+        class="text-sm font-medium text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+        @click="skip"
+      >
+        건너뛰기
+      </button>
+    </div>
   </div>
 </template>
