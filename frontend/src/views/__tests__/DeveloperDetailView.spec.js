@@ -36,9 +36,9 @@ describe('DeveloperDetailView', () => {
     const wrapper = await mountView()
 
     await wrapper.get('button[aria-label="활동 내역 / 통계 탭"]').trigger('click')
-    expect(wrapper.get('button[aria-label="활동 내역 / 통계 탭"]').attributes('aria-selected')).toBe(
-      'true',
-    )
+    expect(
+      wrapper.get('button[aria-label="활동 내역 / 통계 탭"]').attributes('aria-selected'),
+    ).toBe('true')
     expect(wrapper.text()).toContain('최근 메이커 활동')
   })
 })

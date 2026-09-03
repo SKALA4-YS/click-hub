@@ -63,8 +63,7 @@ function validate() {
   if (!form.email.trim()) errors.email = '이메일 주소를 입력해주세요.'
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
     errors.email = '올바른 이메일 주소를 입력해주세요.'
-  if (!passwordValid.value)
-    errors.password = '영문, 숫자, 특수문자를 포함해 8자 이상 입력해주세요.'
+  if (!passwordValid.value) errors.password = '영문, 숫자, 특수문자를 포함해 8자 이상 입력해주세요.'
   return Object.keys(errors).length === 0
 }
 
@@ -102,8 +101,7 @@ async function startWithGoogle() {
           Click-Hub에 오신 것을 환영합니다
         </h1>
         <p class="mt-2 text-[12px] leading-5 text-body-light">
-          배포한 사이드 프로젝트를 세상에 알리고 전 세계 메이커들과 함께 피드백을 나누며
-          성장하세요.
+          배포한 사이드 프로젝트를 세상에 알리고 전 세계 메이커들과 함께 피드백을 나누며 성장하세요.
         </p>
       </header>
 
@@ -148,11 +146,7 @@ async function startWithGoogle() {
               >@handle</span
             >
           </div>
-          <p
-            v-if="errors.profile"
-            id="signup-profile-error"
-            class="mt-1 text-[11px] text-danger"
-          >
+          <p v-if="errors.profile" id="signup-profile-error" class="mt-1 text-[11px] text-danger">
             {{ errors.profile }}
           </p>
         </div>
@@ -175,11 +169,7 @@ async function startWithGoogle() {
           <p id="email-helper" class="mt-1 text-[10px] text-neutral-400">
             계정 확인 및 배포 알림을 수신할 수 있는 이메일을 입력하세요.
           </p>
-          <p
-            v-if="errors.email"
-            id="signup-email-error"
-            class="mt-1 text-[11px] text-danger"
-          >
+          <p v-if="errors.email" id="signup-email-error" class="mt-1 text-[11px] text-danger">
             {{ errors.email }}
           </p>
         </div>
@@ -229,11 +219,7 @@ async function startWithGoogle() {
               :class="{ 'is-active bg-primary-600': level <= passwordLevel }"
             ></span>
           </div>
-          <p
-            v-if="errors.password"
-            id="signup-password-error"
-            class="mt-1 text-[11px] text-danger"
-          >
+          <p v-if="errors.password" id="signup-password-error" class="mt-1 text-[11px] text-danger">
             {{ errors.password }}
           </p>
         </div>

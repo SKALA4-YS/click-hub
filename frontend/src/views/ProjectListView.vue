@@ -92,7 +92,11 @@ function goToPage(page) {
           <span aria-label="프로젝트 수" class="text-xs text-body-light dark:text-body-dark">
             {{ projectCount }}개 프로젝트
           </span>
-          <div class="flex items-center rounded-md border border-divider/20 p-0.5" role="group" aria-label="프로젝트 보기 방식">
+          <div
+            class="flex items-center rounded-md border border-divider/20 p-0.5"
+            role="group"
+            aria-label="프로젝트 보기 방식"
+          >
             <button
               type="button"
               aria-label="목록 보기"
@@ -160,22 +164,24 @@ function goToPage(page) {
         이전
       </button>
       <template v-for="page in displayedPages" :key="page">
-        <span v-if="page === 'ellipsis'" class="px-1 text-xs text-body-light" aria-hidden="true">…</span>
+        <span v-if="page === 'ellipsis'" class="px-1 text-xs text-body-light" aria-hidden="true"
+          >…</span
+        >
         <button
           v-else
-        type="button"
-        :aria-label="`${page}페이지`"
-        class="h-7 min-w-7 rounded px-2 text-xs font-semibold"
-        :class="
-          page === currentPage
-            ? 'bg-primary-600 text-white'
-            : 'border border-divider/15 text-body-light dark:border-divider/30 dark:text-body-dark'
-        "
-        :aria-current="page === currentPage ? 'page' : undefined"
-        @click="goToPage(page)"
-      >
-        {{ page }}
-      </button>
+          type="button"
+          :aria-label="`${page}페이지`"
+          class="h-7 min-w-7 rounded px-2 text-xs font-semibold"
+          :class="
+            page === currentPage
+              ? 'bg-primary-600 text-white'
+              : 'border border-divider/15 text-body-light dark:border-divider/30 dark:text-body-dark'
+          "
+          :aria-current="page === currentPage ? 'page' : undefined"
+          @click="goToPage(page)"
+        >
+          {{ page }}
+        </button>
       </template>
       <button
         type="button"
