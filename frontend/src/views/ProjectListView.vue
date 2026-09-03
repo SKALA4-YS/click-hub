@@ -1,65 +1,78 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import CategoryTabs from '@/components/layout/CategoryTabs.vue'
 import SiteCard from '@/components/card/SiteCard.vue'
-import { mockProjectList } from '@/data/mockProjectList'
+import { toSiteCardProject } from '@/api/adapters/projects'
+import { getCategories } from '@/api/catalog'
+import { getProjectRankings } from '@/api/rankings'
+import { searchProjects } from '@/api/search'
 
 const route = useRoute()
-
-const categories = [
-  { slug: null, label: '전체' },
-  { slug: 'developer-tools', label: '개발도구' },
-  { slug: 'design-creative', label: '디자인' },
-  { slug: 'content-entertainment', label: '엔터테인먼트' },
-  { slug: 'ai-service', label: 'AI' },
-  { slug: 'productivity-work', label: '생산성' },
-  { slug: 'marketing', label: '마케팅' },
-  { slug: 'other', label: '기타' },
-]
 
 const selectedCategory = ref(route.query.category ?? null)
 const sortOption = ref(route.query.sort === 'recommended' ? 'recommended' : 'popular')
 const viewMode = ref('grid')
-const PAGE_SIZE = 8
-const TOTAL_COUNT = 148
-const TOTAL_PAGES = 12
-const currentPage = ref(1)
-const displayedPages = [1, 2, 3, 4, 'ellipsis', 12]
+const categories = ref([{ slug: null, label: '전체' }])
+const projects = ref([])
+const rankings = ref([])
+const nextCursor = ref(null)
+const hasNext = ref(false)
+const isLoading = ref(true)
+const errorMessage = ref('')
 
 const pageTitle = computed(() =>
   sortOption.value === 'recommended' ? '맞춤 추천 전체보기' : 'Top 100 사이트 전체보기',
 )
 
-const filteredProjects = computed(() => {
-  let items = mockProjectList
-  if (selectedCategory.value) {
-    items = items.filter((item) => item.category_slug === selectedCategory.value)
-  }
-  items = [...items]
-  if (sortOption.value === 'popular' || sortOption.value === 'recommended') {
-    items.sort((a, b) => b.stats.likes - a.stats.likes)
-  } else {
-    items.reverse()
-  }
-  return items
-})
-
 const visibleProjects = computed(() => {
-  const start = (currentPage.value - 1) * PAGE_SIZE
-  return filteredProjects.value.slice(start, start + PAGE_SIZE)
+  const items = [...projects.value]
+  if (sortOption.value === 'latest') {
+    return items.sort((a, b) => (b.published_at ?? '').localeCompare(a.published_at ?? ''))
+  }
+  const rankById = new Map(rankings.value.map((item) => [item.projectId, item.rank]))
+  return items.sort(
+    (a, b) =>
+      (rankById.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+      (rankById.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+  )
 })
-const projectCount = computed(() =>
-  selectedCategory.value ? filteredProjects.value.length : TOTAL_COUNT,
-)
 
-watch([selectedCategory, sortOption], () => {
-  currentPage.value = 1
-})
-
-function goToPage(page) {
-  currentPage.value = Math.min(Math.max(page, 1), TOTAL_PAGES)
+async function loadProjects({ append = false } = {}) {
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const result = await searchProjects({
+      category: selectedCategory.value,
+      cursor: append ? nextCursor.value : undefined,
+    })
+    const items = result.items.map(toSiteCardProject)
+    projects.value = append ? [...projects.value, ...items] : items
+    nextCursor.value = result.nextCursor
+    hasNext.value = result.hasNext
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isLoading.value = false
+  }
 }
+
+watch(selectedCategory, () => loadProjects())
+
+onMounted(async () => {
+  const [catalogResult, rankingResult] = await Promise.allSettled([
+    getCategories(),
+    getProjectRankings(),
+  ])
+  if (catalogResult.status === 'fulfilled') {
+    categories.value = [
+      { slug: null, label: '전체' },
+      ...catalogResult.value.map((category) => ({ slug: category.slug, label: category.name })),
+    ]
+  }
+  if (rankingResult.status === 'fulfilled') rankings.value = rankingResult.value
+  await loadProjects()
+})
 </script>
 
 <template>
@@ -90,7 +103,7 @@ function goToPage(page) {
 
         <div class="flex items-center gap-2">
           <span aria-label="프로젝트 수" class="text-xs text-body-light dark:text-body-dark">
-            {{ projectCount }}개 프로젝트
+            {{ projects.length }}개 프로젝트
           </span>
           <div
             class="flex items-center rounded-md border border-divider/20 p-0.5"
@@ -131,6 +144,7 @@ function goToPage(page) {
     </div>
 
     <div
+      v-if="!errorMessage"
       class="project-grid grid gap-6"
       :class="viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'"
     >
@@ -142,55 +156,35 @@ function goToPage(page) {
       />
     </div>
 
+    <p v-if="isLoading" class="py-16 text-center text-sm text-body-light dark:text-body-dark">
+      프로젝트를 불러오는 중입니다.
+    </p>
+
+    <div v-else-if="errorMessage" class="py-16 text-center">
+      <p role="alert" class="text-sm text-danger">{{ errorMessage }}</p>
+      <button
+        type="button"
+        class="mt-4 text-sm font-semibold text-primary-600"
+        @click="loadProjects()"
+      >
+        다시 시도
+      </button>
+    </div>
+
     <p
-      v-if="visibleProjects.length === 0"
+      v-else-if="visibleProjects.length === 0"
       class="py-16 text-center text-sm text-body-light dark:text-body-dark"
     >
       조건에 맞는 프로젝트가 없습니다.
     </p>
 
-    <nav
-      v-if="filteredProjects.length > 0"
-      class="mx-auto flex items-center gap-1"
-      aria-label="프로젝트 페이지"
-      data-testid="pagination"
+    <button
+      v-if="hasNext && !isLoading"
+      type="button"
+      class="mx-auto rounded-lg border border-primary-200 px-5 py-2 text-sm font-semibold text-primary-700"
+      @click="loadProjects({ append: true })"
     >
-      <button
-        type="button"
-        class="rounded px-2 py-1 text-xs text-body-light disabled:opacity-40 dark:text-body-dark"
-        :disabled="currentPage === 1"
-        @click="goToPage(currentPage - 1)"
-      >
-        이전
-      </button>
-      <template v-for="page in displayedPages" :key="page">
-        <span v-if="page === 'ellipsis'" class="px-1 text-xs text-body-light" aria-hidden="true"
-          >…</span
-        >
-        <button
-          v-else
-          type="button"
-          :aria-label="`${page}페이지`"
-          class="h-7 min-w-7 rounded px-2 text-xs font-semibold"
-          :class="
-            page === currentPage
-              ? 'bg-primary-600 text-white'
-              : 'border border-divider/15 text-body-light dark:border-divider/30 dark:text-body-dark'
-          "
-          :aria-current="page === currentPage ? 'page' : undefined"
-          @click="goToPage(page)"
-        >
-          {{ page }}
-        </button>
-      </template>
-      <button
-        type="button"
-        class="rounded px-2 py-1 text-xs text-body-light disabled:opacity-40 dark:text-body-dark"
-        :disabled="currentPage === TOTAL_PAGES"
-        @click="goToPage(currentPage + 1)"
-      >
-        다음
-      </button>
-    </nav>
+      더 보기
+    </button>
   </div>
 </template>

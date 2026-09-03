@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue'
+
 // 카테고리 필터 탭. 기본값은 홈 화면 기준 자주 쓰이는 6개만 노출하고,
 // 전체 목록 페이지처럼 더 많은 카테고리가 필요하면 categories prop으로 넘긴다.
 // slug는 schema.sql seed 데이터와 동일해야 GET /api/v1/feed, /api/v1/projects 요청에 그대로 쓸 수 있다.
@@ -16,7 +18,7 @@ const DEFAULT_CATEGORIES = [
 const props = defineProps({
   categories: { type: Array, default: null },
 })
-const categories = props.categories ?? DEFAULT_CATEGORIES
+const categories = computed(() => props.categories ?? DEFAULT_CATEGORIES)
 
 const modelValue = defineModel({ default: null })
 </script>

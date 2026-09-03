@@ -1,44 +1,102 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import DeveloperDetailView from '@/views/DeveloperDetailView.vue'
+import { useAuthStore } from '@/stores/auth'
 
-async function mountView() {
+const api = vi.hoisted(() => ({
+  getCreator: vi.fn(),
+  getMyProjects: vi.fn(),
+  toggleCreatorSubscription: vi.fn(),
+}))
+
+vi.mock('@/api/users', () => ({
+  ...api,
+  updateOnboarding: vi.fn(),
+  updateProfile: vi.fn(),
+}))
+
+async function mountView({ path = '/developers/creator-id', loggedIn = false } = {}) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
       { path: '/developers/:id', component: DeveloperDetailView },
+      { path: '/mypage', component: DeveloperDetailView },
       { path: '/projects/:id', component: { template: '<div>프로젝트</div>' } },
       { path: '/projects/new', component: { template: '<div>등록</div>' } },
+      { path: '/login', name: 'login', component: { template: '<div>로그인</div>' } },
     ],
   })
-  await router.push('/developers/alex-kim')
+  if (loggedIn) useAuthStore().$patch({ user: { id: 'viewer-id', display_name: '방문자' } })
+  await router.push(path)
   await router.isReady()
-  return mount(DeveloperDetailView, { global: { plugins: [router] } })
+  const wrapper = mount(DeveloperDetailView, { global: { plugins: [router] } })
+  await flushPromises()
+  return { wrapper, router }
 }
 
 describe('DeveloperDetailView', () => {
-  it('shows the complete Figma maker dashboard', async () => {
-    const wrapper = await mountView()
-
-    expect(wrapper.get('h1').text()).toContain('김민준')
-    expect(wrapper.text()).toContain('@alex_dev')
-    expect(wrapper.text()).toContain('등록한 사이트')
-    expect(wrapper.text()).toContain('웹 클릭수')
-    expect(wrapper.text()).toContain('총 누적 조회수')
-    expect(wrapper.findAll('a[href^="/projects/"]')).toHaveLength(4)
-    expect(wrapper.text()).toContain('최근 받은 유저 피드백')
-    expect(wrapper.text()).toContain('마이 퀵 메뉴')
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    api.getCreator.mockReset().mockResolvedValue({
+      id: 'creator-id',
+      displayName: '김민준',
+      avatarUrl: null,
+      subscriberCount: 12,
+      subscribedByMe: false,
+      projects: [
+        {
+          id: 'project-id',
+          title: 'Click HUB',
+          description: '프로젝트 설명',
+          categoryName: '개발자 도구',
+        },
+      ],
+    })
+    api.getMyProjects.mockReset().mockResolvedValue([])
+    api.toggleCreatorSubscription.mockReset().mockResolvedValue({ subscribed: true })
   })
 
-  it('switches profile tabs without leaving the page', async () => {
-    const wrapper = await mountView()
+  it('shows a creator and published projects from the backend', async () => {
+    const { wrapper } = await mountView()
 
-    await wrapper.get('button[aria-label="활동 내역 / 통계 탭"]').trigger('click')
-    expect(
-      wrapper.get('button[aria-label="활동 내역 / 통계 탭"]').attributes('aria-selected'),
-    ).toBe('true')
-    expect(wrapper.text()).toContain('최근 메이커 활동')
+    expect(wrapper.get('h1').text()).toBe('김민준')
+    expect(wrapper.text()).toContain('구독자 12명')
+    expect(wrapper.text()).toContain('Click HUB')
+    expect(api.getCreator).toHaveBeenCalledWith('creator-id')
+  })
+
+  it('persists subscriptions for an authenticated viewer', async () => {
+    const { wrapper } = await mountView({ loggedIn: true })
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === '구독하기')
+      .trigger('click')
+    await flushPromises()
+
+    expect(api.toggleCreatorSubscription).toHaveBeenCalledWith('creator-id')
+    expect(wrapper.text()).toContain('구독 중')
+  })
+
+  it('uses the private project API on my page', async () => {
+    api.getCreator.mockResolvedValue({
+      id: 'viewer-id',
+      displayName: '방문자',
+      avatarUrl: null,
+      subscriberCount: 0,
+      subscribedByMe: false,
+      projects: [],
+    })
+    api.getMyProjects.mockResolvedValue([
+      { id: 'draft-id', title: '작성 중 프로젝트', description: '초안', status: 'DRAFT' },
+    ])
+
+    const { wrapper } = await mountView({ path: '/mypage', loggedIn: true })
+
+    expect(api.getMyProjects).toHaveBeenCalledOnce()
+    expect(wrapper.text()).toContain('작성 중 프로젝트')
   })
 })

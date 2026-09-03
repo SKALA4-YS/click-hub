@@ -1,289 +1,90 @@
 <script setup>
-import { computed, ref } from 'vue'
-import TrendFilterTabs from '@/components/pages/insights/TrendFilterTabs.vue'
-import TrendRankingCard from '@/components/pages/insights/TrendRankingCard.vue'
-import {
-  hotKeywords,
-  insightFilters,
-  makerOpportunities,
-  rankedTrends,
-  emergingStacks,
-} from '@/data/mockWeeklyInsights'
+import { onMounted, ref } from 'vue'
 
-const selectedFilter = ref('all')
-const visibleTrends = computed(() =>
-  selectedFilter.value === 'all'
-    ? rankedTrends
-    : rankedTrends.filter((trend) => trend.category === selectedFilter.value),
-)
+import { getWeeklyInsight } from '@/api/insights'
+
+const insight = ref(null)
+const isLoading = ref(true)
+const errorMessage = ref('')
+
+async function loadInsight() {
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    insight.value = await getWeeklyInsight()
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function formatWeek(value) {
+  return value
+    ? new Intl.DateTimeFormat('ko-KR', { dateStyle: 'long' }).format(new Date(value))
+    : ''
+}
+
+onMounted(loadInsight)
 </script>
 
 <template>
-  <div class="mx-auto max-w-[1216px] pb-10 pt-3 sm:pt-7">
-    <section
-      class="rounded-2xl border border-primary-100 bg-gradient-to-br from-white via-primary-50/60 to-blue-50 p-6 dark:border-primary-800 dark:from-surface-dark-1 dark:via-primary-950 dark:to-surface-dark-2 sm:p-8"
-    >
-      <p class="text-xs font-bold tracking-[0.14em] text-primary-600 dark:text-primary-200">
-        WEEKLY AI TREND REPORT · 2026년 9월 1주
-      </p>
-      <div class="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div class="max-w-2xl">
-          <h1
-            class="font-headline text-3xl font-bold tracking-tight text-heading-light dark:text-heading-dark sm:text-4xl"
-          >
-            지금 메이커들이 가장 주목하는 AI 개발 트렌드 &amp; 키워드
-          </h1>
-          <p class="mt-3 text-sm leading-6 text-body-light dark:text-body-dark">
-            지난 7일 동안 14,000+ 검색과 420개 신규 런칭에서 확인된, 지금 가장 빠르게 떠오르는 AI
-            개발 흐름입니다.
-          </p>
-        </div>
-        <div class="flex shrink-0 flex-wrap gap-2">
-          <button
-            type="button"
-            class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-700"
-          >
-            이번 주 인사이트 리포트 다운로드
-          </button>
-          <RouterLink
-            to="/projects/new"
-            class="inline-flex items-center justify-center rounded-lg border border-primary-200 bg-white px-4 py-2.5 text-sm font-bold text-primary-700 hover:border-primary-400 dark:bg-surface-dark-1 dark:text-primary-100"
-            >트렌드 키워드로 바로 프로젝트 시작하기</RouterLink
-          >
-        </div>
-      </div>
-      <div class="mt-6 grid gap-3 sm:grid-cols-3">
-        <div
-          data-testid="hero-metric"
-          class="rounded-xl border border-primary-100 bg-white/80 p-4 dark:border-primary-800 dark:bg-surface-dark-1"
-        >
-          <p class="text-xs text-body-light dark:text-body-dark">이번 주 검색량</p>
-          <p class="mt-1 font-headline text-xl font-bold text-heading-light dark:text-heading-dark">
-            14,000+
-          </p>
-        </div>
-        <div
-          data-testid="hero-metric"
-          class="rounded-xl border border-primary-100 bg-white/80 p-4 dark:border-primary-800 dark:bg-surface-dark-1"
-        >
-          <p class="text-xs text-body-light dark:text-body-dark">신규 프로젝트 런칭</p>
-          <p class="mt-1 font-headline text-xl font-bold text-heading-light dark:text-heading-dark">
-            420개
-          </p>
-        </div>
-        <div
-          data-testid="hero-metric"
-          class="rounded-xl border border-primary-100 bg-white/80 p-4 dark:border-primary-800 dark:bg-surface-dark-1"
-        >
-          <p class="text-xs text-body-light dark:text-body-dark">급상승 기술 키워드</p>
-          <p class="mt-1 font-headline text-xl font-bold text-heading-light dark:text-heading-dark">
-            68개
-          </p>
-        </div>
-      </div>
-      <div class="mt-5 flex flex-wrap items-center gap-2 text-xs font-semibold">
-        <button
-          aria-label="이전 주 리포트"
-          type="button"
-          class="rounded-md border border-primary-100 bg-white px-3 py-1.5 text-body-light hover:text-primary-600 dark:border-primary-800 dark:bg-surface-dark-1 dark:text-body-dark"
-        >
-          ‹ 이전 주</button
-        ><span
-          class="rounded-md bg-primary-50 px-3 py-1.5 text-primary-700 dark:bg-primary-900 dark:text-primary-100"
-          >2026년 9월 1주차 (최신)</span
-        ><button
-          aria-label="다음 주 리포트"
-          type="button"
-          class="rounded-md border border-primary-100 bg-white px-3 py-1.5 text-body-light hover:text-primary-600 dark:border-primary-800 dark:bg-surface-dark-1 dark:text-body-dark"
-        >
-          다음 주 ›
-        </button>
-      </div>
-      <div class="mt-6 border-t border-primary-100 pt-4 dark:border-primary-800">
-        <TrendFilterTabs v-model:selected="selectedFilter" :filters="insightFilters" />
-      </div>
-    </section>
+  <section class="mx-auto max-w-[1000px] pb-12" aria-labelledby="insight-heading">
+    <p v-if="isLoading" class="py-24 text-center text-sm text-body-light">
+      주간 인사이트를 불러오는 중입니다.
+    </p>
+    <div v-else-if="errorMessage" class="py-24 text-center">
+      <p role="alert" class="text-sm text-danger">{{ errorMessage }}</p>
+      <button type="button" class="mt-4 font-semibold text-primary-600" @click="loadInsight">
+        다시 시도
+      </button>
+    </div>
+    <template v-else>
+      <header class="rounded-2xl border border-primary-100 bg-primary-50/60 p-7">
+        <p class="text-xs font-bold tracking-wide text-primary-700">
+          WEEKLY TREND REPORT · {{ formatWeek(insight.weekStart) }}
+        </p>
+        <h1 id="insight-heading" class="mt-3 font-headline text-3xl font-extrabold">
+          {{ insight.headline }}
+        </h1>
+        <p class="mt-3 text-xs text-body-light">
+          {{ insight.modelName }} · {{ insight.generatedAt }}
+        </p>
+      </header>
 
-    <div class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-      <section aria-label="급상승 키워드 순위">
-        <div class="mb-4 flex items-center justify-between gap-3">
-          <h2
-            class="border-l-4 border-primary-500 pl-3 font-headline text-lg font-bold text-heading-light dark:text-heading-dark"
+      <section class="mt-8">
+        <h2 class="font-headline text-xl font-bold">이번 주 변화</h2>
+        <p v-if="insight.trends.length === 0" class="mt-5 text-sm text-body-light">
+          집계된 트렌드가 없습니다.
+        </p>
+        <ol v-else class="mt-5 space-y-3">
+          <li
+            v-for="(trend, index) in insight.trends"
+            :key="`${trend.topic}-${index}`"
+            class="flex items-center justify-between rounded-xl border border-divider/20 bg-white p-4"
           >
-            이번 주 실시간 급상승 키워드 TOP 10
-            <span class="font-sans text-xs font-normal text-body-light dark:text-body-dark"
-              >(Search &amp; Interest Trends)</span
+            <div>
+              <strong>{{ trend.topic }}</strong>
+              <p class="mt-1 text-xs text-body-light">{{ trend.direction }}</p>
+            </div>
+            <span class="font-bold text-primary-700"
+              >{{ trend.changeRate > 0 ? '+' : '' }}{{ trend.changeRate }}%</span
             >
-          </h2>
-          <span class="text-xs text-body-light dark:text-body-dark"
-            >실시간 12시간 주기 업데이트</span
-          >
-        </div>
-        <div class="space-y-4">
-          <TrendRankingCard v-for="trend in visibleTrends" :key="trend.id" :trend="trend" />
-        </div>
+          </li>
+        </ol>
       </section>
 
-      <aside class="space-y-4">
-        <section
-          class="rounded-xl border border-divider/15 bg-surface-light-1 p-5 dark:border-divider/25 dark:bg-surface-dark-1"
-        >
-          <div class="flex items-center justify-between">
-            <h2 class="font-headline font-bold text-heading-light dark:text-heading-dark">
-              이번 주 핫검색어 랭킹
-            </h2>
-            <span class="text-xs text-primary-600">1–8위</span>
-          </div>
-          <ol class="mt-4 space-y-3">
-            <li
-              v-for="(keyword, index) in hotKeywords"
-              :key="keyword"
-              class="flex items-center gap-3 text-sm"
-            >
-              <span class="w-4 text-center text-xs font-bold text-primary-600">{{ index + 1 }}</span
-              ><span class="truncate text-body-light dark:text-body-dark">{{ keyword }}</span>
-            </li>
-          </ol>
-        </section>
-        <section
-          class="rounded-xl border border-divider/15 bg-surface-light-1 p-5 dark:border-divider/25 dark:bg-surface-dark-1"
-        >
-          <h2 class="font-headline font-bold text-heading-light dark:text-heading-dark">
-            메이커를 위한 주간 런칭 액션 플랜
-          </h2>
-          <div class="mt-4 rounded-lg bg-base-light p-4 dark:bg-base-dark">
-            <p class="text-xs font-bold text-primary-600">지금 시작하기 좋은 아이디어</p>
-            <p class="mt-2 text-sm font-bold text-heading-light dark:text-heading-dark">
-              슬랙 연동 팀 노하우 Q&amp;A 봇
-            </p>
-            <p class="mt-1 text-xs leading-5 text-body-light dark:text-body-dark">
-              사내 문서 10개만 임베딩해 슬랙 채널에서 즉시 대답하는 봇을 3일 만에 만들어 보세요.
-            </p>
-          </div>
-          <RouterLink
-            to="/projects/new"
-            class="mt-4 flex justify-center rounded-lg bg-primary-600 px-3 py-2.5 text-sm font-bold text-white hover:bg-primary-700"
-            >추천 스타터 템플릿 열기</RouterLink
+      <section class="mt-8 rounded-xl border border-divider/20 bg-white p-5">
+        <h2 class="font-headline text-lg font-bold">다음 주 주목할 키워드</h2>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <span
+            v-for="keyword in insight.watchlist"
+            :key="keyword"
+            class="rounded-full bg-primary-50 px-3 py-1 text-sm text-primary-700"
+            >{{ keyword }}</span
           >
-        </section>
-        <section
-          class="rounded-xl border border-divider/15 bg-surface-light-1 p-5 dark:border-divider/25 dark:bg-surface-dark-1"
-        >
-          <h2 class="font-headline font-bold text-heading-light dark:text-heading-dark">
-            매주 월요일 아침 트렌드 리포트 구독
-          </h2>
-          <p class="mt-3 text-xs leading-5 text-body-light dark:text-body-dark">
-            가장 먼저 뜨는 오픈소스와 실전 수익화 모델을 메일로 받아보세요.
-          </p>
-          <input
-            aria-label="리포트 구독 이메일"
-            class="mt-4 w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-sm dark:bg-base-dark"
-            placeholder="이메일 주소를 입력하세요"
-            type="email"
-          /><button
-            type="button"
-            class="mt-2 w-full rounded-lg bg-secondary px-3 py-2.5 text-sm font-bold text-white"
-          >
-            무료 구독하기 (무료 100%)
-          </button>
-        </section>
-        <section
-          data-testid="trend-discussion-cta"
-          class="overflow-hidden rounded-xl bg-gradient-to-br from-primary-800 via-primary-600 to-blue-500 p-5 text-white"
-        >
-          <span class="rounded-full bg-white/15 px-2 py-1 text-xs font-semibold"
-            >트렌드 토론방</span
-          >
-          <h2 class="mt-4 font-headline text-lg font-bold">
-            이번 주 AI 트렌드에 대해 이야기해볼까요?
-          </h2>
-          <p class="mt-3 text-sm leading-6 text-white/80">
-            다른 메이커들이 주목하는 틈새 아이디어와 실시간 피드백을 커뮤니티에서 공유해보세요.
-          </p>
-          <RouterLink
-            to="/community"
-            class="mt-5 inline-flex rounded-lg bg-white px-3 py-2 text-sm font-bold text-primary-700"
-            >트렌드 토론 참여하기 →</RouterLink
-          >
-        </section>
-      </aside>
-    </div>
-
-    <section id="maker-opportunities" data-testid="maker-opportunities" class="mt-10">
-      <div class="flex items-end justify-between gap-4">
-        <h2
-          class="border-l-4 border-blue-500 pl-3 font-headline text-xl font-bold text-heading-light dark:text-heading-dark"
-        >
-          이번 주 주목해야 할 AI 프로덕트 기회
-          <span class="font-sans text-sm font-normal text-body-light dark:text-body-dark"
-            >(Maker Insights &amp; Opportunities)</span
-          >
-        </h2>
-        <span class="text-xs text-body-light dark:text-body-dark">수익 전환 높은 3대 영역</span>
-      </div>
-      <div class="mt-5 space-y-3">
-        <article
-          v-for="opportunity in makerOpportunities"
-          :key="opportunity.id"
-          class="rounded-xl border border-divider/15 bg-surface-light-1 p-5 dark:border-divider/25 dark:bg-surface-dark-1"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <h3 class="font-headline font-bold text-heading-light dark:text-heading-dark">
-              <span
-                class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-md bg-primary-50 text-xs text-primary-600 dark:bg-primary-900"
-                >{{ opportunity.marker }}</span
-              >{{ opportunity.title }}
-            </h3>
-            <span
-              class="shrink-0 rounded-full bg-success/10 px-2 py-1 text-xs font-bold text-success"
-              >{{ opportunity.metric }}</span
-            >
-          </div>
-          <p class="mt-3 text-sm leading-6 text-body-light dark:text-body-dark">
-            {{ opportunity.summary }}
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <section class="mt-10">
-      <div class="flex items-end justify-between gap-4">
-        <h2
-          class="border-l-4 border-success pl-3 font-headline text-xl font-bold text-heading-light dark:text-heading-dark"
-        >
-          개발자들이 실제로 가장 많이 쓰는 신규 기술 스택 TOP 4
-        </h2>
-        <RouterLink
-          to="/projects/new"
-          class="text-sm font-bold text-primary-600 hover:text-primary-700"
-          >기술 스택 분석 더 보기 →</RouterLink
-        >
-      </div>
-      <div data-testid="emerging-stacks" class="mt-5 grid gap-4 sm:grid-cols-2">
-        <article
-          v-for="stack in emergingStacks"
-          :key="stack.id"
-          class="rounded-xl border border-divider/15 bg-surface-light-1 p-5 dark:border-divider/25 dark:bg-surface-dark-1"
-        >
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="font-headline font-bold text-heading-light dark:text-heading-dark">
-              {{ stack.title }}
-            </h3>
-            <span class="shrink-0 text-xs font-bold text-primary-600">{{ stack.metric }}</span>
-          </div>
-          <p class="mt-3 text-sm leading-6 text-body-light dark:text-body-dark">
-            {{ stack.summary }}
-          </p>
-          <div class="mt-4 flex flex-wrap gap-1.5">
-            <span
-              v-for="tag in stack.tags"
-              :key="tag"
-              class="rounded bg-primary-50 px-2 py-1 text-[11px] font-semibold text-primary-600 dark:bg-primary-900 dark:text-primary-100"
-              >{{ tag }}</span
-            >
-          </div>
-        </article>
-      </div>
-    </section>
-  </div>
+        </div>
+      </section>
+    </template>
+  </section>
 </template>

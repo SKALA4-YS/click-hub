@@ -1,157 +1,116 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import HomeView from '@/views/HomeView.vue'
 import { useAuthStore } from '@/stores/auth'
 
+const api = vi.hoisted(() => ({
+  getFeed: vi.fn(),
+  getProjectRankings: vi.fn(),
+  getMySubscriptions: vi.fn(),
+  getCreator: vi.fn(),
+}))
+
+vi.mock('@/api/feed', () => ({ getFeed: api.getFeed }))
+vi.mock('@/api/rankings', () => ({ getProjectRankings: api.getProjectRankings }))
+vi.mock('@/api/users', () => ({
+  getMySubscriptions: api.getMySubscriptions,
+  getCreator: api.getCreator,
+  updateOnboarding: vi.fn(),
+  updateProfile: vi.fn(),
+}))
+
 const routerLinkStub = {
   props: ['to'],
   template: '<a :href="typeof to === \'string\' ? to : to.path"><slot /></a>',
 }
 
+const projects = [
+  {
+    id: 'project-1',
+    title: '실제 프로젝트 A',
+    description: 'Backend 피드에서 받은 프로젝트',
+    categorySlug: 'developer-tools',
+    categoryName: '개발자 도구',
+    likeCount: 12,
+  },
+  {
+    id: 'project-2',
+    title: '실제 프로젝트 B',
+    description: 'PostgreSQL에 저장된 프로젝트',
+    categorySlug: 'ai-service',
+    categoryName: 'AI 서비스',
+    likeCount: 7,
+  },
+]
+
 function mountHome() {
-  const pinia = createPinia()
-  setActivePinia(pinia)
-
   return mount(HomeView, {
-    global: {
-      plugins: [pinia],
-      stubs: {
-        RouterLink: routerLinkStub,
-      },
-    },
-  })
-}
-
-async function mountHomeShell() {
-  const pinia = createPinia()
-  setActivePinia(pinia)
-  vi.stubGlobal('localStorage', {
-    getItem: () => null,
-    setItem: () => {},
-  })
-  const { default: DefaultLayout } = await import('@/layouts/DefaultLayout.vue')
-
-  return mount(DefaultLayout, {
-    global: {
-      plugins: [pinia],
-      stubs: {
-        RouterLink: routerLinkStub,
-        RouterView: HomeView,
-      },
-    },
+    global: { plugins: [createPinia()], stubs: { RouterLink: routerLinkStub } },
   })
 }
 
 describe('HomeView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    document.documentElement.classList.remove('dark')
-  })
-
-  it('shows its feed in the Figma section order', () => {
-    const wrapper = mountHome()
-
-    expect(wrapper.findAll('h2').map((heading) => heading.text())).toEqual([
-      'Top 100',
-      '맞춤 추천',
-      '내가 팔로잉한 개발자',
+    api.getFeed.mockReset().mockResolvedValue({ items: projects, nextCursor: null, hasNext: false })
+    api.getProjectRankings.mockReset().mockResolvedValue([
+      { rank: 1, projectId: 'project-2', title: '실제 프로젝트 B', score: 10 },
+      { rank: 2, projectId: 'project-1', title: '실제 프로젝트 A', score: 8 },
     ])
+    api.getMySubscriptions.mockReset().mockResolvedValue([])
+    api.getCreator.mockReset()
   })
 
-  it('filters every feed section when a category tab is selected', async () => {
+  it('renders backend feed and ranking data instead of mock projects', async () => {
     const wrapper = mountHome()
-    useAuthStore().$patch({ user: { display_name: '김민준' } })
+    await flushPromises()
 
-    await wrapper.get('button[aria-label="개발도구 카테고리"]').trigger('click')
-
-    expect(wrapper.findAll('h3')).toHaveLength(9)
-    expect(wrapper.findAll('h3').every((heading) => heading.text() === 'DevFlow Analytics')).toBe(
-      true,
-    )
-  })
-
-  it('exposes categories as a pressed button group instead of incomplete tabs', async () => {
-    const wrapper = mountHome()
-    const designCategory = wrapper.get('button[aria-label="디자인 카테고리"]')
-
-    expect(wrapper.get('[aria-label="프로젝트 카테고리"]').attributes('role')).toBe('group')
+    expect(wrapper.findAll('h2').map((heading) => heading.text())).toContain('Top 100')
     expect(
-      wrapper.findAll('button[aria-label$="카테고리"]').map((button) => button.text()),
-    ).toEqual(['전체', '개발도구', '디자인', '엔터테인먼트', 'AI', '생산성', '마케팅', '기타'])
-    expect(designCategory.attributes('role')).toBeUndefined()
-    expect(designCategory.attributes('aria-pressed')).toBe('false')
-
-    await designCategory.trigger('click')
-
-    expect(designCategory.attributes('aria-pressed')).toBe('true')
+      wrapper
+        .findAll('.grid h3')
+        .map((heading) => heading.text())
+        .slice(0, 2),
+    ).toEqual(['실제 프로젝트 B', '실제 프로젝트 A'])
+    expect(wrapper.text()).toContain('Backend 피드에서 받은 프로젝트')
+    expect(api.getFeed).toHaveBeenCalledOnce()
+    expect(api.getProjectRankings).toHaveBeenCalledOnce()
   })
 
-  it('links every visible project card to its project detail route', async () => {
+  it('filters API results by the selected category', async () => {
     const wrapper = mountHome()
-    useAuthStore().$patch({ user: { display_name: '김민준' } })
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
-    expect(
-      wrapper.findAll('a[href^="/projects/prj_"]').map((link) => link.attributes('href')),
-    ).toEqual([
-      '/projects/prj_301',
-      '/projects/prj_302',
-      '/projects/prj_303',
-      '/projects/prj_304',
-      '/projects/prj_305',
-      '/projects/prj_306',
-      '/projects/prj_307',
-      '/projects/prj_308',
-      '/projects/prj_309',
-    ])
+    await wrapper.get('button[aria-label="AI 카테고리"]').trigger('click')
+
+    expect(wrapper.text()).toContain('실제 프로젝트 B')
+    expect(wrapper.text()).not.toContain('실제 프로젝트 A')
   })
 
-  it('renders the supplied Figma Home card copy and neutral thumbnail placeholders', async () => {
-    const wrapper = mountHome()
-    useAuthStore().$patch({ user: { display_name: '김민준' } })
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.findAll('h3').map((heading) => heading.text())).toEqual(
-      Array(9).fill('DevFlow Analytics'),
-    )
-    expect(wrapper.text()).toContain(
-      'Real-time performance tracking for indie makers. Monitor your server load, user engagement, and error...',
-    )
-    expect(wrapper.text()).toContain('저장 1,204')
-    expect(wrapper.text()).toContain('댓글 20')
-    expect(wrapper.text()).toContain('조회 20')
-    expect(wrapper.findAll('.bg-gradient-to-br')).toHaveLength(0)
-  })
-
-  it('replaces the signed-out following prompt with followed projects after login', async () => {
+  it('loads followed creators projects for authenticated users', async () => {
     const wrapper = mountHome()
     const auth = useAuthStore()
+    api.getMySubscriptions.mockResolvedValue([{ id: 'creator-1' }])
+    api.getCreator.mockResolvedValue({
+      projects: [{ ...projects[0], id: 'followed-project', title: '구독 프로젝트' }],
+    })
 
-    expect(wrapper.text()).toContain('로그인하면 구독한 제작자가')
+    auth.$patch({ user: { id: 'viewer' } })
+    await flushPromises()
 
-    auth.$patch({ user: { display_name: '김민준' } })
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.text()).toContain('DevFlow Analytics')
-    expect(wrapper.text()).not.toContain('로그인하면 구독한 제작자가')
+    expect(api.getMySubscriptions).toHaveBeenCalledOnce()
+    expect(api.getCreator).toHaveBeenCalledWith('creator-1')
+    expect(wrapper.text()).toContain('구독 프로젝트')
   })
 
-  it('keeps the home content visible while the shared search overlay is open in light and dark mode', async () => {
-    const wrapper = await mountHomeShell()
-    const themeButton = wrapper.get('button[title^="테마:"]')
+  it('shows a retryable API error', async () => {
+    api.getFeed.mockRejectedValue(new Error('피드 연결 실패'))
+    const wrapper = mountHome()
+    await flushPromises()
 
-    await wrapper.get('input[aria-label="통합 검색"]').trigger('focus')
-
-    expect(wrapper.text()).toContain('Top 100')
-    expect(wrapper.get('[role="dialog"][aria-label="검색 제안"]')).toBeTruthy()
-    expect(document.documentElement.classList.contains('dark')).toBe(false)
-
-    await themeButton.trigger('click')
-
-    expect(document.documentElement.classList.contains('dark')).toBe(true)
-    expect(wrapper.text()).toContain('맞춤 추천')
-    expect(wrapper.get('[role="dialog"][aria-label="검색 제안"]')).toBeTruthy()
+    expect(wrapper.get('[role="alert"]').text()).toBe('피드 연결 실패')
+    expect(wrapper.text()).toContain('다시 시도')
   })
 })

@@ -9,6 +9,10 @@ vi.hoisted(() => {
   })
 })
 
+vi.mock('@/views/DeveloperDetailView.vue', () => ({
+  default: { template: '<section><h1>김민준</h1><p>내 프로젝트</p></section>' },
+}))
+
 import FavoritesView from '@/views/FavoritesView.vue'
 import FollowingView from '@/views/FollowingView.vue'
 import MyPageView from '@/views/MyPageView.vue'
@@ -30,12 +34,10 @@ describe('member library pages', () => {
     useAuthStore().$patch({ user: { display_name: '김민준' } })
   })
 
-  it('uses the full maker dashboard for my page', () => {
+  it('uses the API-backed developer profile for my page', () => {
     const wrapper = mountView(MyPageView)
     expect(wrapper.text()).toContain('김민준')
-    expect(wrapper.text()).toContain('웹 클릭수')
-    expect(wrapper.text()).toContain('내 등록 프로젝트')
-    expect(wrapper.text()).toContain('마이 퀵 메뉴')
+    expect(wrapper.text()).toContain('내 프로젝트')
   })
 
   it('shows the Figma favorite vault and filters saved projects', async () => {

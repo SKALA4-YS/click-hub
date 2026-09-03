@@ -1,48 +1,45 @@
-import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import DeveloperRankingView from '@/views/DeveloperRankingView.vue'
+
+const getDeveloperRankings = vi.hoisted(() => vi.fn())
+vi.mock('@/api/rankings', () => ({ getDeveloperRankings }))
 
 const routerLinkStub = {
   props: ['to'],
   template: '<a :href="typeof to === \'string\' ? to : to.path"><slot /></a>',
 }
 
-function mountView() {
-  return mount(DeveloperRankingView, {
-    global: { stubs: { RouterLink: routerLinkStub } },
-  })
-}
-
 describe('DeveloperRankingView', () => {
-  it('shows the Figma ranking sections and developer profile links', () => {
-    const wrapper = mountView()
+  beforeEach(() => {
+    getDeveloperRankings.mockReset().mockResolvedValue([
+      { rank: 1, creatorId: 'creator-1', displayName: '김민준', score: 9.25 },
+      { rank: 2, creatorId: 'creator-2', displayName: 'Sarah Park', score: 7.1 },
+    ])
+  })
+
+  it('renders developer rankings returned by the backend', async () => {
+    const wrapper = mount(DeveloperRankingView, {
+      global: { stubs: { RouterLink: routerLinkStub } },
+    })
+    await flushPromises()
 
     expect(wrapper.text()).toContain('개발자 랭킹 Top Indie Makers')
-    expect(wrapper.text()).toContain('주간 명예의 전당 (Top 3 Podium)')
-    expect(wrapper.text()).toContain('순위 리스트 (4위 ~ 10위)')
-    const profilePaths = new Set(
-      wrapper.findAll('a[href^="/developers/"]').map((link) => link.attributes('href')),
-    )
-    expect(profilePaths.size).toBe(10)
+    expect(wrapper.text()).toContain('김민준')
+    expect(wrapper.get('a[href="/developers/creator-1"]')).toBeTruthy()
+    expect(getDeveloperRankings).toHaveBeenCalledOnce()
   })
 
-  it('filters the ranking list by selected field', async () => {
-    const wrapper = mountView()
+  it('filters the loaded ranking by display name', async () => {
+    const wrapper = mount(DeveloperRankingView, {
+      global: { stubs: { RouterLink: routerLinkStub } },
+    })
+    await flushPromises()
 
-    await wrapper.get('button[aria-label^="AI"]').trigger('click')
+    await wrapper.get('input[placeholder="메이커 검색..."]').setValue('sarah')
 
-    expect(wrapper.get('button[aria-label^="AI"]').attributes('aria-pressed')).toBe('true')
-    expect(wrapper.text()).toContain('PromptCraft Studio')
-    expect(wrapper.text()).not.toContain('FlowBoard Kanban')
-  })
-
-  it('changes the selected ranking period', async () => {
-    const wrapper = mountView()
-
-    await wrapper.get('button[aria-label="월간 랭킹"]').trigger('click')
-
-    expect(wrapper.get('button[aria-label="월간 랭킹"]').attributes('aria-pressed')).toBe('true')
-    expect(wrapper.text()).toContain('월간 랭킹')
+    expect(wrapper.text()).toContain('Sarah Park')
+    expect(wrapper.text()).not.toContain('김민준')
   })
 })

@@ -1,42 +1,92 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import CategoryTabs from '@/components/layout/CategoryTabs.vue'
 import SiteSection from '@/components/section/SiteSection.vue'
 import SiteCard from '@/components/card/SiteCard.vue'
-import {
-  mockTopRankedProjects,
-  mockRecommendedProjects,
-  mockFollowingProjects,
-} from '@/data/mockHomeFeed'
+import { toSiteCardProject, mergeRankingsWithProjects } from '@/api/adapters/projects'
+import { getFeed } from '@/api/feed'
+import { getProjectRankings } from '@/api/rankings'
+import { getCreator, getMySubscriptions } from '@/api/users'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
 
-// TODO: GET /api/v1/feed?category= 확정되면 이 상태를 그대로 쿼리 파라미터로 넘긴다.
-// 지금은 목업 데이터를 category_slug 기준으로 화면에서만 필터링한다.
 const selectedCategory = ref(null)
+const feedProjects = ref([])
+const rankedProjects = ref([])
+const followedProjects = ref([])
+const isLoading = ref(true)
+const errorMessage = ref('')
 
 function filterByCategory(items) {
   if (!selectedCategory.value) return items
   return items.filter((item) => item.category_slug === selectedCategory.value)
 }
 
-const topRankedProjects = computed(() => filterByCategory(mockTopRankedProjects))
-const recommendedProjects = computed(() => filterByCategory(mockRecommendedProjects))
-const followingProjects = computed(() => filterByCategory(mockFollowingProjects))
+const topRankedProjects = computed(() => filterByCategory(rankedProjects.value).slice(0, 6))
+const recommendedProjects = computed(() => filterByCategory(feedProjects.value).slice(0, 6))
+const followingProjects = computed(() => filterByCategory(followedProjects.value).slice(0, 6))
+
+async function loadPublicFeed() {
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const [feed, rankings] = await Promise.all([getFeed(), getProjectRankings()])
+    feedProjects.value = feed.items.map(toSiteCardProject)
+    rankedProjects.value = mergeRankingsWithProjects(rankings, feedProjects.value)
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function loadFollowedProjects() {
+  if (!auth.isLoggedIn) {
+    followedProjects.value = []
+    return
+  }
+  try {
+    const subscriptions = await getMySubscriptions()
+    const creators = await Promise.all(subscriptions.map(({ id }) => getCreator(id)))
+    followedProjects.value = creators.flatMap((creator) => creator.projects.map(toSiteCardProject))
+  } catch {
+    followedProjects.value = []
+  }
+}
+
+onMounted(loadPublicFeed)
+watch(() => auth.isLoggedIn, loadFollowedProjects, { immediate: true })
 </script>
 
 <template>
   <div class="flex flex-col gap-10">
     <CategoryTabs v-model="selectedCategory" />
 
-    <SiteSection title="Top 100" badge="HOT" moreTo="/rankings" :items="topRankedProjects">
+    <p v-if="isLoading" class="py-12 text-center text-sm text-body-light">피드를 불러오는 중...</p>
+    <section v-else-if="errorMessage" class="rounded-xl border border-danger/20 p-8 text-center">
+      <p role="alert" class="text-sm text-danger">{{ errorMessage }}</p>
+      <button
+        class="mt-4 text-sm font-semibold text-primary-600"
+        type="button"
+        @click="loadPublicFeed"
+      >
+        다시 시도
+      </button>
+    </section>
+
+    <SiteSection v-else title="Top 100" badge="HOT" moreTo="/rankings" :items="topRankedProjects">
       <template #default="{ item, index }">
         <SiteCard :project="item" :rank="index + 1" />
       </template>
     </SiteSection>
 
-    <SiteSection title="맞춤 추천" moreTo="/rankings?sort=recommended" :items="recommendedProjects">
+    <SiteSection
+      v-if="!isLoading && !errorMessage"
+      title="최신 프로젝트"
+      moreTo="/rankings?sort=latest"
+      :items="recommendedProjects"
+    >
       <template #default="{ item }">
         <SiteCard :project="item" />
       </template>
