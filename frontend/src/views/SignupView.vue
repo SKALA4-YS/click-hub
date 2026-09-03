@@ -1,16 +1,13 @@
 <script setup>
-import { RouterLink, useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { RouterLink } from 'vue-router'
+import { getApiBaseUrl } from '@/services/api'
 import AuthLogo from '@/components/auth/AuthLogo.vue'
 import SocialProofBar from '@/components/auth/SocialProofBar.vue'
 
-const router = useRouter()
-const auth = useAuthStore()
-
+// 로그인/가입이 같은 Google OAuth "있으면 로그인, 없으면 가입" upsert 플로우라 시작점은
+// 동일하다 — 백엔드 콜백이 신규 가입 여부를 알려주지 않아 온보딩으로의 분기는 아직 못 한다.
 function signupWithGoogle() {
-  // TODO: 실제 Google OAuth 플로우로 교체 (백엔드 엔드포인트 확정 후)
-  auth.mockLoginWithGoogle()
-  router.push('/onboarding')
+  window.location.href = `${getApiBaseUrl()}/v1/auth/google`
 }
 </script>
 
