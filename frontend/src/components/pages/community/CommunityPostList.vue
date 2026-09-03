@@ -27,26 +27,42 @@ defineProps({
           >{{ post.label }}</span
         >
         <span
+          v-if="post.pinned"
+          class="rounded-md bg-primary-50 px-2 py-1 text-xs font-semibold text-primary-600 dark:bg-primary-900 dark:text-blue-200"
+          >공지글</span
+        >
+        <span
+          v-if="post.resolved"
+          class="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+          >해결됨</span
+        >
+        <span
           v-for="tag in post.tags"
           :key="tag"
           class="rounded-md bg-neutral-100 px-2 py-1 text-xs text-body-light dark:bg-surface-dark-2 dark:text-body-dark"
           >#{{ tag }}</span
         >
       </div>
-      <button
-        type="button"
-        class="text-left text-lg font-bold tracking-tight text-heading-light hover:text-primary-600 dark:text-heading-dark dark:hover:text-blue-300"
-      >
+      <h2 class="text-lg font-bold tracking-tight text-heading-light dark:text-heading-dark">
         {{ post.title }}
-      </button>
+      </h2>
       <p class="mt-2 line-clamp-2 text-sm leading-6 text-body-light dark:text-body-dark">
         {{ post.summary }}
       </p>
       <div
         class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-divider/15 pt-3 text-xs text-body-light dark:border-blue-500/10 dark:text-body-dark"
       >
-        <span class="font-semibold text-heading-light dark:text-heading-dark"
-          >{{ post.author }} <span class="ml-1 font-normal">· {{ post.date }}</span></span
+        <span
+          class="flex min-w-0 items-center gap-2 font-semibold text-heading-light dark:text-heading-dark"
+          ><span
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-bold text-secondary dark:bg-surface-dark-2 dark:text-blue-100"
+            >{{ post.author.slice(0, 1) }}</span
+          ><span class="truncate"
+            >{{ post.author }}
+            <span class="ml-1 font-normal text-body-light dark:text-body-dark"
+              >· {{ post.role }} · {{ post.time }}</span
+            ></span
+          ></span
         >
         <span class="flex gap-3"
           ><span>좋아요 {{ post.likes }}</span
