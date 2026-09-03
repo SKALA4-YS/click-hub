@@ -23,6 +23,7 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
+      meta: { standalone: true },
     },
     {
       path: '/signup',
@@ -33,6 +34,13 @@ const router = createRouter({
       path: '/onboarding',
       name: 'onboarding',
       component: () => import('../views/OnboardingView.vue'),
+      meta: { standalone: true },
+    },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: () => import('../views/SignupView.vue'),
+      meta: { standalone: true },
     },
     {
       path: '/mypage',
@@ -53,6 +61,46 @@ const router = createRouter({
       path: '/notifications',
       name: 'notifications',
       component: () => import('../views/NotificationsView.vue'),
+    },
+    {
+      path: '/projects/new',
+      name: 'project-register',
+      component: () => import('../views/ProjectRegisterView.vue'),
+    },
+    {
+      path: '/projects/:id',
+      name: 'project-detail',
+      component: () => import('../views/ProjectDetailView.vue'),
+    },
+    {
+      path: '/rankings',
+      name: 'rankings',
+      component: () => import('../views/ProjectListView.vue'),
+    },
+    {
+      path: '/rankings/developers',
+      name: 'developer-rankings',
+      component: () => import('../views/DeveloperRankingView.vue'),
+    },
+    {
+      path: '/developers/:id',
+      name: 'developer-detail',
+      component: () => import('../views/DeveloperDetailView.vue'),
+    },
+    {
+      path: '/community',
+      name: 'community',
+      component: () => import('../views/CommunityBoardView.vue'),
+    },
+    {
+      path: '/tutorials',
+      name: 'tutorials',
+      component: () => import('../views/TutorialsView.vue'),
+    },
+    {
+      path: '/insights',
+      name: 'insights',
+      component: () => import('../views/InsightsView.vue'),
     },
   ],
 })

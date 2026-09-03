@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useNotificationStore } from '@/stores/notifications'
 import { formatRelativeTime } from '@/utils/formatRelativeTime'
+import notificationIcon from '@/assets/figma/notification.svg'
 
 const notifications = useNotificationStore()
 const isOpen = ref(false)
@@ -30,13 +31,12 @@ function handleClick(notification) {
       title="알림"
       @click="isOpen = !isOpen"
     >
-      🔔
+      <img :src="notificationIcon" alt="" class="h-5 w-5" />
       <span
         v-if="notifications.unreadCount > 0"
-        class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-600 px-1 text-[10px] font-bold text-white"
-      >
-        {{ notifications.unreadCount }}
-      </span>
+        aria-label="읽지 않은 알림"
+        class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#c2601a] ring-2 ring-surface-light-1 dark:ring-base-dark"
+      />
     </button>
 
     <div
