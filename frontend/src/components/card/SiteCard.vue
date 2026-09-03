@@ -76,7 +76,9 @@ function formatCount(value) {
         <div class="flex shrink-0 items-center gap-3 text-xs text-body-light dark:text-body-dark">
           <span title="저장">저장 {{ formatCount(project.stats?.likes) }}</span>
           <span title="댓글">댓글 {{ formatCount(project.stats?.comments) }}</span>
-          <span title="조회">조회 {{ formatCount(project.stats?.views) }}</span>
+          <span title="조회">
+            조회 {{ project.stats?.viewsDisplay ?? formatCount(project.stats?.views) }}
+          </span>
         </div>
       </div>
     </div>

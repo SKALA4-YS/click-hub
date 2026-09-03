@@ -5,8 +5,6 @@ import CategoryTabs from '@/components/layout/CategoryTabs.vue'
 import SiteCard from '@/components/card/SiteCard.vue'
 import { mockProjectList } from '@/data/mockProjectList'
 
-// 전체 사이트 목록 — GET /api/v1/projects?category=&tags=&tech=&pricing=&cursor= 자리.
-// 실제 API는 커서 기반 페이지네이션이라, 번호 페이지 대신 "더 불러오기" 방식으로 맞춘다.
 const route = useRoute()
 
 const categories = [
@@ -22,8 +20,12 @@ const categories = [
 
 const selectedCategory = ref(route.query.category ?? null)
 const sortOption = ref(route.query.sort === 'recommended' ? 'recommended' : 'popular')
+const viewMode = ref('grid')
 const PAGE_SIZE = 8
-const visibleCount = ref(PAGE_SIZE)
+const TOTAL_COUNT = 148
+const TOTAL_PAGES = 12
+const currentPage = ref(1)
+const displayedPages = [1, 2, 3, 4, 'ellipsis', 12]
 
 const pageTitle = computed(() =>
   sortOption.value === 'recommended' ? '맞춤 추천 전체보기' : 'Top 100 사이트 전체보기',
@@ -43,21 +45,20 @@ const filteredProjects = computed(() => {
   return items
 })
 
-const visibleProjects = computed(() => filteredProjects.value.slice(0, visibleCount.value))
-const hasMore = computed(() => visibleCount.value < filteredProjects.value.length)
-const currentPage = computed(() => Math.ceil(visibleCount.value / PAGE_SIZE))
-const pageCount = computed(() => Math.max(1, Math.ceil(filteredProjects.value.length / PAGE_SIZE)))
+const visibleProjects = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return filteredProjects.value.slice(start, start + PAGE_SIZE)
+})
+const projectCount = computed(() =>
+  selectedCategory.value ? filteredProjects.value.length : TOTAL_COUNT,
+)
 
 watch([selectedCategory, sortOption], () => {
-  visibleCount.value = PAGE_SIZE
+  currentPage.value = 1
 })
 
-function loadMore() {
-  visibleCount.value = Math.min(visibleCount.value + PAGE_SIZE, filteredProjects.value.length)
-}
-
 function goToPage(page) {
-  visibleCount.value = Math.min(page * PAGE_SIZE, filteredProjects.value.length)
+  currentPage.value = Math.min(Math.max(page, 1), TOTAL_PAGES)
 }
 </script>
 
@@ -89,8 +90,30 @@ function goToPage(page) {
 
         <div class="flex items-center gap-2">
           <span aria-label="프로젝트 수" class="text-xs text-body-light dark:text-body-dark">
-            {{ filteredProjects.length }}개 프로젝트
+            {{ projectCount }}개 프로젝트
           </span>
+          <div class="flex items-center rounded-md border border-divider/20 p-0.5" role="group" aria-label="프로젝트 보기 방식">
+            <button
+              type="button"
+              aria-label="목록 보기"
+              :aria-pressed="viewMode === 'list'"
+              class="rounded px-2 py-1 text-xs"
+              :class="viewMode === 'list' ? 'bg-primary-600 text-white' : 'text-body-light'"
+              @click="viewMode = 'list'"
+            >
+              목록
+            </button>
+            <button
+              type="button"
+              aria-label="그리드 보기"
+              :aria-pressed="viewMode === 'grid'"
+              class="rounded px-2 py-1 text-xs"
+              :class="viewMode === 'grid' ? 'bg-primary-600 text-white' : 'text-body-light'"
+              @click="viewMode = 'grid'"
+            >
+              그리드
+            </button>
+          </div>
           <select
             v-model="sortOption"
             aria-label="프로젝트 정렬"
@@ -103,7 +126,10 @@ function goToPage(page) {
       </div>
     </div>
 
-    <div class="project-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div
+      class="project-grid grid gap-6"
+      :class="viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'"
+    >
       <SiteCard
         v-for="(item, index) in visibleProjects"
         :key="item.id"
@@ -119,16 +145,6 @@ function goToPage(page) {
       조건에 맞는 프로젝트가 없습니다.
     </p>
 
-    <button
-      v-if="hasMore"
-      type="button"
-      aria-label="프로젝트 더 불러오기"
-      class="mx-auto inline-flex items-center gap-1 rounded-lg border border-divider/20 bg-surface-light-1 px-5 py-2 text-xs font-semibold text-body-light hover:border-primary-400 hover:text-primary-600 dark:border-divider/30 dark:bg-surface-dark-1 dark:text-body-dark"
-      @click="loadMore"
-    >
-      더 불러오기
-    </button>
-
     <nav
       v-if="filteredProjects.length > 0"
       class="mx-auto flex items-center gap-1"
@@ -143,10 +159,12 @@ function goToPage(page) {
       >
         이전
       </button>
-      <button
-        v-for="page in pageCount"
-        :key="page"
+      <template v-for="page in displayedPages" :key="page">
+        <span v-if="page === 'ellipsis'" class="px-1 text-xs text-body-light" aria-hidden="true">…</span>
+        <button
+          v-else
         type="button"
+        :aria-label="`${page}페이지`"
         class="h-7 min-w-7 rounded px-2 text-xs font-semibold"
         :class="
           page === currentPage
@@ -158,10 +176,11 @@ function goToPage(page) {
       >
         {{ page }}
       </button>
+      </template>
       <button
         type="button"
         class="rounded px-2 py-1 text-xs text-body-light disabled:opacity-40 dark:text-body-dark"
-        :disabled="currentPage === pageCount"
+        :disabled="currentPage === TOTAL_PAGES"
         @click="goToPage(currentPage + 1)"
       >
         다음
