@@ -39,6 +39,36 @@ const router = createRouter({
       name: 'notifications',
       component: () => import('../views/NotificationsView.vue'),
     },
+    {
+      path: '/projects/new',
+      name: 'project-register',
+      component: () => import('../views/ProjectRegisterView.vue'),
+    },
+    {
+      path: '/projects/:id',
+      name: 'project-detail',
+      component: () => import('../views/ProjectDetailView.vue'),
+    },
+    {
+      path: '/rankings',
+      name: 'rankings',
+      component: () => import('../views/ProjectListView.vue'),
+    },
+    {
+      path: '/community',
+      name: 'community',
+      component: () => import('../views/CommunityBoardView.vue'),
+    },
+    {
+      path: '/tutorials',
+      name: 'tutorials',
+      component: () => import('../views/TutorialsView.vue'),
+    },
+    {
+      path: '/insights',
+      name: 'insights',
+      component: () => import('../views/InsightsView.vue'),
+    },
   ],
 })
 

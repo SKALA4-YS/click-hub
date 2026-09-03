@@ -4,49 +4,56 @@ import { useTheme } from '@/composables/useTheme'
 import { useAuthStore } from '@/stores/auth'
 import NotificationBell from '@/components/layout/NotificationBell.vue'
 import UserMenu from '@/components/layout/UserMenu.vue'
+import SearchBar from '@/components/layout/SearchBar.vue'
 
 const { mode, cycleMode } = useTheme()
 const auth = useAuthStore()
 
-const themeIcon = { light: '☀️', dark: '🌙', system: '💻' }
+const themeIcon = { light: '☀️', dark: '🌙' }
 </script>
 
 <template>
-  <header class="sticky top-0 z-10 border-b border-neutral-200 bg-white/90 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/90">
+  <header class="sticky top-0 z-10 border-b border-divider/20 bg-surface-light-1/90 backdrop-blur dark:border-blue-500/15 dark:bg-base-dark/90">
     <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-      <RouterLink to="/" class="shrink-0 text-xl font-extrabold tracking-tight text-primary-600">
+      <RouterLink to="/" class="shrink-0 text-xl font-extrabold tracking-tight text-primary-600 dark:text-heading-dark">
         Click HUB
       </RouterLink>
 
       <div class="flex-1">
-        <input
-          type="search"
-          placeholder="프로젝트명, 기술 스택, 키워드로 검색..."
-          class="w-full rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:ring-primary-900"
-        />
+        <SearchBar />
       </div>
 
-      <nav class="hidden items-center gap-4 text-sm font-medium text-neutral-600 sm:flex dark:text-neutral-300">
-        <RouterLink to="/" class="hover:text-primary-600" active-class="text-primary-600">홈</RouterLink>
-        <RouterLink to="/rankings" class="hover:text-primary-600" active-class="text-primary-600">Top 100</RouterLink>
+      <nav class="hidden items-center gap-4 text-sm font-medium text-body-light sm:flex dark:text-body-dark">
+        <RouterLink to="/community" class="hover:text-primary-600" active-class="text-primary-600 dark:text-blue-400">게시판</RouterLink>
+        <RouterLink to="/rankings" class="hover:text-primary-600" active-class="text-primary-600 dark:text-blue-400">랭킹</RouterLink>
+        <RouterLink to="/tutorials" class="hover:text-primary-600" active-class="text-primary-600 dark:text-blue-400">튜토리얼</RouterLink>
+        <RouterLink to="/insights" class="hover:text-primary-600" active-class="text-primary-600 dark:text-blue-400">AI 트렌드</RouterLink>
       </nav>
 
       <button
         type="button"
-        class="rounded-full p-2 text-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        class="rounded-full p-2 text-lg text-body-light hover:bg-neutral-100 dark:text-body-dark dark:hover:bg-surface-dark-2"
         :title="`테마: ${mode}`"
         @click="cycleMode"
       >
         {{ themeIcon[mode] }}
       </button>
 
-      <RouterLink
-        v-if="!auth.isLoggedIn"
-        to="/login"
-        class="shrink-0 rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
-      >
-        로그인
-      </RouterLink>
+      <template v-if="!auth.isLoggedIn">
+        <RouterLink
+          to="/login"
+          class="rounded-full p-2 text-lg text-body-light hover:bg-neutral-100 dark:text-body-dark dark:hover:bg-surface-dark-2"
+          title="알림 (로그인 필요)"
+        >
+          🔔
+        </RouterLink>
+        <RouterLink
+          to="/login"
+          class="shrink-0 rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+        >
+          로그인
+        </RouterLink>
+      </template>
       <template v-else>
         <NotificationBell />
         <UserMenu />

@@ -3,21 +3,66 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary-50: #fff7ed;
-  --color-primary-100: #ffedd5;
-  --color-primary-200: #fed7aa;
-  --color-primary-300: #fdba74;
-  --color-primary-400: #fb923c;
-  --color-primary-500: #f97316;
-  --color-primary-600: #ea580c;
-  --color-primary-700: #c2410c;
-  --color-primary-800: #9a3412;
-  --color-primary-900: #7c2d12;
+  /* Click HUB 디자인 시스템 — Navy & Electric Blue Theme (디자인시스템 최종.md 기준) */
+  /* primary-600을 문서의 브랜드 컬러(#2220A2)에 정확히 맞추고, 나머지 단계는 그 주변으로 보간했다. */
+  --color-primary-50: #eeedfc;
+  --color-primary-100: #dfddf9;
+  --color-primary-200: #c0bbf3;
+  --color-primary-300: #9c95e9;
+  --color-primary-400: #6f64d6;
+  --color-primary-500: #453ac0;
+  --color-primary-600: #2220a2;
+  --color-primary-700: #1b1a81;
+  --color-primary-800: #161563;
+  --color-primary-900: #100f47;
+  --color-primary-950: #0a0930;
+
+  /* 네비게이션 바 등 "깊은 구조 영역" 전용. 카드/페이지 배경으로는 쓰지 않는다 (2.1) */
+  --color-secondary: #0f0e47;
+
+  /* 배경 & 표면 레이어 (2.1) — 다크모드에서 배경보다 카드가 밝아야 층위가 생긴다 */
+  --color-base-dark: #0a0921;
+  --color-surface-dark-1: #16155a;
+  --color-surface-dark-2: #201f6e;
+  --color-base-light: #f8f9fa;
+  --color-surface-light-1: #ffffff;
+
+  /* CTA·강조용 accent는 디자인시스템 문서의 #3B82F6과 Tailwind 기본 blue-500이 동일해 별도 토큰 없이 blue-* 유틸을 사용한다 */
+
+  /* 텍스트 전용 컬러 (2.3). 문서는 "text-primary-dark" 식으로 표기하지만 그대로 토큰화하면
+     브랜드 컬러 스케일인 primary-*와 이름이 겹쳐 헷갈리므로 heading/body로 이름을 분리했다.
+     heading = 제목/강조, body = 본문·메타 정보(좋아요·댓글·조회수 등). */
+  --color-heading-light: #0f0e47;
+  --color-body-light: #4a4a6a;
+  --color-heading-dark: #f5f6fa;
+  --color-body-dark: #b8b8d1;
+
+  /* 테두리·구분선 전용 (2.3 neutral). Tailwind 기본 neutral-*(회색 스케일)와 이름이 겹치면
+     기존에 쓰던 neutral-50~950 유틸이 전부 깨지기 때문에 divider로 이름을 바꿨다. */
+  --color-divider: #767693;
+
+  /* 시맨틱 컬러 (2.4) */
+  --color-rank-gold: #f5c542;
+  --color-rank-silver: #c7ccd8;
+  --color-rank-bronze: #d8935a;
+  --color-status-hot: #f5473b;
+
+  /* 상태(semantic) 컬러 — success는 문서의 status-success(#22C55E)에 맞췄고,
+     warning/danger는 문서에는 없지만 폼 에러·삭제 등 destructive 액션에 계속 필요해 유지한다.
+     project_status(DRAFT/PENDING_REVIEW/PUBLISHED/ARCHIVED/REJECTED) 배지에도 사용.
+     bg-success/10, text-success 처럼 Tailwind 투명도 모디파이어를 그대로 쓸 수 있다. */
+  --color-success: #22c55e;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
 
   --font-sans:
-    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    'Inter', 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    sans-serif;
+  --font-headline:
+    'Manrope', 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    sans-serif;
 }
 
 body {
-  @apply bg-neutral-50 text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
+  @apply bg-base-light text-heading-light antialiased dark:bg-base-dark dark:text-heading-dark;
 }
