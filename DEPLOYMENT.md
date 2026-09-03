@@ -86,6 +86,7 @@ docker compose down
 - FE/BE 연결 확인: `/api/v1/ping`
 - Render Free 인스턴스는 유휴 상태에서 내려가며 첫 연결에 약 1분이 걸릴 수 있습니다.
 - CORS 허용 Origin은 쉼표로 여러 개를 지정할 수 있지만 `*`는 사용하지 않습니다.
+- DB가 준비되기 전에는 기본 `nodb` 프로필로 JDBC/JPA 자동 구성을 끕니다. DB 연결을 시작할 때 별도 활성 프로필과 DB 환경변수를 구성합니다.
 
 ## 배포 URL
 

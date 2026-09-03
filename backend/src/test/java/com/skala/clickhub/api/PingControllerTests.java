@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-@SpringBootTest(properties = "app.cors.allowed-origins=https://click-hub.vercel.app")
+@SpringBootTest(properties = "clickhub.cors.allowed-origins=https://click-hub.vercel.app")
 class PingControllerTests {
 
 	private static final String ALLOWED_ORIGIN = "https://click-hub.vercel.app";
@@ -26,7 +27,7 @@ class PingControllerTests {
 
 	@BeforeEach
 	void setUp() {
-		mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+		mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
 	}
 
 	@Test
