@@ -55,7 +55,10 @@ function handleClick(notification) {
       </div>
 
       <ul class="mt-1 flex max-h-80 flex-col gap-1 overflow-y-auto">
-        <li v-if="notifications.items.length === 0" class="px-2 py-4 text-center text-sm text-neutral-500">
+        <li
+          v-if="notifications.items.length === 0"
+          class="px-2 py-4 text-center text-sm text-neutral-500"
+        >
           알림이 없습니다.
         </li>
         <li v-for="notification in notifications.items" :key="notification.id">

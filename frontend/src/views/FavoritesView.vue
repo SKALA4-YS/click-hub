@@ -19,16 +19,21 @@ function remove(id) {
   </div>
 
   <div v-else class="flex flex-col gap-4">
-    <h1 class="text-xl font-bold">즐겨찾기 보관함</h1>
+    <h1 class="font-headline text-xl font-bold">즐겨찾기 보관함</h1>
 
-    <p v-if="favorites.length === 0" class="text-sm text-neutral-500">즐겨찾기한 프로젝트가 없습니다.</p>
+    <p v-if="favorites.length === 0" class="text-sm text-neutral-500">
+      즐겨찾기한 프로젝트가 없습니다.
+    </p>
     <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <div
         v-for="project in favorites"
         :key="project.id"
         class="flex flex-col gap-2 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800"
       >
-        <RouterLink :to="{ name: 'project-detail', params: { id: project.id } }" class="font-semibold hover:underline">
+        <RouterLink
+          :to="{ name: 'project-detail', params: { id: project.id } }"
+          class="font-semibold hover:underline"
+        >
           {{ project.title }}
         </RouterLink>
         <p class="text-xs text-neutral-500">{{ project.category }} · {{ project.owner_name }}</p>

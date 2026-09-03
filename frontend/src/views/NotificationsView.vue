@@ -16,8 +16,12 @@ const notifications = useNotificationStore()
 
   <div v-else class="flex flex-col gap-4">
     <div class="flex items-center justify-between">
-      <h1 class="text-xl font-bold">알림</h1>
-      <button type="button" class="text-sm text-primary-600 hover:underline" @click="notifications.markAllRead">
+      <h1 class="font-headline text-xl font-bold">알림</h1>
+      <button
+        type="button"
+        class="text-sm text-primary-600 hover:underline"
+        @click="notifications.markAllRead"
+      >
         전체 읽음 처리
       </button>
     </div>

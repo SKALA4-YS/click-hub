@@ -19,9 +19,11 @@ function unfollow(creatorId) {
   </div>
 
   <div v-else class="flex flex-col gap-4">
-    <h1 class="text-xl font-bold">팔로잉 관리</h1>
+    <h1 class="font-headline text-xl font-bold">팔로잉 관리</h1>
 
-    <p v-if="following.length === 0" class="text-sm text-neutral-500">구독 중인 제작자가 없습니다.</p>
+    <p v-if="following.length === 0" class="text-sm text-neutral-500">
+      구독 중인 제작자가 없습니다.
+    </p>
     <ul v-else class="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-800">
       <li
         v-for="creator in following"

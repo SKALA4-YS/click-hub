@@ -12,10 +12,15 @@ const themeIcon = { light: '☀️', dark: '🌙', system: '💻' }
 </script>
 
 <template>
-  <header class="sticky top-0 z-10 border-b border-neutral-200 bg-white/90 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/90">
+  <header
+    class="sticky top-0 z-10 border-b border-neutral-200 bg-white/90 backdrop-blur dark:border-white/10 dark:bg-secondary/95"
+  >
     <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-      <RouterLink to="/" class="shrink-0 text-xl font-extrabold tracking-tight text-primary-600">
-        Click HUB
+      <RouterLink
+        to="/"
+        class="font-headline shrink-0 text-xl font-extrabold tracking-tight text-primary-600 dark:text-white"
+      >
+        Click-Hub
       </RouterLink>
 
       <div class="flex-1">
@@ -26,9 +31,15 @@ const themeIcon = { light: '☀️', dark: '🌙', system: '💻' }
         />
       </div>
 
-      <nav class="hidden items-center gap-4 text-sm font-medium text-neutral-600 sm:flex dark:text-neutral-300">
-        <RouterLink to="/" class="hover:text-primary-600" active-class="text-primary-600">홈</RouterLink>
-        <RouterLink to="/rankings" class="hover:text-primary-600" active-class="text-primary-600">Top 100</RouterLink>
+      <nav
+        class="hidden items-center gap-4 text-sm font-medium text-neutral-600 sm:flex dark:text-neutral-300"
+      >
+        <RouterLink to="/" class="hover:text-primary-600" active-class="text-primary-600"
+          >홈</RouterLink
+        >
+        <RouterLink to="/rankings" class="hover:text-primary-600" active-class="text-primary-600"
+          >Top 100</RouterLink
+        >
       </nav>
 
       <button
