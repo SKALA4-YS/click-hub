@@ -100,8 +100,11 @@ onBeforeUnmount(() => {
 
     <div
       v-if="isOpen"
-      class="absolute left-0 top-full z-30 mt-2 w-full min-w-[420px] rounded-2xl border border-divider/15 bg-surface-light-1 p-3 shadow-lg dark:border-divider/25 dark:bg-surface-dark-1"
+      role="dialog"
+      aria-label="검색 제안"
+      class="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-divider/15 bg-surface-light-1 shadow-lg dark:border-divider/25 dark:bg-surface-dark-1 sm:min-w-[420px]"
     >
+      <div class="max-h-72 overflow-y-auto p-3">
       <ul v-if="suggestions.length > 0" class="flex flex-col">
         <li v-for="item in suggestions" :key="item.id">
           <button
@@ -144,9 +147,10 @@ onBeforeUnmount(() => {
           </select>
         </div>
       </div>
+      </div>
 
-      <div class="flex items-center justify-between border-t border-divider/15 px-2 pt-2 text-xs text-body-light dark:border-divider/25 dark:text-body-dark">
-        <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-t border-divider/15 px-3 py-2 text-xs text-body-light dark:border-divider/25 dark:text-body-dark">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
           <button type="button" class="hover:text-primary-600" @click="recentSearchEnabled = !recentSearchEnabled">
             최근검색어 {{ recentSearchEnabled ? '끄기' : '켜기' }}
           </button>
@@ -154,7 +158,7 @@ onBeforeUnmount(() => {
             자동완성 {{ autocompleteEnabled ? '끄기' : '켜기' }}
           </button>
         </div>
-        <button type="button" class="rounded-md border border-divider/20 px-2 py-1 hover:text-primary-600 dark:border-divider/30" @click="close">
+        <button type="button" aria-label="검색 닫기" class="rounded-md border border-divider/20 px-2 py-1 hover:text-primary-600 dark:border-divider/30" @click="close">
           닫기 ESC
         </button>
       </div>

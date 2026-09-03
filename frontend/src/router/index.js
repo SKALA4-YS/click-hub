@@ -20,6 +20,11 @@ const router = createRouter({
       component: () => import('../views/OnboardingView.vue'),
     },
     {
+      path: '/signup',
+      name: 'signup',
+      component: () => import('../views/SignupView.vue'),
+    },
+    {
       path: '/mypage',
       name: 'mypage',
       component: () => import('../views/MyPageView.vue'),
@@ -53,6 +58,16 @@ const router = createRouter({
       path: '/rankings',
       name: 'rankings',
       component: () => import('../views/ProjectListView.vue'),
+    },
+    {
+      path: '/rankings/developers',
+      name: 'developer-rankings',
+      component: () => import('../views/DeveloperRankingView.vue'),
+    },
+    {
+      path: '/developers/:id',
+      name: 'developer-detail',
+      component: () => import('../views/DeveloperDetailView.vue'),
     },
     {
       path: '/community',
