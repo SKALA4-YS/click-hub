@@ -11,6 +11,11 @@ const selectedGoals = ref([])
 const selectedCategories = ref([])
 const selectedTechStacks = ref([])
 
+const previewProjects = [
+  { title: 'DevFlow Analytics', tag: '#개발자도구', highlight: '주간 Top 1위' },
+  { title: 'PromptCraft Studio', tag: '#AI', highlight: '신규 주목' },
+]
+
 function toggle(list, value) {
   const index = list.value.indexOf(value)
   if (index === -1) {
@@ -38,8 +43,15 @@ function skip() {
 <template>
   <div class="mx-auto flex max-w-2xl flex-col gap-8">
     <div>
-      <p class="text-sm font-semibold text-primary-600">맞춤 설정 · 1/1단계</p>
-      <h1 class="mt-1 text-xl font-bold">어떤 사이드 프로젝트를 찾고 계신가요?</h1>
+      <div class="mb-2 flex items-center justify-between text-xs font-medium text-neutral-500">
+        <span class="text-primary-600">● 맞춤 설정 1/1단계</span>
+        <span>33% 완료됨</span>
+      </div>
+      <div class="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+        <div class="h-full w-1/3 rounded-full bg-primary-600" />
+      </div>
+
+      <h1 class="mt-4 text-xl font-bold">어떤 사이드 프로젝트를 찾고 계신가요?</h1>
       <p class="mt-2 text-sm text-neutral-500">
         관심사와 기술 스택을 선택하면 홈 피드를 맞춤으로 구성해 드려요. (건너뛰어도 됩니다)
       </p>
@@ -106,20 +118,42 @@ function skip() {
       </div>
     </section>
 
+    <section class="rounded-xl bg-primary-950 p-5 text-white">
+      <div class="mb-3 flex items-center justify-between">
+        <p class="text-sm font-semibold">✨ 회원님의 취향을 기반으로 생성 중인 홈 피드 미리보기</p>
+      </div>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div
+          v-for="project in previewProjects"
+          :key="project.title"
+          class="rounded-lg bg-white/10 p-3 text-sm"
+        >
+          <p class="font-medium">{{ project.title }}</p>
+          <div class="mt-2 flex items-center justify-between text-xs text-white/70">
+            <span>{{ project.tag }}</span>
+            <span class="rounded-full bg-white/15 px-2 py-0.5">{{ project.highlight }}</span>
+          </div>
+        </div>
+      </div>
+      <p class="mt-3 text-xs text-white/60">
+        설정하신 관심사와 스택은 마이페이지에서 언제든지 자유롭게 수정하실 수 있습니다.
+      </p>
+    </section>
+
     <div class="flex items-center gap-4">
       <button
         type="button"
         class="rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700"
         @click="complete"
       >
-        설정 완료하고 시작하기
+        맞춤 피드로 시작하기
       </button>
       <button
         type="button"
         class="text-sm font-medium text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
         @click="skip"
       >
-        건너뛰기
+        나중에 설정하기 (기본 피드로 시작)
       </button>
     </div>
   </div>
