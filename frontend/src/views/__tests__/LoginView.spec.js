@@ -23,11 +23,16 @@ describe('LoginView', () => {
     expect(wrapper.get('a[href="/"]').text()).toContain('홈으로 돌아가기')
     expect(wrapper.text()).toContain('인디 서비스 실시간 탐색 중')
     expect(wrapper.get('h1').text()).toBe('다시 오신 것을 환영해요')
-    expect(wrapper.text()).toContain('배포된 사이드 프로젝트의 성과를 확인하고')
+    expect(wrapper.text()).toContain(
+      '배포된 사이트 프로젝트의 성과를 확인하고 전 세계 메이커들과 피드백을 나누세요.',
+    )
     expect(wrapper.get('button[name="google-login"]').text()).toContain('Google로 3초 만에 로그인')
     expect(wrapper.text()).toContain('추천')
     expect(wrapper.text()).toContain('또는 이메일로 로그인')
-    expect(wrapper.text()).toContain('1,400+ 명의 인디 메이커 활동 중')
+    expect(wrapper.text()).toContain('1,400+명의 인디 메이커 활동 중')
+    expect(wrapper.text()).toContain('주간 핫 프로젝트 #1')
+    expect(wrapper.text()).toContain('984')
+    expect(wrapper.text()).toContain('256-bit SSL 엔드투엔드 암호화 보안 적용')
   })
 
   it('provides labelled email, password, keep-login, and password visibility controls', async () => {
@@ -38,10 +43,16 @@ describe('LoginView', () => {
       '비밀번호를 입력하세요',
     )
     expect(wrapper.get('input[type="checkbox"]').attributes('name')).toBe('keep-logged-in')
+    expect(wrapper.text()).toContain('안전한 PC에서만 권장')
+    expect(wrapper.text()).toContain('비밀번호를 잊으셨나요?')
+    expect(wrapper.get('button[name="toggle-password"]').attributes('aria-label')).toContain('보기')
 
     await wrapper.get('button[name="toggle-password"]').trigger('click')
 
     expect(wrapper.get('input[name="password"]').attributes('type')).toBe('text')
+    expect(wrapper.get('button[name="toggle-password"]').attributes('aria-label')).toContain(
+      '숨기기',
+    )
   })
 
   it('keeps invalid email sign-in on the form and describes the correction', async () => {
@@ -72,7 +83,8 @@ describe('LoginView', () => {
   it('offers the static signup route without a dead forgot-password link', () => {
     const wrapper = mount(LoginView)
 
-    expect(wrapper.get('a[href="/signup"]').text()).toContain('회원가입')
+    expect(wrapper.get('a[href="/signup"]').text()).toContain('회원가입하기')
     expect(wrapper.find('a[href="#"]').exists()).toBe(false)
+    expect(wrapper.find('button:disabled').exists()).toBe(false)
   })
 })
