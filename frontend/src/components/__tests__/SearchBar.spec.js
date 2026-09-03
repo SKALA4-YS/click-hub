@@ -13,6 +13,7 @@ describe('SearchBar', () => {
     expect(wrapper.get('input[type="search"]').attributes('role')).toBe('combobox')
     expect(wrapper.get('input[type="search"]').attributes('aria-expanded')).toBe('true')
     expect(wrapper.get('[role="listbox"]')).toBeTruthy()
+    expect(wrapper.findAll('input[type="search"]')).toHaveLength(1)
     wrapper.unmount()
   })
 
@@ -50,5 +51,38 @@ describe('SearchBar', () => {
 
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
     wrapper.unmount()
+  })
+
+  it('moves through suggestions and selects the active option from the combobox', async () => {
+    const wrapper = mount(SearchBar, { attachTo: document.body })
+    const input = wrapper.get('input[type="search"]')
+    await input.setValue('Dev')
+
+    await input.trigger('keydown', { key: 'ArrowDown' })
+    expect(wrapper.get('[role="option"][aria-selected="true"]').text()).toContain('DevFlow')
+
+    await input.trigger('keydown', { key: 'ArrowUp' })
+    expect(wrapper.find('[role="option"][aria-selected="true"]').exists()).toBe(false)
+
+    await input.trigger('keydown', { key: 'ArrowDown' })
+    await input.trigger('keydown', { key: 'Enter' })
+    expect(input.element.value).toBe('DevFlow Analytics')
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('does not steal focus when an outside click closes the overlay', async () => {
+    const outsideButton = document.createElement('button')
+    document.body.append(outsideButton)
+    const wrapper = mount(SearchBar, { attachTo: document.body })
+    await wrapper.get('input[type="search"]').trigger('focus')
+    outsideButton.focus()
+
+    await outsideButton.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+    expect(document.activeElement).toBe(outsideButton)
+    wrapper.unmount()
+    outsideButton.remove()
   })
 })

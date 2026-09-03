@@ -16,9 +16,9 @@ import AppHeader from '@/components/layout/AppHeader.vue'
       >
         <p>© 2026 CLICK-HUB. ALL RIGHTS RESERVED.</p>
         <div class="flex gap-4">
-          <a href="/privacy" class="hover:text-primary-600">Privacy</a>
-          <a href="/terms" class="hover:text-primary-600">Terms</a>
-          <a href="mailto:contact@click-hub.example" class="hover:text-primary-600">문의하기</a>
+          <span>Privacy</span>
+          <span>Terms</span>
+          <span>문의하기</span>
         </div>
       </div>
     </footer>
