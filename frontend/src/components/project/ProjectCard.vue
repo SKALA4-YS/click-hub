@@ -54,7 +54,7 @@ const categoryBadgeClass = {
           {{ project.title }}
         </h3>
       </div>
-      <p v-if="project.description" class="line-clamp-2 text-sm text-neutral-600 dark:text-neutral-300">
+      <p class="line-clamp-2 text-sm text-neutral-600 dark:text-neutral-300">
         {{ project.description }}
       </p>
 
@@ -62,14 +62,12 @@ const categoryBadgeClass = {
         class="mt-auto flex items-center justify-between pt-2 text-xs text-neutral-500 dark:text-neutral-400"
       >
         <span
-          v-if="project.category"
           class="rounded-full px-2 py-1 font-medium"
-          :class="categoryBadgeClass[project.category] ?? categoryBadgeClass.other"
+          :class="categoryBadgeClass[project.category]"
         >
           {{ categoryLabel[project.category] ?? '기타' }}
         </span>
-        <span v-else />
-        <span v-if="project.stats" class="flex items-center gap-3">
+        <span class="flex items-center gap-3">
           <span>🔖 {{ project.stats.unique_favorites.toLocaleString() }}</span>
           <span>💬 {{ project.stats.unique_commenters }}</span>
           <span>👁 {{ project.stats.unique_visitors.toLocaleString() }}</span>

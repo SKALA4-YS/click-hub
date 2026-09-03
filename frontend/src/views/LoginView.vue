@@ -1,11 +1,16 @@
 <script setup>
-import { RouterLink } from 'vue-router'
-import { getApiBaseUrl } from '@/services/api'
+import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import AuthLogo from '@/components/auth/AuthLogo.vue'
 import SocialProofBar from '@/components/auth/SocialProofBar.vue'
 
+const router = useRouter()
+const auth = useAuthStore()
+
 function loginWithGoogle() {
-  window.location.href = `${getApiBaseUrl()}/v1/auth/google`
+  // TODO: 실제 Google OAuth 플로우로 교체 (백엔드 엔드포인트 확정 후)
+  auth.mockLoginWithGoogle()
+  router.push('/')
 }
 </script>
 
