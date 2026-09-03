@@ -31,7 +31,9 @@ function saveProfile() {
   </div>
 
   <div v-else class="flex flex-col gap-6">
-    <section class="flex items-center gap-4 rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
+    <section
+      class="flex items-center gap-4 rounded-xl border border-neutral-200 p-5 dark:border-neutral-800"
+    >
       <div
         class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-700 dark:bg-primary-900 dark:text-primary-100"
       >
@@ -47,7 +49,11 @@ function saveProfile() {
       <button
         type="button"
         class="border-b-2 px-3 py-2 text-sm font-medium"
-        :class="activeTab === 'projects' ? 'border-primary-600 text-primary-600' : 'border-transparent text-neutral-500'"
+        :class="
+          activeTab === 'projects'
+            ? 'border-primary-600 text-primary-600'
+            : 'border-transparent text-neutral-500'
+        "
         @click="activeTab = 'projects'"
       >
         내 프로젝트
@@ -55,7 +61,11 @@ function saveProfile() {
       <button
         type="button"
         class="border-b-2 px-3 py-2 text-sm font-medium"
-        :class="activeTab === 'settings' ? 'border-primary-600 text-primary-600' : 'border-transparent text-neutral-500'"
+        :class="
+          activeTab === 'settings'
+            ? 'border-primary-600 text-primary-600'
+            : 'border-transparent text-neutral-500'
+        "
         @click="activeTab = 'settings'"
       >
         계정 설정
@@ -63,7 +73,9 @@ function saveProfile() {
     </nav>
 
     <section v-if="activeTab === 'projects'" class="flex flex-col gap-3">
-      <p v-if="mockMyProjects.length === 0" class="text-sm text-neutral-500">등록한 프로젝트가 없습니다.</p>
+      <p v-if="mockMyProjects.length === 0" class="text-sm text-neutral-500">
+        등록한 프로젝트가 없습니다.
+      </p>
       <div
         v-for="project in mockMyProjects"
         :key="project.id"
@@ -72,7 +84,8 @@ function saveProfile() {
         <div>
           <p class="font-medium">{{ project.title }}</p>
           <p class="mt-1 text-xs text-neutral-500">
-            주간 방문자 {{ project.weekly_visitors.toLocaleString() }} · 좋아요 {{ project.unique_likes }}
+            주간 방문자 {{ project.weekly_visitors.toLocaleString() }} · 좋아요
+            {{ project.unique_likes }}
           </p>
         </div>
         <span class="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium dark:bg-neutral-800">
@@ -108,7 +121,11 @@ function saveProfile() {
             :key="option"
             type="button"
             class="rounded-full border px-3 py-1.5 text-sm"
-            :class="mode === option ? 'border-primary-500 bg-primary-600 text-white' : 'border-neutral-200 dark:border-neutral-800'"
+            :class="
+              mode === option
+                ? 'border-primary-500 bg-primary-600 text-white'
+                : 'border-neutral-200 dark:border-neutral-800'
+            "
             @click="setMode(option)"
           >
             {{ option === 'light' ? '라이트' : option === 'dark' ? '다크' : '시스템' }}

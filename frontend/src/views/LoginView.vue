@@ -13,7 +13,9 @@ function loginWithGoogle() {
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-sm flex-col items-center gap-6 rounded-2xl border border-neutral-200 p-8 text-center dark:border-neutral-800">
+  <div
+    class="mx-auto flex max-w-sm flex-col items-center gap-6 rounded-2xl border border-neutral-200 p-8 text-center dark:border-neutral-800"
+  >
     <div>
       <p class="text-xl font-extrabold text-primary-600">Click HUB</p>
       <h1 class="mt-3 text-xl font-bold">Click HUB에 오신 것을 환영합니다</h1>

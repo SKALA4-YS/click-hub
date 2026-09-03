@@ -2,10 +2,26 @@
 // 기획서 API 명세 확정 전까지는 로컬 상태로만 관리하고, 실제로는 프로필 생성 API 요청에 포함될 값이다.
 
 export const goals = [
-  { id: 'indie-maker', label: '1인 사이드 프로젝트 빌더', description: '직접 만든 서비스를 알리고 초기 피드백을 모으고 싶어요.' },
-  { id: 'tech-explorer', label: '새로운 서비스 탐색자', description: '출시된 재미있는 사이드 프로젝트를 써보고 피드백을 남겨요.' },
-  { id: 'career-benchmark', label: '취준생 / 포트폴리오 벤치마커', description: '실제 배포된 서비스의 아키텍처와 코드를 참고하고 싶어요.' },
-  { id: 'co-founder', label: '동료 빌더 구인 / 협업자', description: '함께 프로젝트를 만들 파트너를 찾아요.' },
+  {
+    id: 'indie-maker',
+    label: '1인 사이드 프로젝트 빌더',
+    description: '직접 만든 서비스를 알리고 초기 피드백을 모으고 싶어요.',
+  },
+  {
+    id: 'tech-explorer',
+    label: '새로운 서비스 탐색자',
+    description: '출시된 재미있는 사이드 프로젝트를 써보고 피드백을 남겨요.',
+  },
+  {
+    id: 'career-benchmark',
+    label: '취준생 / 포트폴리오 벤치마커',
+    description: '실제 배포된 서비스의 아키텍처와 코드를 참고하고 싶어요.',
+  },
+  {
+    id: 'co-founder',
+    label: '동료 빌더 구인 / 협업자',
+    description: '함께 프로젝트를 만들 파트너를 찾아요.',
+  },
 ]
 
 export const interestCategories = [
