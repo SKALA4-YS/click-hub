@@ -1,160 +1,212 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+
+import { getCategories, getTechnologies } from '@/api/catalog'
 import { useAuthStore } from '@/stores/auth'
-import { goals, interestCategories, popularTechStacks } from '@/data/onboardingOptions'
+
+const goals = [
+  {
+    id: 'indie-maker',
+    label: '1인 사이드 프로젝트 빌더',
+    description: '직접 만든 서비스를 알리고 초기 유저들의 피드백을 모으고 싶어요.',
+  },
+  {
+    id: 'tech-explorer',
+    label: '새로운 서비스 탐색자',
+    description: '출시된 프로젝트를 써보고 솔직한 피드백을 남기고 싶어요.',
+  },
+  {
+    id: 'career-benchmark',
+    label: '포트폴리오 벤치마커',
+    description: '실제 배포된 서비스의 아키텍처와 코드를 참고하고 싶어요.',
+  },
+  {
+    id: 'co-founder',
+    label: '협업자 찾기',
+    description: '함께 프로젝트를 출시할 동료를 찾고 싶어요.',
+  },
+]
 
 const router = useRouter()
 const auth = useAuthStore()
-
 const selectedGoals = ref([])
 const selectedCategories = ref([])
-const selectedTechStacks = ref([])
+const selectedTechnologies = ref([])
+const categories = ref([])
+const technologies = ref([])
+const categorySearch = ref('')
+const technologySearch = ref('')
+const isSaving = ref(false)
+const errorMessage = ref('')
 
-const previewProjects = [
-  { title: 'DevFlow Analytics', tag: '#개발자도구', highlight: '주간 Top 1위' },
-  { title: 'PromptCraft Studio', tag: '#AI', highlight: '신규 주목' },
-]
+const visibleCategories = computed(() =>
+  categories.value.filter((item) =>
+    item.name.toLowerCase().includes(categorySearch.value.trim().toLowerCase()),
+  ),
+)
+const visibleTechnologies = computed(() =>
+  technologies.value.filter((item) =>
+    item.name.toLowerCase().includes(technologySearch.value.trim().toLowerCase()),
+  ),
+)
 
 function toggle(list, value) {
-  const index = list.value.indexOf(value)
-  if (index === -1) {
-    list.value.push(value)
-  } else {
-    list.value.splice(index, 1)
+  const index = list.indexOf(value)
+  if (index === -1) list.push(value)
+  else list.splice(index, 1)
+}
+
+async function persist(payload) {
+  if (isSaving.value) return
+  isSaving.value = true
+  errorMessage.value = ''
+  try {
+    await auth.completeOnboarding(payload)
+    await router.replace('/')
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isSaving.value = false
   }
 }
 
 function complete() {
-  auth.completeOnboarding({
+  return persist({
     goals: selectedGoals.value,
     categories: selectedCategories.value,
-    techStacks: selectedTechStacks.value,
+    techStacks: selectedTechnologies.value,
   })
-  router.push('/')
 }
 
-function skip() {
-  auth.skipOnboarding()
-  router.push('/')
+async function skip() {
+  if (isSaving.value) return
+  isSaving.value = true
+  try {
+    await auth.skipOnboarding()
+    await router.replace('/')
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isSaving.value = false
+  }
 }
+
+onMounted(async () => {
+  if (!auth.isLoggedIn) return router.replace('/login')
+  if (auth.onboarding) return router.replace('/')
+  try {
+    ;[categories.value, technologies.value] = await Promise.all([
+      getCategories(),
+      getTechnologies(),
+    ])
+  } catch (error) {
+    errorMessage.value = error.message
+  }
+})
 </script>
 
 <template>
-  <div class="mx-auto flex max-w-2xl flex-col gap-8">
-    <div>
-      <div class="mb-2 flex items-center justify-between text-xs font-medium text-neutral-500">
-        <span class="text-primary-600">● 맞춤 설정 1/1단계</span>
-        <span>33% 완료됨</span>
-      </div>
-      <div class="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
-        <div class="h-full w-1/3 rounded-full bg-primary-600" />
-      </div>
-
-      <h1 class="font-headline mt-4 text-xl font-bold">어떤 사이드 프로젝트를 찾고 계신가요?</h1>
-      <p class="mt-2 text-sm text-neutral-500">
-        관심사와 기술 스택을 선택하면 홈 피드를 맞춤으로 구성해 드려요. (건너뛰어도 됩니다)
+  <main class="mx-auto max-w-[832px] px-4 py-10">
+    <header class="border-b border-primary-100 pb-7">
+      <h1 class="font-headline text-3xl font-bold">어떤 사이드 프로젝트를 찾고 계신가요?</h1>
+      <p class="mt-3 text-sm text-body-light">
+        관심사와 기술 스택은 서버에 저장되며 언제든 다시 설정할 수 있습니다.
       </p>
-    </div>
+    </header>
+    <p v-if="errorMessage" role="alert" class="mt-5 text-sm text-danger">{{ errorMessage }}</p>
 
-    <section class="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
-      <h2 class="mb-3 font-semibold">1. 주 활동 목표 (복수 선택 가능)</h2>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <section class="mt-6 rounded-xl border border-primary-100 bg-white p-6">
+      <h2 class="font-headline text-lg font-bold">1. 주 활동 목표</h2>
+      <div class="mt-4 grid gap-3 sm:grid-cols-2">
         <button
           v-for="goal in goals"
           :key="goal.id"
+          :data-testid="`goal-${goal.id}`"
           type="button"
-          class="rounded-lg border p-3 text-left text-sm transition"
+          :aria-pressed="selectedGoals.includes(goal.id)"
+          class="rounded-lg border p-4 text-left"
           :class="
             selectedGoals.includes(goal.id)
-              ? 'border-primary-500 bg-primary-50 dark:bg-primary-950'
-              : 'border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900'
+              ? 'border-primary-600 bg-primary-50'
+              : 'border-divider/20'
           "
           @click="toggle(selectedGoals, goal.id)"
         >
-          <p class="font-medium">{{ goal.label }}</p>
-          <p class="mt-1 text-xs text-neutral-500">{{ goal.description }}</p>
+          <strong>{{ goal.label }}</strong
+          ><span class="mt-1 block text-xs text-body-light">{{ goal.description }}</span>
         </button>
       </div>
     </section>
 
-    <section class="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
-      <h2 class="mb-3 font-semibold">2. 관심 프로젝트 카테고리</h2>
-      <div class="flex flex-wrap gap-2">
+    <section class="mt-5 rounded-xl border border-primary-100 bg-white p-6">
+      <h2 class="font-headline text-lg font-bold">2. 관심 프로젝트 카테고리</h2>
+      <input
+        v-model="categorySearch"
+        data-testid="category-search"
+        type="search"
+        class="mt-4 w-full rounded-lg border border-divider/20 px-3 py-2"
+        placeholder="카테고리 검색"
+      />
+      <div class="mt-4 flex flex-wrap gap-2">
         <button
-          v-for="category in interestCategories"
-          :key="category.slug"
+          v-for="item in visibleCategories"
+          :key="item.id"
+          :data-testid="`category-${item.slug}`"
           type="button"
-          class="rounded-full border px-3 py-1.5 text-sm transition"
-          :class="
-            selectedCategories.includes(category.slug)
-              ? 'border-primary-500 bg-primary-600 text-white'
-              : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900'
-          "
-          @click="toggle(selectedCategories, category.slug)"
+          :aria-pressed="selectedCategories.includes(item.slug)"
+          class="rounded-full border border-divider/20 px-3 py-2 text-sm"
+          :class="selectedCategories.includes(item.slug) && 'bg-primary-600 text-white'"
+          @click="toggle(selectedCategories, item.slug)"
         >
-          {{ category.name }}
+          {{ item.name }}
         </button>
       </div>
     </section>
 
-    <section class="rounded-xl border border-neutral-200 p-5 dark:border-neutral-800">
-      <h2 class="mb-3 font-semibold">3. 관심 기술 스택</h2>
-      <div class="flex flex-wrap gap-2">
+    <section class="mt-5 rounded-xl border border-primary-100 bg-white p-6">
+      <h2 class="font-headline text-lg font-bold">3. 관심 기술 스택</h2>
+      <input
+        v-model="technologySearch"
+        data-testid="stack-search"
+        type="search"
+        class="mt-4 w-full rounded-lg border border-divider/20 px-3 py-2"
+        placeholder="기술 스택 검색"
+      />
+      <div class="mt-4 flex flex-wrap gap-2">
         <button
-          v-for="tech in popularTechStacks"
-          :key="tech"
+          v-for="item in visibleTechnologies"
+          :key="item.id"
+          :data-testid="`recommended-${item.slug}`"
           type="button"
-          class="rounded-full border px-3 py-1.5 text-sm transition"
-          :class="
-            selectedTechStacks.includes(tech)
-              ? 'border-primary-500 bg-primary-600 text-white'
-              : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900'
-          "
-          @click="toggle(selectedTechStacks, tech)"
+          :aria-pressed="selectedTechnologies.includes(item.slug)"
+          class="rounded-full border border-divider/20 px-3 py-2 text-sm"
+          :class="selectedTechnologies.includes(item.slug) && 'bg-primary-600 text-white'"
+          @click="toggle(selectedTechnologies, item.slug)"
         >
-          {{ tech }}
+          {{ item.name }}
         </button>
       </div>
     </section>
 
-    <section class="rounded-xl bg-primary-950 p-5 text-white">
-      <div class="mb-3 flex items-center justify-between">
-        <p class="text-sm font-semibold">✨ 회원님의 취향을 기반으로 생성 중인 홈 피드 미리보기</p>
-      </div>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div
-          v-for="project in previewProjects"
-          :key="project.title"
-          class="rounded-lg bg-white/10 p-3 text-sm"
-        >
-          <p class="font-medium">{{ project.title }}</p>
-          <div class="mt-2 flex items-center justify-between text-xs text-white/70">
-            <span>{{ project.tag }}</span>
-            <span class="rounded-full bg-white/15 px-2 py-0.5">{{ project.highlight }}</span>
-          </div>
-        </div>
-      </div>
-      <p class="mt-3 text-xs text-white/60">
-        설정하신 관심사와 스택은 마이페이지에서 언제든지 자유롭게 수정하실 수 있습니다.
-      </p>
-    </section>
-
-    <div class="flex items-center gap-4">
+    <footer class="mt-7 flex flex-wrap items-center justify-between gap-4">
       <button
+        data-testid="onboarding-skip"
         type="button"
-        class="rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700"
-        @click="complete"
-      >
-        맞춤 피드로 시작하기
-      </button>
-      <button
-        type="button"
-        class="text-sm font-medium text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+        :disabled="isSaving"
+        class="text-sm text-body-light"
         @click="skip"
       >
-        나중에 설정하기 (기본 피드로 시작)
+        나중에 설정하기</button
+      ><button
+        data-testid="onboarding-complete"
+        type="button"
+        :disabled="isSaving"
+        class="rounded-lg bg-primary-700 px-5 py-3 text-sm font-semibold text-white"
+        @click="complete"
+      >
+        {{ isSaving ? '저장 중...' : '설정 저장' }}
       </button>
-    </div>
-  </div>
+    </footer>
+  </main>
 </template>

@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -49,4 +50,16 @@ public class CommunityPostComment extends BaseTimeEntity {
     private String body;
 
     private OffsetDateTime deletedAt;
+
+    @Builder
+    private CommunityPostComment(CommunityPost post, User author, CommunityPostComment parent, String body) {
+        this.post = post;
+        this.author = author;
+        this.parent = parent;
+        this.body = body;
+    }
+
+    public void softDelete() {
+        this.deletedAt = OffsetDateTime.now();
+    }
 }

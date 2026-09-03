@@ -1,10 +1,12 @@
 package com.skala.clickhub.security.oauth2;
 
+import com.skala.clickhub.exception.BusinessException;
 import com.skala.clickhub.service.OAuth2UserSyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +33,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String displayName = (name != null && !name.isBlank()) ? name : githubLogin;
         String avatarUrl = (String) attributes.get("avatar_url");
 
-        syncService.syncGithubUser(githubUserId, githubLogin, displayName, avatarUrl);
+        try {
+            syncService.syncGithubUser(githubUserId, githubLogin, displayName, avatarUrl);
+        } catch (BusinessException e) {
+            // CustomOidcUserService와 동일한 이유(실측 확인) — Google 로그인 경로에서 발견한 버그를
+            // GitHub 경로에도 동일하게 적용해 둔다.
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(e.getErrorCode().getCode(), e.getErrorCode().getMessage(), null), e);
+        }
 
         return oAuth2User;
     }

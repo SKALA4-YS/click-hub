@@ -48,7 +48,8 @@ public class Notification {
     private Project project;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "notification_type", nullable = false)
     private NotificationType type;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -60,4 +61,11 @@ public class Notification {
     private OffsetDateTime createdAt;
 
     private OffsetDateTime readAt;
+
+    /** 이미 읽은 알림을 다시 읽음 처리해도 최초 읽은 시각을 덮어쓰지 않는다. */
+    public void markRead() {
+        if (this.readAt == null) {
+            this.readAt = OffsetDateTime.now();
+        }
+    }
 }

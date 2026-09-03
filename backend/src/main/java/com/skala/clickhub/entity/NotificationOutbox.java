@@ -44,7 +44,8 @@ public class NotificationOutbox {
     private User actor;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "notification_type", nullable = false)
     private NotificationType type;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -52,7 +53,8 @@ public class NotificationOutbox {
     private JsonNode payload;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "outbox_status", nullable = false)
     private OutboxStatus status;
 
     @Column(nullable = false)

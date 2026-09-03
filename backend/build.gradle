@@ -61,6 +61,9 @@ tasks.named('processResources') {
 	from('../db/migration') {
 		into 'db/migration'
 	}
+	from('../db/demo') {
+		into 'db/demo'
+	}
 }
 
 tasks.named('test') {

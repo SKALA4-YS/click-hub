@@ -1,146 +1,105 @@
 <script setup>
-import { ref } from 'vue'
+import { reactive, ref, watchEffect } from 'vue'
 import { RouterLink } from 'vue-router'
+
+import DeveloperDetailView from '@/views/DeveloperDetailView.vue'
 import { useAuthStore } from '@/stores/auth'
-import { useTheme } from '@/composables/useTheme'
-import { mockMyProjects } from '@/data/mockMyProjects'
 
 const auth = useAuthStore()
-const { mode, setMode } = useTheme()
+const isEditingProfile = ref(false)
+const isSaving = ref(false)
+const profileMessage = ref('')
+const profile = reactive({ displayName: '', theme: 'LIGHT', newProjectNotifications: true })
 
-const activeTab = ref('projects')
-const displayNameDraft = ref(auth.user?.display_name ?? '')
+watchEffect(() => {
+  if (!isEditingProfile.value && auth.user) {
+    profile.displayName = auth.user.displayName ?? ''
+    profile.theme = auth.user.theme ?? 'LIGHT'
+    profile.newProjectNotifications = auth.user.newProjectNotifications ?? true
+  }
+})
 
-const statusLabel = {
-  DRAFT: '작성중',
-  PENDING_REVIEW: '심사중',
-  PUBLISHED: '운영중',
-  REJECTED: '반려됨',
-  ARCHIVED: '보관됨',
-}
-
-function saveProfile() {
-  auth.updateProfile({ display_name: displayNameDraft.value })
+async function saveProfile() {
+  isSaving.value = true
+  profileMessage.value = ''
+  try {
+    await auth.saveProfile({
+      display_name: profile.displayName,
+      theme: profile.theme,
+      new_project_notifications: profile.newProjectNotifications,
+    })
+    profileMessage.value = '프로필이 저장되었습니다.'
+    isEditingProfile.value = false
+  } catch (error) {
+    profileMessage.value = error.message
+  } finally {
+    isSaving.value = false
+  }
 }
 </script>
 
 <template>
-  <div v-if="!auth.isLoggedIn" class="py-16 text-center text-sm text-neutral-500">
-    로그인이 필요합니다.
-    <RouterLink to="/login" class="text-primary-600 hover:underline">로그인하러 가기</RouterLink>
-  </div>
-
-  <div v-else class="flex flex-col gap-6">
-    <section
-      class="flex items-center gap-4 rounded-xl border border-neutral-200 p-5 dark:border-neutral-800"
+  <section v-if="!auth.isLoggedIn" class="mx-auto max-w-[1120px] py-28 text-center">
+    <p class="text-sm text-body-light">마이페이지를 확인하려면 로그인이 필요합니다.</p>
+    <RouterLink
+      to="/login"
+      class="mt-5 inline-flex rounded-lg bg-primary-600 px-6 py-3 text-sm font-bold text-white"
+      >로그인하러 가기</RouterLink
     >
-      <div
-        class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-700 dark:bg-primary-900 dark:text-primary-100"
-      >
-        {{ auth.user.avatar_initial }}
-      </div>
-      <div>
-        <h1 class="font-headline text-lg font-bold">{{ auth.user.display_name }}</h1>
-        <p class="text-sm text-neutral-500">등록한 프로젝트 {{ mockMyProjects.length }}개</p>
-      </div>
-    </section>
-
-    <nav class="flex gap-2 border-b border-neutral-200 dark:border-neutral-800">
-      <button
-        type="button"
-        class="border-b-2 px-3 py-2 text-sm font-medium"
-        :class="
-          activeTab === 'projects'
-            ? 'border-primary-600 text-primary-600'
-            : 'border-transparent text-neutral-500'
-        "
-        @click="activeTab = 'projects'"
-      >
-        내 프로젝트
-      </button>
-      <button
-        type="button"
-        class="border-b-2 px-3 py-2 text-sm font-medium"
-        :class="
-          activeTab === 'settings'
-            ? 'border-primary-600 text-primary-600'
-            : 'border-transparent text-neutral-500'
-        "
-        @click="activeTab = 'settings'"
-      >
-        계정 설정
-      </button>
-    </nav>
-
-    <section v-if="activeTab === 'projects'" class="flex flex-col gap-3">
-      <p v-if="mockMyProjects.length === 0" class="text-sm text-neutral-500">
-        등록한 프로젝트가 없습니다.
-      </p>
-      <div
-        v-for="project in mockMyProjects"
-        :key="project.id"
-        class="flex items-center justify-between rounded-lg border border-neutral-200 p-4 dark:border-neutral-800"
-      >
+  </section>
+  <div v-else>
+    <section class="mx-auto mb-6 max-w-[1120px] rounded-xl border border-divider/20 bg-white p-5">
+      <div class="flex items-center justify-between gap-4">
         <div>
-          <p class="font-medium">{{ project.title }}</p>
-          <p class="mt-1 text-xs text-neutral-500">
-            주간 방문자 {{ project.weekly_visitors.toLocaleString() }} · 좋아요
-            {{ project.unique_likes }}
+          <h1 class="font-headline text-lg font-bold">프로필 설정</h1>
+          <p v-if="profileMessage" role="status" class="mt-1 text-xs text-body-light">
+            {{ profileMessage }}
           </p>
         </div>
-        <span class="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium dark:bg-neutral-800">
-          {{ statusLabel[project.status] }}
-        </span>
+        <button
+          type="button"
+          class="text-sm font-semibold text-primary-700"
+          @click="isEditingProfile = !isEditingProfile"
+        >
+          {{ isEditingProfile ? '취소' : '수정' }}
+        </button>
       </div>
-    </section>
-
-    <section v-else class="flex max-w-md flex-col gap-6">
-      <div>
-        <label class="mb-1 block text-sm font-medium">닉네임</label>
-        <div class="flex gap-2">
-          <input
-            v-model="displayNameDraft"
-            type="text"
-            class="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-primary-400 dark:border-neutral-700 dark:bg-neutral-900"
-          />
-          <button
-            type="button"
-            class="shrink-0 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
-            @click="saveProfile"
+      <form
+        v-if="isEditingProfile"
+        class="mt-4 grid gap-4 sm:grid-cols-3"
+        @submit.prevent="saveProfile"
+      >
+        <label class="text-sm font-semibold"
+          >표시 이름<input
+            v-model="profile.displayName"
+            required
+            maxlength="100"
+            class="mt-2 w-full rounded-lg border border-divider/20 px-3 py-2"
+        /></label>
+        <label class="text-sm font-semibold"
+          >테마<select
+            v-model="profile.theme"
+            class="mt-2 w-full rounded-lg border border-divider/20 px-3 py-2"
           >
-            저장
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <label class="mb-1 block text-sm font-medium">테마</label>
-        <div class="flex gap-2">
-          <button
-            v-for="option in ['light', 'dark', 'system']"
-            :key="option"
-            type="button"
-            class="rounded-full border px-3 py-1.5 text-sm"
-            :class="
-              mode === option
-                ? 'border-primary-500 bg-primary-600 text-white'
-                : 'border-neutral-200 dark:border-neutral-800'
-            "
-            @click="setMode(option)"
-          >
-            {{ option === 'light' ? '라이트' : option === 'dark' ? '다크' : '시스템' }}
-          </button>
-        </div>
-      </div>
-
-      <label class="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          :checked="auth.user.new_project_notifications"
-          @change="auth.updateProfile({ new_project_notifications: $event.target.checked })"
-        />
-        구독한 제작자의 신규 프로젝트 알림 받기
-      </label>
+            <option value="LIGHT">라이트</option>
+            <option value="DARK">다크</option>
+            <option value="SYSTEM">시스템</option>
+          </select></label
+        >
+        <label
+          class="flex items-center gap-2 self-end rounded-lg border border-divider/20 px-3 py-2 text-sm"
+          ><input v-model="profile.newProjectNotifications" type="checkbox" />신규 프로젝트
+          알림</label
+        >
+        <button
+          type="submit"
+          :disabled="isSaving"
+          class="rounded-lg bg-primary-600 px-5 py-2 text-sm font-bold text-white sm:col-span-3"
+        >
+          {{ isSaving ? '저장 중...' : '프로필 저장' }}
+        </button>
+      </form>
     </section>
+    <DeveloperDetailView />
   </div>
 </template>

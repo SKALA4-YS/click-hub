@@ -14,8 +14,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -79,11 +77,14 @@ public class SecurityConfig {
                         // §12 "인증: 선택" — 토큰이 있으면 개인화, 없어도 접근은 허용해야 하는 조회 API
                         .requestMatchers(HttpMethod.GET,
                                 "/v1/projects/{id}", "/v1/search", "/v1/feed",
-                                "/v1/rankings/**", "/v1/insights/weekly", "/v1/tutorials"
+                                "/v1/projects/{id}/comments", "/v1/creators/{id}",
+                                "/v1/catalog/**", "/v1/rankings/**",
+                                "/v1/insights/weekly", "/v1/tutorials"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/projects/{id}/outbound-clicks").permitAll()
-                        // 커뮤니티 게시판(V1 스키마 도메인) 조회는 인증 없이 열람 가능
-                        .requestMatchers(HttpMethod.GET, "/v1/community/**").permitAll()
+                        // 커뮤니티 게시판은 목록/상세/댓글 조회까지 전부 로그인 사용자 전용이다
+                        // (2026-09-03 확정). 그래서 아래 anyRequest().authenticated()에 그대로 걸린다 —
+                        // 이전에 있던 GET /v1/community/** permitAll 규칙은 이 방침에 맞춰 제거했다.
                         .anyRequest().authenticated()
                 )
                 // 인증/인가 실패도 컨트롤러 예외와 동일하게 ApiResponse 포맷으로 내려준다.
@@ -137,10 +138,5 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
     }
 }
