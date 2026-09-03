@@ -31,3 +31,4 @@ backend/out/
 
 # Local agent state
 /.agent/
+status_report/
