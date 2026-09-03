@@ -1,39 +1,15 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+
+import { getGoogleLoginUrl } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 
-const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
-const email = ref('')
-const password = ref('')
-const keepLoggedIn = ref(false)
-const showPassword = ref(false)
-const errorMessage = ref('')
+const googleLoginUrl = getGoogleLoginUrl()
 
-function completeStaticLogin() {
-  auth.mockLoginWithGoogle()
-  router.push('/onboarding')
-}
-
-function loginWithGoogle() {
-  errorMessage.value = ''
-  completeStaticLogin()
-}
-
-function loginWithEmail() {
-  if (!email.value.trim()) {
-    errorMessage.value = '이메일 주소를 입력해주세요.'
-    return
-  }
-
-  if (!password.value) {
-    errorMessage.value = '비밀번호를 입력해주세요.'
-    return
-  }
-
-  errorMessage.value = ''
-  completeStaticLogin()
+function prepareGoogleLogin() {
+  auth.prepareOAuthLogin(route.query.redirect)
 }
 </script>
 
@@ -79,116 +55,23 @@ function loginWithEmail() {
             </p>
           </div>
 
-          <button
+          <a
             name="google-login"
-            type="button"
+            :href="googleLoginUrl"
             class="mt-7 flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-divider/30 bg-white px-4 text-sm font-semibold text-heading-light transition-colors hover:bg-primary-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 dark:border-blue-500/25 dark:bg-surface-dark-2 dark:text-heading-dark dark:hover:bg-primary-700"
-            @click="loginWithGoogle"
+            @click="prepareGoogleLogin"
           >
             Google로 3초 만에 로그인
             <span
               class="rounded bg-primary-50 px-1.5 py-0.5 text-[10px] font-bold text-primary-700 dark:bg-primary-950 dark:text-primary-200"
               >추천</span
             >
-          </button>
+          </a>
 
-          <div
-            class="my-6 flex items-center gap-3 text-xs text-body-light dark:text-body-dark"
-            aria-hidden="true"
+          <p
+            class="mt-6 rounded-lg bg-primary-50 px-4 py-3 text-center text-sm leading-6 text-body-light dark:bg-primary-950/40 dark:text-body-dark"
           >
-            <span class="h-px flex-1 bg-divider/20 dark:bg-blue-500/20" />
-            또는 이메일로 로그인
-            <span class="h-px flex-1 bg-divider/20 dark:bg-blue-500/20" />
-          </div>
-
-          <form novalidate @submit.prevent="loginWithEmail">
-            <p
-              v-if="errorMessage"
-              role="alert"
-              class="mb-4 rounded-md bg-danger/10 px-3 py-2 text-xs font-medium text-danger"
-            >
-              {{ errorMessage }}
-            </p>
-
-            <label
-              for="login-email"
-              class="block text-sm font-semibold text-heading-light dark:text-heading-dark"
-              >이메일 주소 <span class="text-primary-600">*</span></label
-            >
-            <input
-              id="login-email"
-              v-model="email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              placeholder="maker@domain.com"
-              class="mt-2 h-11 w-full rounded-lg border border-divider/30 bg-base-light px-3 text-sm text-heading-light outline-none placeholder:text-body-light/70 focus:border-primary-600 focus:ring-2 focus:ring-primary-100 dark:border-blue-500/25 dark:bg-base-dark dark:text-heading-dark"
-            />
-
-            <div class="mt-4 flex items-center justify-between gap-3">
-              <label
-                for="login-password"
-                class="text-sm font-semibold text-heading-light dark:text-heading-dark"
-                >비밀번호 <span class="text-primary-600">*</span></label
-              >
-              <span
-                aria-disabled="true"
-                title="비밀번호 재설정 기능은 아직 준비 중입니다."
-                class="text-xs font-medium text-body-light dark:text-body-dark"
-                >비밀번호를 잊으셨나요?</span
-              >
-            </div>
-            <div class="relative mt-2">
-              <input
-                id="login-password"
-                v-model="password"
-                name="password"
-                :type="showPassword ? 'text' : 'password'"
-                autocomplete="current-password"
-                placeholder="비밀번호를 입력하세요"
-                class="h-11 w-full rounded-lg border border-divider/30 bg-base-light px-3 pr-12 text-sm text-heading-light outline-none placeholder:text-body-light/70 focus:border-primary-600 focus:ring-2 focus:ring-primary-100 dark:border-blue-500/25 dark:bg-base-dark dark:text-heading-dark"
-              />
-              <button
-                name="toggle-password"
-                type="button"
-                class="absolute inset-y-0 right-0 px-3 text-xs font-semibold text-body-light hover:text-primary-600 dark:text-body-dark"
-                :aria-label="showPassword ? '비밀번호 숨기기' : '비밀번호 보기'"
-                @click="showPassword = !showPassword"
-              >
-                {{ showPassword ? '숨기기' : '보기' }}
-              </button>
-            </div>
-
-            <label
-              class="mt-4 flex cursor-pointer items-start gap-2 text-sm text-heading-light dark:text-heading-dark"
-            >
-              <input
-                v-model="keepLoggedIn"
-                name="keep-logged-in"
-                type="checkbox"
-                class="mt-0.5 h-4 w-4 accent-primary-600"
-              />
-              <span>
-                로그인 상태 유지
-                <small class="ml-2 text-xs text-body-light dark:text-body-dark"
-                  >안전한 PC에서만 권장</small
-                >
-              </span>
-            </label>
-
-            <button
-              type="submit"
-              class="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 text-sm font-bold text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
-            >
-              로그인하기 <span aria-hidden="true">→</span>
-            </button>
-          </form>
-
-          <p class="mt-6 text-center text-sm text-body-light dark:text-body-dark">
-            아직 Click-Hub 계정이 없으신가요?
-            <a href="/signup" class="font-semibold text-primary-600 hover:underline"
-              >회원가입하기</a
-            >
+            MVP1은 Google 로그인만 지원합니다. 처음 로그인하면 계정이 자동으로 생성됩니다.
           </p>
           <p class="mt-4 text-center text-[11px] leading-5 text-body-light dark:text-body-dark">
             <span aria-hidden="true">[보안]</span>

@@ -18,7 +18,7 @@ async function mountView({ loggedIn = false } = {}) {
   })
   await router.push('/projects/prj_301')
   await router.isReady()
-  if (loggedIn) useAuthStore().mockLoginWithGoogle()
+  if (loggedIn) useAuthStore().$patch({ user: { display_name: '김민준' } })
 
   return mount(ProjectDetailView, { global: { plugins: [router] } })
 }

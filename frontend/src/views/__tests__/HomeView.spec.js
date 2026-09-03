@@ -62,7 +62,7 @@ describe('HomeView', () => {
 
   it('filters every feed section when a category tab is selected', async () => {
     const wrapper = mountHome()
-    useAuthStore().mockLoginWithGoogle()
+    useAuthStore().$patch({ user: { display_name: '김민준' } })
 
     await wrapper.get('button[aria-label="개발도구 카테고리"]').trigger('click')
 
@@ -90,7 +90,7 @@ describe('HomeView', () => {
 
   it('links every visible project card to its project detail route', async () => {
     const wrapper = mountHome()
-    useAuthStore().mockLoginWithGoogle()
+    useAuthStore().$patch({ user: { display_name: '김민준' } })
     await wrapper.vm.$nextTick()
 
     expect(
@@ -110,7 +110,7 @@ describe('HomeView', () => {
 
   it('renders the supplied Figma Home card copy and neutral thumbnail placeholders', async () => {
     const wrapper = mountHome()
-    useAuthStore().mockLoginWithGoogle()
+    useAuthStore().$patch({ user: { display_name: '김민준' } })
     await wrapper.vm.$nextTick()
 
     expect(wrapper.findAll('h3').map((heading) => heading.text())).toEqual(
@@ -131,7 +131,7 @@ describe('HomeView', () => {
 
     expect(wrapper.text()).toContain('로그인하면 구독한 제작자가')
 
-    auth.mockLoginWithGoogle()
+    auth.$patch({ user: { display_name: '김민준' } })
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('DevFlow Analytics')

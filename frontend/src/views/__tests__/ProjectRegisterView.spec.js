@@ -19,7 +19,7 @@ function mountView() {
 describe('ProjectRegisterView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useAuthStore().mockLoginWithGoogle()
+    useAuthStore().$patch({ user: { display_name: '김민준' } })
   })
 
   it('presents the Figma registration flow and all major form sections', () => {

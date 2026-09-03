@@ -6,6 +6,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '@/stores/auth'
 import OnboardingView from '@/views/OnboardingView.vue'
 
+const updateOnboarding = vi.hoisted(() => vi.fn())
+
+vi.mock('@/api/users', () => ({
+  updateOnboarding,
+  updateProfile: vi.fn(),
+}))
+
 function createTestRouter() {
   return createRouter({
     history: createMemoryHistory(),
@@ -33,6 +40,12 @@ function mountOnboarding({ loggedIn = true, onboarding = null } = {}) {
 describe('OnboardingView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    updateOnboarding.mockImplementation(async (request) => ({
+      goals: request.goals,
+      categorySlugs: request.categorySlugs,
+      technologySlugs: request.technologySlugs,
+      completedAt: '2026-09-04T00:00:00Z',
+    }))
   })
 
   it('renders the single-page 1/3 preference screen with all three preference sections', () => {

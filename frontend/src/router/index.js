@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getAccessToken } from '@/auth/tokenStorage'
 import HomeView from '../views/HomeView.vue'
 
 export const routes = [
@@ -17,38 +18,49 @@ export const routes = [
     path: '/onboarding',
     name: 'onboarding',
     component: () => import('../views/OnboardingView.vue'),
+    meta: { standalone: true, requiresAuth: true },
+  },
+  {
+    path: '/oauth/callback',
+    name: 'oauth-callback',
+    component: () => import('../views/OAuthCallbackView.vue'),
     meta: { standalone: true },
   },
   {
     path: '/signup',
     name: 'signup',
-    component: () => import('../views/SignupView.vue'),
+    redirect: { name: 'login' },
     meta: { standalone: true },
   },
   {
     path: '/mypage',
     name: 'mypage',
     component: () => import('../views/MyPageView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/favorites',
     name: 'favorites',
     component: () => import('../views/FavoritesView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/following',
     name: 'following',
     component: () => import('../views/FollowingView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/notifications',
     name: 'notifications',
     component: () => import('../views/NotificationsView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/projects/new',
     name: 'project-register',
     component: () => import('../views/ProjectRegisterView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/projects/:id',
@@ -74,6 +86,7 @@ export const routes = [
     path: '/community',
     name: 'community',
     component: () => import('../views/CommunityBoardView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/tutorials',
@@ -90,6 +103,13 @@ export const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+})
+
+router.beforeEach((to) => {
+  if (to.meta.requiresAuth && !getAccessToken()) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  return true
 })
 
 export default router

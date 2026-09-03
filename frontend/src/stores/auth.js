@@ -1,39 +1,117 @@
 import { defineStore } from 'pinia'
 
-// Google OAuth 연동 확정 (2026-09-03) — 기획서 v1.1의 GitHub 로그인 필수 조항은 갱신 예정.
-// 실제 OAuth 플로우는 백엔드 확정 후 연동, 현재는 화면 흐름 확인용 목업 상태만 관리한다.
+import { getMe } from '@/api/auth'
+import { updateOnboarding, updateProfile } from '@/api/users'
+import {
+  clearAccessToken,
+  getAccessToken,
+  saveOAuthReturnPath,
+  setAccessToken,
+} from '@/auth/tokenStorage'
+
+function toUserViewModel(user) {
+  if (!user) return null
+  const displayName = user.displayName ?? ''
+  return {
+    ...user,
+    display_name: displayName,
+    avatar_initial: displayName.slice(0, 1) || '?',
+    new_project_notifications: user.newProjectNotifications,
+  }
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
     onboarding: null,
+    initialized: false,
+    loading: false,
+    error: null,
   }),
   getters: {
     isLoggedIn: (state) => state.user !== null,
   },
   actions: {
-    mockLoginWithGoogle() {
-      this.user = {
-        display_name: '김민준',
-        avatar_initial: '김',
-        new_project_notifications: true,
+    async restoreSession() {
+      if (!getAccessToken()) {
+        this.clearSession()
+        this.initialized = true
+        return null
+      }
+
+      this.loading = true
+      this.error = null
+      try {
+        const user = toUserViewModel(await getMe())
+        this.user = user
+        this.onboarding = user.onboardingCompleted ? { completed: true } : null
+        return user
+      } catch (error) {
+        this.clearSession()
+        this.error = error.message
+        throw error
+      } finally {
+        this.loading = false
+        this.initialized = true
       }
     },
-    completeOnboarding({ goals, categories, techStacks }) {
-      this.onboarding = { goals, categories, techStacks, completed_at: new Date().toISOString() }
-    },
-    skipOnboarding() {
-      this.onboarding = { skipped: true, completed_at: new Date().toISOString() }
-    },
-    updateProfile({ display_name, new_project_notifications }) {
-      if (!this.user) return
-      if (display_name !== undefined) this.user.display_name = display_name
-      if (new_project_notifications !== undefined) {
-        this.user.new_project_notifications = new_project_notifications
+    async completeOAuthCallback(fragment) {
+      const params = new URLSearchParams(fragment.replace(/^#/, ''))
+      const oauthError = params.get('error')
+      const accessToken = params.get('accessToken')
+
+      if (oauthError) {
+        this.clearSession()
+        throw new Error(`Google 로그인에 실패했습니다. (${oauthError})`)
       }
+      if (!accessToken) {
+        this.clearSession()
+        throw new Error('로그인 응답에 Access Token이 없습니다.')
+      }
+
+      setAccessToken(accessToken)
+      return this.restoreSession()
     },
-    logout() {
+    prepareOAuthLogin(returnPath) {
+      saveOAuthReturnPath(returnPath || '/')
+    },
+    async completeOnboarding({ goals, categories, techStacks }) {
+      const onboarding = await updateOnboarding({
+        goals,
+        categorySlugs: categories,
+        technologySlugs: techStacks,
+      })
+      this.onboarding = onboarding
+      if (this.user) this.user.onboardingCompleted = true
+      return onboarding
+    },
+    async skipOnboarding() {
+      const onboarding = await updateOnboarding({
+        goals: [],
+        categorySlugs: [],
+        technologySlugs: [],
+      })
+      this.onboarding = { ...onboarding, skipped: true }
+      if (this.user) this.user.onboardingCompleted = true
+      return this.onboarding
+    },
+    async saveProfile({ display_name, theme, new_project_notifications }) {
+      const user = await updateProfile({
+        displayName: display_name,
+        theme,
+        newProjectNotifications: new_project_notifications,
+      })
+      this.user = toUserViewModel(user)
+      return this.user
+    },
+    clearSession() {
+      clearAccessToken()
       this.user = null
       this.onboarding = null
+    },
+    logout() {
+      this.clearSession()
+      this.error = null
     },
   },
 })

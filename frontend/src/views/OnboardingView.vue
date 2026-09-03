@@ -46,7 +46,7 @@ function removeStack(stack) {
 }
 
 async function complete() {
-  auth.completeOnboarding({
+  await auth.completeOnboarding({
     goals: selectedGoals.value,
     categories: selectedCategories.value,
     techStacks: selectedTechStacks.value,
@@ -55,7 +55,7 @@ async function complete() {
 }
 
 async function skip() {
-  auth.skipOnboarding()
+  await auth.skipOnboarding()
   await router.replace('/')
 }
 

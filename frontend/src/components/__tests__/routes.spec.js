@@ -12,7 +12,7 @@ describe('shared shell routes', () => {
   })
 
   it.each([
-    ['/signup', 'signup'],
+    ['/oauth/callback', 'oauth-callback'],
     ['/rankings/developers', 'developer-rankings'],
     ['/developers/42', 'developer-detail'],
   ])('resolves %s to the %s lazy page route', (path, name) => {
@@ -20,5 +20,12 @@ describe('shared shell routes', () => {
 
     expect(resolved.name).toBe(name)
     expect(resolved.matched[0].components.default).toEqual(expect.any(Function))
+  })
+
+  it('redirects the legacy password signup route to Google login', () => {
+    const resolved = router.resolve('/signup')
+
+    expect(resolved.name).toBe('signup')
+    expect(resolved.matched[0].redirect).toEqual({ name: 'login' })
   })
 })

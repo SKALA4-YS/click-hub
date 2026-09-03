@@ -27,7 +27,7 @@ function mountView(component) {
 describe('member library pages', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useAuthStore().mockLoginWithGoogle()
+    useAuthStore().$patch({ user: { display_name: '김민준' } })
   })
 
   it('uses the full maker dashboard for my page', () => {
