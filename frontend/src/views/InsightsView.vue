@@ -19,12 +19,12 @@ const visibleTrends = computed(() =>
 </script>
 
 <template>
-  <div class="mx-auto max-w-[1120px] pb-10 pt-3 sm:pt-7">
+  <div class="mx-auto max-w-[1216px] pb-10 pt-3 sm:pt-7">
     <section
       class="rounded-2xl border border-primary-100 bg-gradient-to-br from-white via-primary-50/60 to-blue-50 p-6 dark:border-primary-800 dark:from-surface-dark-1 dark:via-primary-950 dark:to-surface-dark-2 sm:p-8"
     >
       <p class="text-xs font-bold tracking-[0.14em] text-primary-600 dark:text-primary-200">
-        WEEKLY MAKER INSIGHTS
+        WEEKLY AI TREND REPORT · 2026년 9월 1주
       </p>
       <div class="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div class="max-w-2xl">
@@ -34,14 +34,70 @@ const visibleTrends = computed(() =>
             지금 메이커들이 가장 주목하는 AI 개발 트렌드 &amp; 키워드
           </h1>
           <p class="mt-3 text-sm leading-6 text-body-light dark:text-body-dark">
-            이번 주 새롭게 떠오른 개발 테마와 실제로 런칭된 프로젝트를 한눈에 살펴보세요.
+            지난 7일 동안 14,000+ 검색과 420개 신규 런칭에서 확인된, 지금 가장 빠르게 떠오르는 AI
+            개발 흐름입니다.
           </p>
         </div>
-        <RouterLink
-          to="/projects/new"
-          class="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-700"
-          >+ 지금 내 프로젝트 등록하기</RouterLink
+        <div class="flex shrink-0 flex-wrap gap-2">
+          <button
+            type="button"
+            class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-700"
+          >
+            이번 주 인사이트 리포트 다운로드
+          </button>
+          <RouterLink
+            to="/projects/new"
+            class="inline-flex items-center justify-center rounded-lg border border-primary-200 bg-white px-4 py-2.5 text-sm font-bold text-primary-700 hover:border-primary-400 dark:bg-surface-dark-1 dark:text-primary-100"
+            >트렌드 키워드로 바로 프로젝트 시작하기</RouterLink
+          >
+        </div>
+      </div>
+      <div class="mt-6 grid gap-3 sm:grid-cols-3">
+        <div
+          data-testid="hero-metric"
+          class="rounded-xl border border-primary-100 bg-white/80 p-4 dark:border-primary-800 dark:bg-surface-dark-1"
         >
+          <p class="text-xs text-body-light dark:text-body-dark">이번 주 검색량</p>
+          <p class="mt-1 font-headline text-xl font-bold text-heading-light dark:text-heading-dark">
+            14,000+
+          </p>
+        </div>
+        <div
+          data-testid="hero-metric"
+          class="rounded-xl border border-primary-100 bg-white/80 p-4 dark:border-primary-800 dark:bg-surface-dark-1"
+        >
+          <p class="text-xs text-body-light dark:text-body-dark">신규 프로젝트 런칭</p>
+          <p class="mt-1 font-headline text-xl font-bold text-heading-light dark:text-heading-dark">
+            420개
+          </p>
+        </div>
+        <div
+          data-testid="hero-metric"
+          class="rounded-xl border border-primary-100 bg-white/80 p-4 dark:border-primary-800 dark:bg-surface-dark-1"
+        >
+          <p class="text-xs text-body-light dark:text-body-dark">급상승 기술 키워드</p>
+          <p class="mt-1 font-headline text-xl font-bold text-heading-light dark:text-heading-dark">
+            68개
+          </p>
+        </div>
+      </div>
+      <div class="mt-5 flex flex-wrap items-center gap-2 text-xs font-semibold">
+        <button
+          aria-label="이전 주 리포트"
+          type="button"
+          class="rounded-md border border-primary-100 bg-white px-3 py-1.5 text-body-light hover:text-primary-600 dark:border-primary-800 dark:bg-surface-dark-1 dark:text-body-dark"
+        >
+          ‹ 이전 주</button
+        ><span
+          class="rounded-md bg-primary-50 px-3 py-1.5 text-primary-700 dark:bg-primary-900 dark:text-primary-100"
+          >2026년 9월 1주차 (최신)</span
+        ><button
+          aria-label="다음 주 리포트"
+          type="button"
+          class="rounded-md border border-primary-100 bg-white px-3 py-1.5 text-body-light hover:text-primary-600 dark:border-primary-800 dark:bg-surface-dark-1 dark:text-body-dark"
+        >
+          다음 주 ›
+        </button>
       </div>
       <div class="mt-6 border-t border-primary-100 pt-4 dark:border-primary-800">
         <TrendFilterTabs v-model:selected="selectedFilter" :filters="insightFilters" />
@@ -49,7 +105,7 @@ const visibleTrends = computed(() =>
     </section>
 
     <div class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-      <main>
+      <section aria-label="급상승 키워드 순위">
         <div class="mb-4 flex items-center justify-between gap-3">
           <h2
             class="border-l-4 border-primary-500 pl-3 font-headline text-lg font-bold text-heading-light dark:text-heading-dark"
@@ -66,7 +122,7 @@ const visibleTrends = computed(() =>
         <div class="space-y-4">
           <TrendRankingCard v-for="trend in visibleTrends" :key="trend.id" :trend="trend" />
         </div>
-      </main>
+      </section>
 
       <aside class="space-y-4">
         <section
@@ -131,6 +187,25 @@ const visibleTrends = computed(() =>
             무료 구독하기 (무료 100%)
           </button>
         </section>
+        <section
+          data-testid="trend-discussion-cta"
+          class="overflow-hidden rounded-xl bg-gradient-to-br from-primary-800 via-primary-600 to-blue-500 p-5 text-white"
+        >
+          <span class="rounded-full bg-white/15 px-2 py-1 text-xs font-semibold"
+            >트렌드 토론방</span
+          >
+          <h2 class="mt-4 font-headline text-lg font-bold">
+            이번 주 AI 트렌드에 대해 이야기해볼까요?
+          </h2>
+          <p class="mt-3 text-sm leading-6 text-white/80">
+            다른 메이커들이 주목하는 틈새 아이디어와 실시간 피드백을 커뮤니티에서 공유해보세요.
+          </p>
+          <RouterLink
+            to="/community"
+            class="mt-5 inline-flex rounded-lg bg-white px-3 py-2 text-sm font-bold text-primary-700"
+            >트렌드 토론 참여하기 →</RouterLink
+          >
+        </section>
       </aside>
     </div>
 
@@ -184,7 +259,7 @@ const visibleTrends = computed(() =>
           >기술 스택 분석 더 보기 →</RouterLink
         >
       </div>
-      <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div data-testid="emerging-stacks" class="mt-5 grid gap-4 sm:grid-cols-2">
         <article
           v-for="stack in emergingStacks"
           :key="stack.id"

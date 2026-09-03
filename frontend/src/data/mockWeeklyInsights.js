@@ -1,8 +1,9 @@
 export const insightFilters = [
   { id: 'all', label: '전체 트렌드' },
-  { id: 'agent', label: 'AI 에이전트' },
-  { id: 'builder', label: 'AI 개발 도구' },
-  { id: 'data', label: '데이터·RAG' },
+  { id: 'agent', label: '급상승 검색어' },
+  { id: 'builder', label: '빌더 채택 기술' },
+  { id: 'data', label: '신규 런칭 인기 테마' },
+  { id: 'global', label: '해외·PH 급상승' },
 ]
 
 export const rankedTrends = [
@@ -17,8 +18,8 @@ export const rankedTrends = [
     summary:
       'Ollama, WebLLM, Llama.cpp를 프론트엔드/데스크톱 앱에 결합해 서버 API 호출 비용 없이 브라우저에서 즉시 동작하는 로컬 에이전트 패턴이 급부상하고 있습니다.',
     stack: '핵심 툴: Ollama / WebLLM / Llama.cpp / Transformers.js',
-    point: '보안·현장 환경 고려 채택 1위',
-    to: '/projects/prj_701',
+    point: 'B2B 채택 1위',
+    to: '/projects/prj_301',
   },
   {
     id: 'voice-agent',
@@ -31,8 +32,8 @@ export const rankedTrends = [
     summary:
       'OpenAI Realtime API 및 Cartesia, ElevenLabs를 활용해 레이턴시 300ms 미만의 자연스러운 양방향 음성 상담 봇, 외국어 회화, 튜터, 인바운드 세일즈 봇이 다수 런칭되었습니다.',
     stack: '핵심 툴: Realtime API / WebRTC / LiveKit',
-    point: '전화·인터뷰 자동화 붐 급증',
-    to: '/projects/prj_702',
+    point: '음성 AI 실전 도입 급증',
+    to: '/projects/prj_302',
   },
   {
     id: 'canvas-builder',
@@ -46,7 +47,7 @@ export const rankedTrends = [
       '채팅창을 벗어나 Tldraw, Excalidraw 기반의 무한 화이트보드 공간에서 노드와 카드를 연결하며 코드를 생성하고 시각화하는 노코드·로우코드 빌더 테마가 큰 관심을 얻고 있습니다.',
     stack: '핵심 툴: Tldraw SDK / React Flow',
     point: 'UX 혁신 부문 1위',
-    to: '/projects/prj_703',
+    to: '/projects/prj_303',
   },
   {
     id: 'multimodal-rag',
@@ -60,16 +61,16 @@ export const rankedTrends = [
       '단순 텍스트 검색을 넘어 복잡한 표, 차트, PDF 스캔본을 구조화하여 정확도를 98%까지 끌어올린 RAG 솔루션으로 공공·금융·법률 문서 분석 도구 채택이 두드러집니다.',
     stack: '핵심 툴: Supabase pgvector / Cohere Rerank',
     point: '수익화 성공률 최상위',
-    to: '/projects/prj_704',
+    to: '/projects/prj_301',
   },
 ]
 
 export const hotKeywords = [
-  'DeepSeek R1 모델 연동',
+  'DeepSeek R1 로컬 연동',
   'Cursor 커스텀 룰 (rules)',
-  'V0 활용 실험',
+  'v0 템플릿 복제',
   'Supabase 벡터 검색',
-  'AI 음성 인터뷰 SaaS',
+  '인디해커 Stripe 정산',
   '외국어 코칭 자동화',
   'Next.js 15 Server Action',
   'Claude 3.5 Sonnet 프롬프트',
@@ -121,7 +122,7 @@ export const emergingStacks = [
   {
     id: 'supabase-pgvector',
     title: 'Supabase pgvector',
-    metric: '도입 증가',
+    metric: 'Supabase 34%',
     summary:
       '벡터 검색과 인증을 한 번에 연결해 빠르게 RAG 프로토타입을 만드는 선택이 늘고 있습니다.',
     tags: ['#RAG', '#Database'],
@@ -129,7 +130,7 @@ export const emergingStacks = [
   {
     id: 'deepseek-coder',
     title: 'DeepSeek Coder V2',
-    metric: '관심 급등',
+    metric: 'DeepSeek 가성비 1위',
     summary: '코드 생성과 리팩터링에 특화된 경량 오픈 모델로 개발 환경 통합 사례가 증가했습니다.',
     tags: ['#OpenSource'],
   },

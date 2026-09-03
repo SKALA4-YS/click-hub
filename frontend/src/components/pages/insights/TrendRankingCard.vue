@@ -35,8 +35,11 @@ defineProps({ trend: { type: Object, required: true } })
     <div
       class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-divider/10 pt-3 text-xs"
     >
-      <span class="text-body-light dark:text-body-dark">{{ trend.stack }}</span
-      ><RouterLink
+      <div data-testid="trend-point-row" class="flex flex-wrap items-center gap-2">
+        <span class="text-body-light dark:text-body-dark">{{ trend.stack }}</span>
+        <span class="font-bold text-primary-600 dark:text-primary-200">{{ trend.point }}</span>
+      </div>
+      <RouterLink
         :to="trend.to"
         class="font-bold text-primary-600 hover:text-primary-700 dark:text-primary-200"
         >관련 인기 프로젝트 보기 →</RouterLink

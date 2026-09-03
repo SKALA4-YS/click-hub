@@ -7,12 +7,11 @@ const emit = defineEmits(['update:selected'])
 </script>
 
 <template>
-  <div class="flex flex-wrap gap-2" role="tablist" aria-label="AI 트렌드 필터">
+  <div class="flex flex-wrap gap-2" role="group" aria-label="AI 트렌드 필터">
     <button
       v-for="filter in filters"
       :key="filter.id"
       type="button"
-      role="tab"
       :aria-label="`${filter.label} 트렌드`"
       :aria-pressed="selected === filter.id"
       class="rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors"
