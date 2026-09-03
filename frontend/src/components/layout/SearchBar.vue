@@ -1,11 +1,12 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { mockProjectList } from '@/data/mockProjectList'
 import clearIcon from '@/assets/figma/clear.svg'
 import diagonalArrowIcon from '@/assets/figma/diagonal-arrow.svg'
 import filterChevronIcon from '@/assets/figma/filter-chevron.svg'
 import headerSearchIcon from '@/assets/figma/header-search.svg'
 import helpIcon from '@/assets/figma/help.svg'
+import searchIcon from '@/assets/figma/search.svg'
 import slidersIcon from '@/assets/figma/sliders.svg'
 import suggestionSearchIcon from '@/assets/figma/suggestion-search.svg'
 
@@ -46,6 +47,10 @@ const suggestions = computed(() => {
   return mockProjectList
     .filter((p) => p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
     .slice(0, 4)
+})
+
+watch(suggestions, (items) => {
+  if (activeIndex.value >= items.length) activeIndex.value = -1
 })
 
 function open() {
@@ -100,7 +105,8 @@ function handleKeydown(event) {
 
   if (event.key === 'Enter' && activeIndex.value >= 0) {
     event.preventDefault()
-    applySuggestion(suggestions.value[activeIndex.value].title)
+    const selectedSuggestion = suggestions.value[activeIndex.value]
+    if (selectedSuggestion) applySuggestion(selectedSuggestion.title)
   }
 }
 
@@ -128,14 +134,14 @@ onBeforeUnmount(() => {
     <div
       :role="isOpen ? 'dialog' : undefined"
       :aria-label="isOpen ? '검색 제안' : undefined"
-      class="flex items-center gap-2 border border-divider/20 bg-neutral-50 px-4 py-2 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-100 dark:border-divider/30 dark:bg-surface-dark-1"
+      class="flex items-center gap-2 rounded-full border border-divider/20 bg-neutral-50 px-4 py-2 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-100 dark:border-divider/30 dark:bg-surface-dark-1"
       :class="
         isOpen &&
         'absolute left-0 top-0 z-30 w-full flex-col overflow-hidden rounded-2xl bg-surface-light-1 p-0 shadow-lg dark:border-divider/25 dark:bg-surface-dark-1'
       "
     >
       <div class="flex w-full min-w-0 items-center gap-2" :class="isOpen && 'px-4 py-3'">
-        <img :src="headerSearchIcon" alt="" class="h-4 w-4 shrink-0" />
+        <img :src="isOpen ? searchIcon : headerSearchIcon" alt="" class="h-4 w-4 shrink-0" />
         <input
           ref="inputEl"
           v-model="query"

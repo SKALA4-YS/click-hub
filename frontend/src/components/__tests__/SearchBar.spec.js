@@ -85,4 +85,22 @@ describe('SearchBar', () => {
     wrapper.unmount()
     outsideButton.remove()
   })
+
+  it('clamps a previously active option before selecting after the query narrows', async () => {
+    const wrapper = mount(SearchBar, { attachTo: document.body })
+    const input = wrapper.get('input[type="search"]')
+    await input.setValue('개발자 도구')
+
+    await input.trigger('keydown', { key: 'ArrowDown' })
+    await input.trigger('keydown', { key: 'ArrowDown' })
+    await input.trigger('keydown', { key: 'ArrowDown' })
+    await input.trigger('keydown', { key: 'ArrowDown' })
+    await input.setValue('Dev')
+
+    await input.trigger('keydown', { key: 'Enter' })
+
+    expect(input.element.value).toBe('Dev')
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
 })

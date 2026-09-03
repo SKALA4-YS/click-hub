@@ -35,7 +35,7 @@ function handleClick(notification) {
       <span
         v-if="notifications.unreadCount > 0"
         aria-label="읽지 않은 알림"
-        class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-orange-400 ring-2 ring-surface-light-1 dark:ring-base-dark"
+        class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#c2601a] ring-2 ring-surface-light-1 dark:ring-base-dark"
       />
     </button>
 
