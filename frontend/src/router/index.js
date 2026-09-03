@@ -13,16 +13,19 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
+      meta: { standalone: true },
     },
     {
       path: '/onboarding',
       name: 'onboarding',
       component: () => import('../views/OnboardingView.vue'),
+      meta: { standalone: true },
     },
     {
       path: '/signup',
       name: 'signup',
       component: () => import('../views/SignupView.vue'),
+      meta: { standalone: true },
     },
     {
       path: '/mypage',
