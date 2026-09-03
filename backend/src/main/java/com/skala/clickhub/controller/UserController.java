@@ -2,17 +2,24 @@ package com.skala.clickhub.controller;
 
 import com.skala.clickhub.common.response.ApiResponse;
 import com.skala.clickhub.dto.auth.AuthDtos.MeResponse;
-import com.skala.clickhub.entity.User;
-import com.skala.clickhub.exception.BusinessException;
-import com.skala.clickhub.exception.ErrorCode;
-import com.skala.clickhub.repository.UserRepository;
+import com.skala.clickhub.dto.user.UserDtos.CreatorSummary;
+import com.skala.clickhub.dto.user.UserDtos.OnboardingResponse;
+import com.skala.clickhub.dto.user.UserDtos.OnboardingUpdateRequest;
+import com.skala.clickhub.dto.user.UserDtos.ProfileUpdateRequest;
+import com.skala.clickhub.dto.user.UserDtos.ProjectItem;
+import com.skala.clickhub.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import java.util.List;
 
 /**
  * "현재 로그인한 사용자" 조회는 "/v1/auth/**"가 아니라 "/v1/users/**"에 둔다.
@@ -33,21 +40,39 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     // 인증: 로그인
     @GetMapping("/me")
     public ApiResponse<MeResponse> me(@AuthenticationPrincipal UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        return ApiResponse.success(userService.getMe(userId));
+    }
 
-        return ApiResponse.success(new MeResponse(
-                user.getId(),
-                user.getDisplayName(),
-                user.getAvatarUrl(),
-                user.getRole().name(),
-                user.getTheme().name(),
-                user.getAuthProvider().name()
-        ));
+    @PatchMapping("/me")
+    public ApiResponse<MeResponse> updateProfile(@AuthenticationPrincipal UUID userId,
+                                                  @Valid @RequestBody ProfileUpdateRequest request) {
+        return ApiResponse.success(userService.updateProfile(userId, request));
+    }
+
+    @PutMapping("/me/onboarding")
+    public ApiResponse<OnboardingResponse> updateOnboarding(
+            @AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody OnboardingUpdateRequest request) {
+        return ApiResponse.success(userService.updateOnboarding(userId, request));
+    }
+
+    @GetMapping("/me/projects")
+    public ApiResponse<List<ProjectItem>> getMyProjects(@AuthenticationPrincipal UUID userId) {
+        return ApiResponse.success(userService.getMyProjects(userId));
+    }
+
+    @GetMapping("/me/favorites")
+    public ApiResponse<List<ProjectItem>> getMyFavorites(@AuthenticationPrincipal UUID userId) {
+        return ApiResponse.success(userService.getMyFavorites(userId));
+    }
+
+    @GetMapping("/me/subscriptions")
+    public ApiResponse<List<CreatorSummary>> getMySubscriptions(@AuthenticationPrincipal UUID userId) {
+        return ApiResponse.success(userService.getMySubscriptions(userId));
     }
 }

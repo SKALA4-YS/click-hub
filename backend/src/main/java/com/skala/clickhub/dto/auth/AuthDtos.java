@@ -12,6 +12,8 @@ public final class AuthDtos {
             String avatarUrl,
             String role,
             String theme,
-            String authProvider
+            String authProvider,
+            boolean newProjectNotifications,
+            boolean onboardingCompleted
     ) {}
 }

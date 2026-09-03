@@ -35,11 +35,13 @@ public class Tutorial extends BaseTimeEntity {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "tutorial_type", nullable = false)
     private TutorialType type;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "tutorial_difficulty", nullable = false)
     private TutorialDifficulty difficulty;
 
     @Column(nullable = false)

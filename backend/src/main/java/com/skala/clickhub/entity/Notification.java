@@ -48,7 +48,8 @@ public class Notification {
     private Project project;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "notification_type", nullable = false)
     private NotificationType type;
 
     @JdbcTypeCode(SqlTypes.JSON)

@@ -12,6 +12,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -32,7 +34,8 @@ public class User extends BaseTimeEntity {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "social_login_provider", nullable = false)
     private SocialLoginProvider authProvider;
 
     /** GOOGLE 로그인 사용자의 OIDC subject — GITHUB 로그인 사용자는 null (V2 CHECK 참고) */
@@ -50,11 +53,13 @@ public class User extends BaseTimeEntity {
     private String avatarUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "user_role", nullable = false)
     private UserRole role;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "theme_preference", nullable = false)
     private Theme theme;
 
     @Column(nullable = false)
@@ -77,5 +82,17 @@ public class User extends BaseTimeEntity {
         this.role = role;
         this.theme = theme;
         this.newProjectNotifications = newProjectNotifications;
+    }
+
+    public void updateProfile(String displayName, Theme theme, Boolean newProjectNotifications) {
+        if (displayName != null) {
+            this.displayName = displayName;
+        }
+        if (theme != null) {
+            this.theme = theme;
+        }
+        if (newProjectNotifications != null) {
+            this.newProjectNotifications = newProjectNotifications;
+        }
     }
 }

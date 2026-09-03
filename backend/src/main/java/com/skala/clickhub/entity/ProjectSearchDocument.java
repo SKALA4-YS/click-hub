@@ -50,11 +50,13 @@ public class ProjectSearchDocument {
     private String siteUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "project_status", nullable = false)
     private ProjectStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "pricing_type", nullable = false)
     private PricingType pricing;
 
     private String categorySlug;

@@ -135,6 +135,9 @@ public class ProjectService {
     public DetailResponse getDetail(UUID projectId, UUID viewerId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
+        if (project.getStatus() != ProjectStatus.PUBLISHED && !project.isOwnedBy(viewerId)) {
+            throw new BusinessException(ErrorCode.PROJECT_NOT_FOUND);
+        }
 
         interactionEventRecorder.record(EventType.PROJECT_DETAIL_VIEW, project, viewerId);
 

@@ -10,6 +10,7 @@ import com.skala.clickhub.repository.DashboardAiAnalysisRepository;
 import com.skala.clickhub.repository.InteractionEventRepository;
 import com.skala.clickhub.repository.DeveloperRankingRepository;
 import com.skala.clickhub.repository.NotificationRepository;
+import com.skala.clickhub.repository.ProjectCommentRepository;
 import com.skala.clickhub.repository.ProjectDailyMetricRepository;
 import com.skala.clickhub.repository.ProjectRankingRepository;
 import com.skala.clickhub.repository.ProjectReactionRepository;
@@ -17,6 +18,9 @@ import com.skala.clickhub.repository.ProjectRepository;
 import com.skala.clickhub.repository.ProjectTechnologyRepository;
 import com.skala.clickhub.repository.TechnologyRepository;
 import com.skala.clickhub.repository.TutorialRepository;
+import com.skala.clickhub.repository.UserOnboardingInterestCategoryRepository;
+import com.skala.clickhub.repository.UserOnboardingInterestTechnologyRepository;
+import com.skala.clickhub.repository.UserOnboardingProfileRepository;
 import com.skala.clickhub.repository.UserRepository;
 import com.skala.clickhub.repository.WeeklyInsightRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -36,6 +40,15 @@ public abstract class NoDbRepositoryMocks {
     protected UserRepository userRepository;
 
     @MockitoBean
+    protected UserOnboardingProfileRepository userOnboardingProfileRepository;
+
+    @MockitoBean
+    protected UserOnboardingInterestCategoryRepository userOnboardingInterestCategoryRepository;
+
+    @MockitoBean
+    protected UserOnboardingInterestTechnologyRepository userOnboardingInterestTechnologyRepository;
+
+    @MockitoBean
     protected ProjectRepository projectRepository;
 
     @MockitoBean
@@ -43,6 +56,9 @@ public abstract class NoDbRepositoryMocks {
 
     @MockitoBean
     protected ProjectReactionRepository projectReactionRepository;
+
+    @MockitoBean
+    protected ProjectCommentRepository projectCommentRepository;
 
     @MockitoBean
     protected CategoryRepository categoryRepository;
