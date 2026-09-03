@@ -64,16 +64,21 @@ describe('OnboardingView', () => {
     expect(wrapper.text()).toContain('4개 선택됨 (최소 3개 권장)')
   })
 
-  it('filters stacks, adds a recommended stack, and removes selected tags', async () => {
+  it('returns removed default stacks to the unified search catalog and hides added recommendations', async () => {
     const { wrapper } = mountOnboarding()
+
+    await wrapper.get('[data-testid="remove-Vue.js"]').trigger('click')
+    await wrapper.get('[data-testid="stack-search"]').setValue('Vue')
+    expect(wrapper.get('[data-testid="recommended-Vue.js"]')).toBeTruthy()
+    await wrapper.get('[data-testid="recommended-Vue.js"]').trigger('click')
+    expect(wrapper.get('[data-testid="selected-Vue.js"]')).toBeTruthy()
 
     await wrapper.get('[data-testid="stack-search"]').setValue('React')
     expect(wrapper.get('[data-testid="recommended-React"]')).toBeTruthy()
     await wrapper.get('[data-testid="recommended-React"]').trigger('click')
 
     expect(wrapper.get('[data-testid="selected-React"]')).toBeTruthy()
-    await wrapper.get('[data-testid="remove-React"]').trigger('click')
-    expect(wrapper.find('[data-testid="selected-React"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="recommended-React"]').exists()).toBe(false)
   })
 
   it('uses replace navigation for skip and stores the skipped state', async () => {
@@ -107,5 +112,16 @@ describe('OnboardingView', () => {
     const completed = mountOnboarding({ onboarding: { skipped: true } })
     await flushPromises()
     expect(completed.router.currentRoute.value.path).toBe('/')
+  })
+
+  it('keeps the full Figma goal wording and exposes non-blank preview indicators', () => {
+    const { wrapper } = mountOnboarding()
+
+    expect(wrapper.text()).toContain('초기 유저들의 피드백')
+    expect(wrapper.text()).toContain('솔직한 피드백')
+    expect(wrapper.text()).toContain('실전 아키텍처와 깃허브 코드를 참고하고')
+    expect(wrapper.text()).toContain('런칭할 기획자, 디자이너, 개발자 파트너')
+    expect(wrapper.get('[aria-label="DevFlow Analytics 상승 추이"]')).toBeTruthy()
+    expect(wrapper.get('[aria-label="PromptCraft Studio 스택 매칭 94%"]')).toBeTruthy()
   })
 })
