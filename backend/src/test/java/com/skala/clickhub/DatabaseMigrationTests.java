@@ -13,6 +13,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+/**
+ * db/migration의 모든 마이그레이션(V1, V2, ...)이 순서대로 실제 PostgreSQL(+pgvector)에
+ * 적용되는지 검증한다. 새 버전 파일을 추가할 때마다 이 테스트의 기대값도 함께 갱신해야 한다.
+ */
 @Testcontainers
 @SpringBootTest
 class DatabaseMigrationTests {
@@ -38,15 +42,16 @@ class DatabaseMigrationTests {
 	private JdbcTemplate jdbcTemplate;
 
 	@Test
-	void appliesSchemaMigrationsWithExtensionsTablesAndSeedData() {
-		assertEquals(1, count("SELECT count(*) FROM flyway_schema_history WHERE version = '1' AND success"));
-		assertEquals(1, count("SELECT count(*) FROM flyway_schema_history WHERE version = '2' AND success"));
+	void appliesMigrationsWithExtensionsTablesAndSeedData() {
+		assertEquals(2, count("SELECT count(*) FROM flyway_schema_history WHERE version IN ('1', '2') AND success"));
 		assertEquals(2, count("SELECT count(*) FROM pg_extension WHERE extname IN ('pgcrypto', 'vector')"));
-		assertEquals(25, count("SELECT count(*) FROM pg_tables "
+		// V1 22개 테이블 + V2가 추가하는 user_onboarding_interest_categories 1개 = 23개
+		assertEquals(23, count("SELECT count(*) FROM pg_tables "
 				+ "WHERE schemaname = 'public' AND tablename <> 'flyway_schema_history'"));
 		assertEquals(14, count("SELECT count(*) FROM categories"));
 		assertEquals(15, count("SELECT count(*) FROM technologies"));
-		assertEquals(5, count("SELECT count(*) FROM community_boards"));
+		// V2가 users.auth_provider를 NOT NULL로 확정할 수 있는지 (백필 로직) 확인
+		assertEquals(0, count("SELECT count(*) FROM users WHERE auth_provider IS NULL"));
 	}
 
 	private int count(String sql) {
