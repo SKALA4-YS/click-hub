@@ -38,7 +38,7 @@ function formatCount(value) {
       :class="
         project.thumbnail_url
           ? 'bg-surface-light-1 dark:bg-surface-dark-2'
-          : 'bg-gradient-to-br from-primary-500 to-blue-500'
+          : 'bg-[#f5f5f5] dark:bg-surface-dark-2'
       "
     >
       <img
@@ -74,33 +74,9 @@ function formatCount(value) {
         </span>
 
         <div class="flex shrink-0 items-center gap-3 text-xs text-body-light dark:text-body-dark">
-          <span class="flex items-center gap-1" title="좋아요">
-            <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
-              <path
-                d="M10 17.5s-6.5-4.1-8.4-8.1C.4 6.6 1.7 3.5 4.7 3c1.9-.3 3.6.6 4.3 2 .7-1.4 2.4-2.3 4.3-2 3 .5 4.3 3.6 3.1 6.4-1.9 4-8.4 8.1-8.4 8.1z"
-              />
-            </svg>
-            {{ formatCount(project.stats?.likes) }}
-          </span>
-          <span class="flex items-center gap-1" title="댓글">
-            <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
-              <path
-                fill-rule="evenodd"
-                d="M2 5a2 2 0 012-2h12a2 2 0 012 2v7a2 2 0 01-2 2H8l-4 3v-3H4a2 2 0 01-2-2V5z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            {{ formatCount(project.stats?.comments) }}
-          </span>
-          <span class="flex items-center gap-1" title="조회수">
-            <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5">
-              <path
-                d="M10 3.5c-4.5 0-8 3.7-8 6.5s3.5 6.5 8 6.5 8-3.7 8-6.5-3.5-6.5-8-6.5zm0 10.5a4 4 0 110-8 4 4 0 010 8z"
-              />
-              <circle cx="10" cy="10" r="1.8" />
-            </svg>
-            {{ formatCount(project.stats?.views) }}
-          </span>
+          <span title="저장">저장 {{ formatCount(project.stats?.likes) }}</span>
+          <span title="댓글">댓글 {{ formatCount(project.stats?.comments) }}</span>
+          <span title="조회">조회 {{ formatCount(project.stats?.views) }}</span>
         </div>
       </div>
     </div>

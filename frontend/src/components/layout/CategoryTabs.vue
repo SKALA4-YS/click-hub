@@ -8,6 +8,8 @@ const DEFAULT_CATEGORIES = [
   { slug: 'design-creative', label: '디자인' },
   { slug: 'content-entertainment', label: '엔터테인먼트' },
   { slug: 'ai-service', label: 'AI' },
+  { slug: 'productivity-work', label: '생산성' },
+  { slug: 'marketing', label: '마케팅' },
   { slug: 'other', label: '기타' },
 ]
 

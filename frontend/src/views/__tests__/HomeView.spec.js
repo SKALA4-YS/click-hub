@@ -64,12 +64,12 @@ describe('HomeView', () => {
     const wrapper = mountHome()
     useAuthStore().mockLoginWithGoogle()
 
-    await wrapper.get('button[aria-label="디자인 카테고리"]').trigger('click')
+    await wrapper.get('button[aria-label="개발도구 카테고리"]').trigger('click')
 
-    expect(wrapper.text()).toContain('IconGenie Studio')
-    expect(wrapper.text()).toContain('MoodPalette')
-    expect(wrapper.text()).not.toContain('DevFlow Analytics')
-    expect(wrapper.text()).not.toContain('GitPulse Activity')
+    expect(wrapper.findAll('h3')).toHaveLength(9)
+    expect(wrapper.findAll('h3').every((heading) => heading.text() === 'DevFlow Analytics')).toBe(
+      true,
+    )
   })
 
   it('exposes categories as a pressed button group instead of incomplete tabs', async () => {
@@ -77,6 +77,9 @@ describe('HomeView', () => {
     const designCategory = wrapper.get('button[aria-label="디자인 카테고리"]')
 
     expect(wrapper.get('[aria-label="프로젝트 카테고리"]').attributes('role')).toBe('group')
+    expect(
+      wrapper.findAll('button[aria-label$="카테고리"]').map((button) => button.text()),
+    ).toEqual(['전체', '개발도구', '디자인', '엔터테인먼트', 'AI', '생산성', '마케팅', '기타'])
     expect(designCategory.attributes('role')).toBeUndefined()
     expect(designCategory.attributes('aria-pressed')).toBe('false')
 
@@ -105,6 +108,23 @@ describe('HomeView', () => {
     ])
   })
 
+  it('renders the supplied Figma Home card copy and neutral thumbnail placeholders', async () => {
+    const wrapper = mountHome()
+    useAuthStore().mockLoginWithGoogle()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.findAll('h3').map((heading) => heading.text())).toEqual(
+      Array(9).fill('DevFlow Analytics'),
+    )
+    expect(wrapper.text()).toContain(
+      'Real-time performance tracking for indie makers. Monitor your server load, user engagement, and error...',
+    )
+    expect(wrapper.text()).toContain('저장 1,204')
+    expect(wrapper.text()).toContain('댓글 20')
+    expect(wrapper.text()).toContain('조회 20')
+    expect(wrapper.findAll('.bg-gradient-to-br')).toHaveLength(0)
+  })
+
   it('replaces the signed-out following prompt with followed projects after login', async () => {
     const wrapper = mountHome()
     const auth = useAuthStore()
@@ -114,7 +134,7 @@ describe('HomeView', () => {
     auth.mockLoginWithGoogle()
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).toContain('StudyMate Planner')
+    expect(wrapper.text()).toContain('DevFlow Analytics')
     expect(wrapper.text()).not.toContain('로그인하면 구독한 제작자가')
   })
 
