@@ -1,6 +1,12 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { mockProjectList } from '@/data/mockProjectList'
+import clearIcon from '@/assets/figma/clear.svg'
+import diagonalArrowIcon from '@/assets/figma/diagonal-arrow.svg'
+import filterChevronIcon from '@/assets/figma/filter-chevron.svg'
+import helpIcon from '@/assets/figma/help.svg'
+import searchIcon from '@/assets/figma/search.svg'
+import suggestionSearchIcon from '@/assets/figma/suggestion-search.svg'
 
 // GET /api/v1/search?q=&category=&tags=&tech=&pricing= 자리.
 // 자동완성 결과를 내려주는 별도 API는 명세에 없어서, 지금은 제목·카테고리 기준으로
@@ -12,6 +18,7 @@ const recentSearchEnabled = ref(true)
 const autocompleteEnabled = ref(true)
 const rootEl = ref(null)
 const inputEl = ref(null)
+const restoringFocus = ref(false)
 
 const categoryFilter = ref('')
 const pricingFilter = ref('')
@@ -39,7 +46,8 @@ const suggestions = computed(() => {
     .slice(0, 4)
 })
 
-function handleInput() {
+function open() {
+  if (restoringFocus.value) return
   isOpen.value = true
 }
 
@@ -50,12 +58,17 @@ function clearQuery() {
 
 function applySuggestion(title) {
   query.value = title
-  // TODO: 검색 결과 페이지 연동 전이라 지금은 입력창만 채운다.
+  close()
 }
 
 function close() {
   isOpen.value = false
   showAdvanced.value = false
+  nextTick(() => {
+    restoringFocus.value = true
+    inputEl.value?.focus()
+    restoringFocus.value = false
+  })
 }
 
 function handleOutsideClick(event) {
@@ -65,13 +78,22 @@ function handleKeydown(event) {
   if (event.key === 'Escape') close()
 }
 
+function suggestionParts(title) {
+  const searchTerm = query.value.trim()
+  const index = title.toLocaleLowerCase().indexOf(searchTerm.toLocaleLowerCase())
+  if (index < 0 || !searchTerm) return { prefix: '', match: '', suffix: title }
+  return {
+    prefix: title.slice(0, index),
+    match: title.slice(index, index + searchTerm.length),
+    suffix: title.slice(index + searchTerm.length),
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleOutsideClick)
-  document.addEventListener('keydown', handleKeydown)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleOutsideClick)
-  document.removeEventListener('keydown', handleKeydown)
 })
 </script>
 
@@ -80,21 +102,30 @@ onBeforeUnmount(() => {
     <div
       class="flex items-center gap-2 rounded-full border border-divider/20 bg-neutral-50 px-4 py-2 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-100 dark:border-divider/30 dark:bg-surface-dark-1"
     >
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" class="h-4 w-4 shrink-0 text-body-light dark:text-body-dark">
-        <circle cx="9" cy="9" r="6" stroke-width="1.5" />
-        <path d="M17 17l-4-4" stroke-width="1.5" stroke-linecap="round" />
-      </svg>
+      <img :src="searchIcon" alt="" class="h-4 w-4 shrink-0" />
       <input
         ref="inputEl"
         v-model="query"
         type="search"
-        placeholder="프로젝트명, 기술 스택, 키워드로 검색..."
+        role="combobox"
+        aria-label="통합 검색"
+        :aria-expanded="isOpen"
+        aria-controls="search-suggestions"
+        aria-autocomplete="list"
+        placeholder="검색어를 입력하세요..."
         class="w-full bg-transparent text-sm outline-none"
-        @focus="isOpen = true"
-        @input="handleInput"
+        @focus="open"
+        @input="open"
+        @keydown="handleKeydown"
       />
-      <button v-if="query" type="button" class="text-body-light hover:text-primary-600 dark:text-body-dark" @click="clearQuery">
-        <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="1.5" /></svg>
+      <button
+        v-if="query"
+        type="button"
+        aria-label="검색어 지우기"
+        class="text-body-light hover:text-primary-600 dark:text-body-dark"
+        @click="clearQuery"
+      >
+        <img :src="clearIcon" alt="" class="h-3 w-3" />
       </button>
     </div>
 
@@ -104,62 +135,141 @@ onBeforeUnmount(() => {
       aria-label="검색 제안"
       class="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-divider/15 bg-surface-light-1 shadow-lg dark:border-divider/25 dark:bg-surface-dark-1 sm:min-w-[420px]"
     >
-      <div class="max-h-72 overflow-y-auto p-3">
-      <ul v-if="suggestions.length > 0" class="flex flex-col">
-        <li v-for="item in suggestions" :key="item.id">
+      <div
+        class="flex items-center gap-2 border-b border-divider/15 px-3 py-3 dark:border-divider/25"
+      >
+        <img :src="searchIcon" alt="" class="h-4 w-4 shrink-0" />
+        <input
+          v-model="query"
+          type="search"
+          aria-label="검색어"
+          class="min-w-0 flex-1 bg-transparent text-sm outline-none"
+          @input="open"
+          @keydown="handleKeydown"
+        />
+        <button v-if="query" type="button" aria-label="검색어 지우기" @click="clearQuery">
+          <img :src="clearIcon" alt="" class="h-3 w-3" />
+        </button>
+      </div>
+
+      <div class="max-h-72 overflow-y-auto py-2">
+        <ul id="search-suggestions" role="listbox" aria-label="검색 제안" class="flex flex-col">
+          <li v-for="item in suggestions" :key="item.id">
+            <button
+              type="button"
+              role="option"
+              :aria-label="item.title"
+              :aria-selected="false"
+              class="flex w-full items-center justify-between px-4 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-surface-dark-2"
+              @click="applySuggestion(item.title)"
+            >
+              <span class="flex min-w-0 items-center gap-2">
+                <img :src="suggestionSearchIcon" alt="" class="h-4 w-4 shrink-0" />
+                <span class="truncate text-heading-light dark:text-heading-dark"
+                  ><span>{{ suggestionParts(item.title).prefix }}</span
+                  ><strong class="font-bold text-primary-600">{{
+                    suggestionParts(item.title).match
+                  }}</strong
+                  ><span>{{ suggestionParts(item.title).suffix }}</span></span
+                >
+              </span>
+              <img :src="diagonalArrowIcon" alt="" class="h-3 w-3 shrink-0" />
+            </button>
+          </li>
+        </ul>
+        <p
+          v-if="suggestions.length === 0 && query.trim()"
+          class="px-4 py-3 text-sm text-body-light dark:text-body-dark"
+        >
+          일치하는 프로젝트가 없어요.
+        </p>
+        <p
+          v-if="suggestions.length === 0 && !query.trim()"
+          class="px-4 py-3 text-sm text-body-light dark:text-body-dark"
+        >
+          검색어를 입력하세요.
+        </p>
+      </div>
+
+      <div
+        class="border-y border-divider/15 bg-neutral-50 px-3 py-2 dark:border-divider/25 dark:bg-surface-dark-2"
+      >
+        <div class="flex items-center justify-between gap-2">
           <button
             type="button"
-            class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-surface-dark-2"
-            @click="applySuggestion(item.title)"
+            class="flex items-center gap-1 text-xs font-semibold text-heading-light dark:text-heading-dark"
+            @click="showAdvanced = !showAdvanced"
           >
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" class="h-4 w-4 shrink-0 text-body-light dark:text-body-dark">
-              <circle cx="9" cy="9" r="6" stroke-width="1.5" />
-              <path d="M17 17l-4-4" stroke-width="1.5" stroke-linecap="round" />
-            </svg>
-            <span class="flex-1 truncate text-heading-light dark:text-heading-dark">{{ item.title }}</span>
-            <span class="shrink-0 rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] text-body-light dark:bg-surface-dark-2 dark:text-body-dark">{{ item.category }}</span>
+            상세 필터 조건
+            <img
+              :src="filterChevronIcon"
+              alt=""
+              class="h-3 w-3 transition-transform"
+              :class="showAdvanced && 'rotate-180'"
+            />
           </button>
-        </li>
-      </ul>
-      <p v-else-if="query.trim()" class="px-2 py-3 text-sm text-body-light dark:text-body-dark">일치하는 프로젝트가 없어요.</p>
-      <p v-else class="px-2 py-3 text-sm text-body-light dark:text-body-dark">프로젝트명, 카테고리, 기술 스택으로 검색해보세요.</p>
-
-      <div class="mt-1 border-t border-divider/15 pt-2 dark:border-divider/25">
-        <button
-          type="button"
-          class="flex w-full items-center justify-between px-2 py-2 text-sm font-medium text-heading-light hover:text-primary-600 dark:text-heading-dark"
-          @click="showAdvanced = !showAdvanced"
-        >
-          상세 필터 조건
-          <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 transition-transform" :class="showAdvanced && 'rotate-180'">
-            <path d="M5.25 7.5l4.75 5 4.75-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </button>
-
-        <div v-if="showAdvanced" class="grid grid-cols-2 gap-2 px-2 pb-2 pt-1">
-          <select v-model="categoryFilter" class="rounded-lg border border-divider/20 bg-surface-light-1 px-2 py-1.5 text-sm dark:border-divider/30 dark:bg-surface-dark-2">
+          <span class="flex items-center gap-1 text-xs text-body-light dark:text-body-dark"
+            ><img :src="filterChevronIcon" alt="" class="h-3 w-3" />원하는 조건이 더
+            있으신가요?</span
+          >
+        </div>
+        <div v-if="showAdvanced" class="grid grid-cols-2 gap-2 pt-2">
+          <select
+            v-model="categoryFilter"
+            class="rounded-lg border border-divider/20 bg-surface-light-1 px-2 py-1.5 text-sm dark:border-divider/30 dark:bg-surface-dark-2"
+          >
             <option value="">카테고리 전체</option>
-            <option v-for="c in categoryOptions" :key="c.slug" :value="c.slug">{{ c.label }}</option>
+            <option v-for="c in categoryOptions" :key="c.slug" :value="c.slug">
+              {{ c.label }}
+            </option>
           </select>
-          <select v-model="pricingFilter" class="rounded-lg border border-divider/20 bg-surface-light-1 px-2 py-1.5 text-sm dark:border-divider/30 dark:bg-surface-dark-2">
+          <select
+            v-model="pricingFilter"
+            class="rounded-lg border border-divider/20 bg-surface-light-1 px-2 py-1.5 text-sm dark:border-divider/30 dark:bg-surface-dark-2"
+          >
             <option value="">가격 전체</option>
-            <option v-for="p in pricingOptions" :key="p.value" :value="p.value">{{ p.label }}</option>
+            <option v-for="p in pricingOptions" :key="p.value" :value="p.value">
+              {{ p.label }}
+            </option>
           </select>
         </div>
       </div>
-      </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 border-t border-divider/15 px-3 py-2 text-xs text-body-light dark:border-divider/25 dark:text-body-dark">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <button type="button" class="hover:text-primary-600" @click="recentSearchEnabled = !recentSearchEnabled">
+      <div
+        class="flex flex-wrap items-center justify-between gap-2 border-t border-divider/15 px-3 py-2 text-xs text-body-light dark:border-divider/25 dark:text-body-dark"
+      >
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <button
+            type="button"
+            class="hover:text-primary-600"
+            @click="recentSearchEnabled = !recentSearchEnabled"
+          >
             최근검색어 {{ recentSearchEnabled ? '끄기' : '켜기' }}
           </button>
-          <button type="button" class="hover:text-primary-600" @click="autocompleteEnabled = !autocompleteEnabled">
+          <span aria-hidden="true" class="text-divider/30">|</span>
+          <button
+            type="button"
+            class="hover:text-primary-600"
+            @click="autocompleteEnabled = !autocompleteEnabled"
+          >
             자동완성 {{ autocompleteEnabled ? '끄기' : '켜기' }}
           </button>
+          <span aria-hidden="true" class="text-divider/30">|</span>
+          <a href="/tutorials" class="inline-flex items-center gap-1 hover:text-primary-600"
+            >도움말 <img :src="helpIcon" alt="" class="h-3 w-3"
+          /></a>
         </div>
-        <button type="button" aria-label="검색 닫기" class="rounded-md border border-divider/20 px-2 py-1 hover:text-primary-600 dark:border-divider/30" @click="close">
-          닫기 ESC
+        <button
+          type="button"
+          aria-label="검색 닫기"
+          class="inline-flex items-center gap-1 rounded-md px-1 py-1 hover:text-primary-600"
+          @click="close"
+        >
+          닫기
+          <kbd
+            class="rounded border border-divider/20 bg-neutral-50 px-1 py-0.5 font-mono text-[10px] text-body-light dark:border-divider/30 dark:bg-surface-dark-2 dark:text-body-dark"
+            >ESC</kbd
+          >
         </button>
       </div>
     </div>
