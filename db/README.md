@@ -6,9 +6,12 @@
 - Extension: `pgcrypto`, `pgvector`
 - Migration: Flyway
 - 최초 스키마: `migration/V1__initial_schema.sql`
+- 현재 확장: `migration/V2__align_google_onboarding_and_community.sql`
 - 로컬 데이터: `data/` 바인드 마운트, Git 제외
 
-`V1__initial_schema.sql`은 기본 테이블 22개와 조회 함수·트리거·인덱스·Seed 사전을 생성합니다. Backend가 기동될 때 Flyway가 빈 DB에 최초 1회 자동 실행합니다.
+`V1__initial_schema.sql`은 기본 테이블 22개와 조회 함수·트리거·인덱스·Seed 사전을 생성합니다. 이어서 `V2__align_google_onboarding_and_community.sql`이 Google 로그인·온보딩·커뮤니티 정렬을 적용해 총 25개 테이블 상태로 만듭니다. Backend가 기동될 때 Flyway가 버전 순서대로 최초 1회 실행합니다.
+
+V2는 기존 `showcase` 게시판과 게시글을 삭제하지 않고 보존하며, 최신 기본 게시판 `notice`와 `share`를 추가합니다.
 
 ## 로컬 실행
 
