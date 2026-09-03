@@ -19,6 +19,11 @@ const router = createRouter({
       name: 'onboarding',
       component: () => import('../views/OnboardingView.vue'),
     },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: () => import('../views/NotificationsView.vue'),
+    },
   ],
 })
 

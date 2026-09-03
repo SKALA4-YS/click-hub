@@ -2,6 +2,7 @@
 import { RouterLink } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
 import { useAuthStore } from '@/stores/auth'
+import NotificationBell from '@/components/layout/NotificationBell.vue'
 
 const { mode, cycleMode } = useTheme()
 const auth = useAuthStore()
@@ -45,12 +46,14 @@ const themeIcon = { light: '☀️', dark: '🌙', system: '💻' }
       >
         로그인
       </RouterLink>
-      <div
-        v-else
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-700 dark:bg-primary-900 dark:text-primary-100"
-      >
-        {{ auth.user.avatar_initial }}
-      </div>
+      <template v-else>
+        <NotificationBell />
+        <div
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-700 dark:bg-primary-900 dark:text-primary-100"
+        >
+          {{ auth.user.avatar_initial }}
+        </div>
+      </template>
     </div>
   </header>
 </template>
