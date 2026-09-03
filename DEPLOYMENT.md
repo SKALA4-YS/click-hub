@@ -1,11 +1,12 @@
 # Click HUB 배포 가이드
 
-Click HUB는 하나의 GitHub 모노레포에서 Frontend와 Backend를 독립 배포합니다.
+Click HUB는 하나의 GitHub 모노레포에서 Frontend와 Backend를 독립 배포하고 Backend는 Render Managed PostgreSQL을 사용합니다.
 
 | 애플리케이션 | 플랫폼 | 저장소 Root Directory | 운영 브랜치 |
 | --- | --- | --- | --- |
 | Frontend | Vercel | `frontend` | `main` |
-| Backend | Render Web Service | `backend` | `main` |
+| Backend | Render Docker Web Service | 저장소 루트 build context | `main` |
+| Database | Render PostgreSQL 16 | `render.yaml` | `main` |
 
 ## 배포 순서
 
@@ -18,15 +19,18 @@ Click HUB는 하나의 GitHub 모노레포에서 Frontend와 Backend를 독립 �
 
 첫 배포에서는 Backend URL이 아직 없으므로 연결 상태 카드가 실패로 표시될 수 있습니다.
 
-### 2. Render Backend 생성
+### 2. Render Backend와 PostgreSQL 생성
 
 1. Render Dashboard에서 New Blueprint를 선택하고 같은 GitHub 저장소를 연결합니다.
 2. 저장소 루트의 `render.yaml`을 사용합니다.
-3. 초기 Blueprint 입력에서 `CORS_ALLOWED_ORIGINS`를 Vercel 운영 Origin으로 설정합니다.
+3. Blueprint가 `click-hub-backend`와 `click-hub-db` 두 리소스를 생성하는지 확인합니다.
+4. 초기 Blueprint 입력에서 `CORS_ALLOWED_ORIGINS`를 Vercel 운영 Origin으로 설정합니다.
    - 예: `https://click-hub-frontend.vercel.app`
    - 끝에 `/`를 붙이지 않습니다.
-4. Singapore 리전의 Free Web Service 배포를 완료합니다.
-5. 아래 주소가 HTTP 200인지 확인합니다.
+5. DB 접속정보는 `fromDatabase`, JWT Secret은 `generateValue`로 Backend에 자동 등록됩니다.
+6. Backend 시작 로그에서 Flyway V1 적용 성공을 확인합니다.
+7. Singapore 리전의 Free Web Service와 PostgreSQL 배포를 완료합니다.
+8. 아래 주소가 HTTP 200인지 확인합니다.
 
 ```bash
 curl https://<service>.onrender.com/actuator/health
@@ -58,7 +62,7 @@ npm ci
 npm run dev
 ```
 
-Docker Compose 기본 포트는 Frontend 5173, Backend 8080입니다.
+Docker Compose 기본 포트는 Frontend 5173, Backend 8080, PostgreSQL 5432입니다. DB 데이터는 `db/data/`에 저장되고 Git에는 포함되지 않습니다.
 
 ```bash
 docker compose up --build -d
@@ -69,6 +73,7 @@ docker compose up --build -d
 ```bash
 FRONTEND_PORT=15173 \
 BACKEND_PORT=18080 \
+DATABASE_PORT=15432 \
 VITE_API_BASE_URL=http://localhost:18080 \
 CORS_ALLOWED_ORIGINS=http://localhost:15173 \
 docker compose up --build -d
@@ -85,8 +90,9 @@ docker compose down
 - Render health: `/actuator/health`
 - FE/BE 연결 확인: `/api/v1/ping`
 - Render Free 인스턴스는 유휴 상태에서 내려가며 첫 연결에 약 1분이 걸릴 수 있습니다.
+- Render Free PostgreSQL은 생성 30일 후 만료되고 백업을 제공하지 않으므로 검증 환경으로만 사용합니다.
 - CORS 허용 Origin은 쉼표로 여러 개를 지정할 수 있지만 `*`는 사용하지 않습니다.
-- DB가 준비되기 전에는 기본 `nodb` 프로필로 JDBC/JPA 자동 구성을 끕니다. DB 연결을 시작할 때 별도 활성 프로필과 DB 환경변수를 구성합니다.
+- DB 스키마는 Flyway가 `db/migration`의 버전 순서대로 적용하며 Hibernate는 `validate`만 수행합니다.
 
 ## 배포 URL
 
@@ -94,3 +100,4 @@ docker compose down
 
 - Frontend: 미배포
 - Backend: 미배포
+- Database: `click-hub-db` 미배포

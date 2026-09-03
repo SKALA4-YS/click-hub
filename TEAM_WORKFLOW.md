@@ -8,6 +8,7 @@
 | --- | --- | --- |
 | Frontend | Vue 3, Vite, Vercel | `main` |
 | Backend | Spring Boot, Java 21, Render Docker | `main` |
+| Database | PostgreSQL 16, pgvector, Flyway | `main` |
 | 로컬 통합 환경 | Docker Compose | 작업 브랜치 |
 | 기능 통합 | GitHub Pull Request | `develop` |
 | 운영 배포 | Vercel·Render 자동 배포 | `main` |
@@ -33,10 +34,10 @@ flowchart LR
 ### 3.1 최초 1회 필수 작업
 
 - [ ] Vercel에 `click-hub-frontend` 프로젝트를 만들고 Root Directory를 `frontend`로 설정합니다.
-- [ ] Render에서 저장소 루트의 `render.yaml`을 사용하는 Blueprint를 생성합니다.
+- [ ] Render에서 저장소 루트의 `render.yaml`을 사용해 Backend와 PostgreSQL Blueprint를 생성합니다.
 - [ ] Vercel 최초 URL을 Render의 `CORS_ALLOWED_ORIGINS`에 입력합니다.
 - [ ] Render URL을 Vercel의 `VITE_API_BASE_URL`에 입력하고 FE를 재배포합니다.
-- [ ] Render에 충분히 긴 랜덤 값의 `CLICKHUB_JWT_SECRET`을 등록합니다.
+- [ ] Blueprint가 DB 접속정보와 `CLICKHUB_JWT_SECRET`을 자동 생성·연결했는지 확인합니다.
 - [ ] 공개 FE 화면, `/actuator/health`, `/api/v1/ping`, 브라우저 CORS 호출을 확인합니다.
 - [ ] 확정된 운영 URL과 확인 결과를 `DEPLOYMENT.md`에 기록합니다.
 
@@ -47,10 +48,12 @@ flowchart LR
 | Vercel | `VITE_API_BASE_URL` | Render HTTPS Origin | 공개 설정값이지만 변경 후 재배포 필요 |
 | Render | `CORS_ALLOWED_ORIGINS` | Vercel HTTPS Origin | 끝의 `/` 제거, `*` 금지 |
 | Render | `CLICKHUB_JWT_SECRET` | 32바이트 이상 랜덤 비밀값 | Git 커밋·메신저 공유 금지 |
+| Render | `DB_HOST`, `DB_PORT`, `DB_NAME` | Managed PostgreSQL 연결정보 | Blueprint 자동 연결 |
+| Render | `DB_USERNAME`, `DB_PASSWORD` | Managed PostgreSQL 인증정보 | Blueprint 자동 연결, 외부 공유 금지 |
 | Render | `JAVA_TOOL_OPTIONS` | Blueprint 기본값 사용 | 메모리 문제 발생 시 DevOps가 조정 |
 | Render | `PORT` | Render 자동 주입 | 직접 등록하지 않음 |
 
-현재 Backend는 DB 도입 전까지 기본 `nodb` 프로필로 실행됩니다. DB를 도입할 때 DevOps 담당자는 DB 서비스, 활성 프로필, 접속 정보와 Secret 관리 방법을 별도 작업으로 준비해야 합니다.
+DB 스키마는 `db/migration`의 Flyway 파일을 기준으로 관리합니다. Render Free PostgreSQL은 30일 후 만료되므로 장기 데이터가 생기기 전에 유료 전환 또는 이전 계획을 수립합니다.
 
 ### 3.2 저장소 보호 규칙
 
@@ -113,6 +116,7 @@ cd backend
 - FE 개발자는 API 주소를 코드에 하드코딩하지 않고 `VITE_API_BASE_URL`을 사용합니다.
 - BE 개발자는 API를 `/api/v1` 아래에 추가하고 필요한 CORS·Security 공개 경로를 함께 검토합니다.
 - API 계약을 변경하면 FE와 BE 담당자에게 알리고 관련 테스트와 문서를 함께 수정합니다.
+- DB 스키마를 변경하면 기존 migration을 고치지 않고 다음 버전 SQL을 추가합니다.
 - 의존성을 추가하면 lockfile 또는 Gradle 설정을 함께 커밋하고 Docker 빌드 영향도 확인합니다.
 - 토큰, 비밀번호, 개인 `.env`, 빌드 결과물은 커밋하지 않습니다.
 
@@ -143,6 +147,7 @@ docker compose build
 docker compose up -d
 curl http://localhost:8080/actuator/health
 curl http://localhost:8080/api/v1/ping
+docker compose exec db psql -U clickhub -d clickhub -c "SELECT version, success FROM flyway_schema_history;"
 docker compose down
 ```
 
@@ -185,6 +190,7 @@ curl https://<render-service>.onrender.com/api/v1/ping
 - [ ] Vercel 운영 URL이 HTTP 200으로 열립니다.
 - [ ] Backend connection 카드가 연결 성공을 표시합니다.
 - [ ] Render health가 `UP`입니다.
+- [ ] Backend 로그에서 Flyway migration 성공을 확인했습니다.
 - [ ] Ping API가 `status=ok`, `service=click-hub-backend`를 반환합니다.
 - [ ] 브라우저 요청에 운영 Vercel Origin만 CORS 허용됩니다.
 - [ ] Vercel·Render 로그에 반복 오류가 없습니다.
