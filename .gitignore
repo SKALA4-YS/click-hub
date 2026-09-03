@@ -23,6 +23,9 @@ backend/.gradle/
 backend/build/
 backend/out/
 
+# Database
+/db/data/
+
 # Logs
 *.log
 

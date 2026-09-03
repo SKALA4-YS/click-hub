@@ -13,9 +13,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(properties = "clickhub.cors.allowed-origins=https://click-hub.vercel.app")
+@ActiveProfiles("nodb")
 class PingControllerTests {
 
 	private static final String ALLOWED_ORIGIN = "https://click-hub.vercel.app";
