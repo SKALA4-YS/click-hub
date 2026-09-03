@@ -7,6 +7,45 @@
 
 ## 0. 변경 이력
 
+### 2026-09-03 (8차) — Rankings 기능(§4) 실제 구현: `GET /v1/rankings/projects`, `GET /v1/rankings/developers`
+`api-spec-draft.md`(10개 기능 그룹으로 재정리된 최신 API 명세 — §12 기반 구버전 명세를 대체)의
+1번(Auth)에 이어 4번(Rankings)을 순서대로 구현. 경로 프리픽스는 `api-spec-draft.md`가 `/api/v1`을
+표준으로 명시하지만, 전체 앱 마이그레이션은 별도 작업으로 미루고 이번 기능은 기존 관례대로
+`/v1/rankings`를 그대로 유지하기로 결정(사용자 확인).
+
+`project_top100_7d`/`developer_top100_7d`는 이미 V1 스키마에 정의된 뷰라 새 SQL은 필요 없었고,
+Java에서 읽기 전용으로 매핑해 1-based 랭크를 붙여 노출하는 것이 전부였다.
+
+- `entity/ProjectRankingView.java`, `entity/DeveloperRankingView.java` — 각각 `project_top100_7d`/
+  `developer_top100_7d`에 매핑되는 `@Entity @Immutable` (아래 "알려진 한계" 항목의 기존 방침을
+  뒤집음 — 네이티브 쿼리 대신 뷰를 엔티티로 직접 매핑하는 쪽이 Spring Data 파생 쿼리를 그대로 쓸 수
+  있어 더 간단했다). 계산된 컬럼이라 `nullable=false`는 명시하지 않음(뷰 컬럼의 nullable 메타데이터가
+  `ddl-auto=validate`와 충돌할 수 있어서).
+- `repository/ProjectRankingRepository.java`, `repository/DeveloperRankingRepository.java` —
+  `JpaRepository`가 아니라 `Repository<T, ID>` 마커 인터페이스만 확장(뷰는 쓸 수 없으므로 save/delete
+  자체를 노출하지 않음). `findTop100ByOrderByScoreDesc()` 파생 쿼리 하나씩만 존재.
+- `service/RankingService.java` — 두 리포지토리 결과에 순서대로 1-based rank를 붙여 `RankingDtos`로
+  매핑하는 얇은 서비스.
+- `controller/RankingController.java` — `UnsupportedOperationException` 스텁을 실제 구현으로 교체.
+
+**테스트 중 발견한 실제 제약**: 뷰가 값을 내려면 프로젝트가 `PUBLISHED` 상태여야 하는데,
+`validate_project_write()` 트리거가 이 상태 전이를 엄격히 강제한다 — INSERT는 반드시 `DRAFT`여야
+하고, 소유자는 `github_user_id NOT NULL`이어야 하며, `PUBLISHED` 전환 전에는 `primary_category_id`
+필수 + `record_project_url_validation()`으로 최근 URL 검증을 통과해야 한다. `RankingIntegrationTest`는
+Testcontainers 위에서 이 트리거 순서 그대로(DRAFT INSERT → PENDING_REVIEW → URL 검증 함수 호출 →
+PUBLISHED) `JdbcTemplate`으로 시드 데이터를 만든다. 같은 클래스의 여러 테스트 메서드가 매번
+`github_login` 등 유니크 값을 커밋하면 두 번째 메서드부터 유니크 제약 충돌이 나서(실측:
+`DuplicateKeyException` on `users_github_login_uq`), 클래스에 `@Transactional`을 붙여 각 테스트를
+롤백시켜 해결.
+
+**검증**: `RankingIntegrationTest`(뷰 매핑 2건 + MockMvc 엔드포인트 2건) 전부 통과, 기존
+`nodb` 프로필 테스트(`ClickHubApplicationTests`, `PingControllerTests`)는 새 리포지토리 2개가
+컨텍스트에 추가되며 깨졌던 것을 `@MockitoBean`으로 채워 복구(전체 스위트 9건 통과). 추가로
+실제 임시 Postgres 컨테이너 + `bootRun`으로 라이브 스모크 테스트 — 데이터 없을 때 `GET
+/v1/rankings/projects`·`/developers`가 200 + 빈 배열, 트리거를 통과시켜 실제로 `PUBLISHED`
+프로젝트 하나를 만든 뒤 재호출하면 정확한 점수·rank로 응답하는 것까지 확인. 임시 컨테이너/프로세스는
+종료 후 정리함.
+
 ### 2026-09-03 (7차) — 실제 브라우저로 Google 로그인 E2E 테스트, 진짜 버그 2건 발견·수정
 "웹 사용자가 실제 쓰는 방식으로 모든 기능을 테스트해달라"는 요청에 따라 진행. 프론트엔드는 아직
 Vite/Vue 기본 템플릿 + 백엔드 헬스체크 위젯뿐이고, 백엔드도 Google 로그인 외 전부 스켈레톤이라 —
@@ -260,7 +299,7 @@ Flyway 기반 PostgreSQL 인프라를 구축했다는 변경내역서(`BE_POSTGR
 - **알려진 한계(의도적으로 미완성 처리, TODO)**:
   - `ProjectSearchDocument.embedding` (`vector(1536)`) — Hibernate 기본 매핑 대상이 아니라 필드 자체를 뺐다. `com.pgvector:pgvector` 의존성 + 커스텀 UserType 추가 후 복원 필요.
   - `DashboardAiAnalysis.sourcePeriod` (`daterange`) — 임시로 `String`에 매핑. 실제 range 연산이 필요해지면 커스텀 UserType 필요.
-  - `project_top100_7d`/`developer_top100_7d` 뷰 — `@Entity`로 만들지 않았다. 랭킹 조회는 값 객체(`RankingDtos`)로 결과만 반환하는 네이티브 쿼리 기반 조회를 권장.
+  - ~~`project_top100_7d`/`developer_top100_7d` 뷰 — `@Entity`로 만들지 않았다...~~ → 8차에서 해소됨: `ProjectRankingView`/`DeveloperRankingView`로 `@Entity @Immutable` 매핑, `RankingService`가 `RankingDtos`로 변환.
 
 ### `dto`
 §12 API 도메인당 1파일 구조는 유지하고, 필드를 엔티티 변경에 맞춰 동기화했다.
@@ -305,6 +344,6 @@ Flyway 기반 PostgreSQL 인프라를 구축했다는 변경내역서(`BE_POSTGR
 
 1. `com.pgvector:pgvector` 의존성 추가 후 `ProjectSearchDocument.embedding` 필드 복원.
 2. `daterange` 커스텀 Hibernate `UserType` 작성 후 `DashboardAiAnalysis.sourcePeriod` 타입 교체.
-3. `project_top100_7d` / `developer_top100_7d` 뷰 조회용 네이티브 쿼리 Repository 작성.
-4. `repository`/`service` 레이어 구현 — 이번 단계에서도 의도적으로 비워둠(비즈니스 로직 제외 범위).
+3. ~~`project_top100_7d` / `developer_top100_7d` 뷰 조회용 네이티브 쿼리 Repository 작성.~~ → 8차에서 완료(엔티티 매핑 방식으로).
+4. `repository`/`service` 레이어 구현 — Rankings(§4)는 8차에서 완료. 나머지 도메인(Projects, Community, Dashboard 등)은 여전히 스켈레톤.
 5. SQL 트리거 예외 → `ErrorCode` 매핑 규칙 정의.

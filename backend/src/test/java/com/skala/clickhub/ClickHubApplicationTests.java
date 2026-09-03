@@ -1,5 +1,7 @@
 package com.skala.clickhub;
 
+import com.skala.clickhub.repository.DeveloperRankingRepository;
+import com.skala.clickhub.repository.ProjectRankingRepository;
 import com.skala.clickhub.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,6 +17,13 @@ class ClickHubApplicationTests {
 	// 컨텍스트 로딩만 검증하는 이 테스트에서는 Mockito 목으로 대신 채운다.
 	@MockitoBean
 	private UserRepository userRepository;
+
+	// RankingService가 필요로 하는 뷰 전용 리포지토리도 같은 이유로 목으로 채운다.
+	@MockitoBean
+	private ProjectRankingRepository projectRankingRepository;
+
+	@MockitoBean
+	private DeveloperRankingRepository developerRankingRepository;
 
 	@Test
 	void contextLoads() {

@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
+import com.skala.clickhub.repository.DeveloperRankingRepository;
+import com.skala.clickhub.repository.ProjectRankingRepository;
 import com.skala.clickhub.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,13 @@ class PingControllerTests {
 	// 하므로 컨텍스트 로딩을 위해 Mockito 목으로 채운다 (이 테스트는 인증 로직을 검증하지 않음).
 	@MockitoBean
 	private UserRepository userRepository;
+
+	// RankingService가 필요로 하는 뷰 전용 리포지토리도 같은 이유로 목으로 채운다.
+	@MockitoBean
+	private ProjectRankingRepository projectRankingRepository;
+
+	@MockitoBean
+	private DeveloperRankingRepository developerRankingRepository;
 
 	@Autowired
 	private WebApplicationContext context;
