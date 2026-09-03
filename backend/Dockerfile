@@ -2,13 +2,14 @@
 
 FROM eclipse-temurin:21-jdk-alpine AS build
 
-WORKDIR /workspace
+WORKDIR /workspace/backend
 
-COPY gradlew settings.gradle build.gradle ./
-COPY gradle gradle
+COPY backend/gradlew backend/settings.gradle backend/build.gradle ./
+COPY backend/gradle gradle
 RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
 
-COPY src src
+COPY backend/src src
+COPY db/migration /workspace/db/migration
 RUN ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
@@ -18,7 +19,7 @@ RUN addgroup -S spring && adduser -S spring -G spring
 WORKDIR /app
 USER spring:spring
 
-COPY --from=build --chown=spring:spring /workspace/build/libs/*.jar app.jar
+COPY --from=build --chown=spring:spring /workspace/backend/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
