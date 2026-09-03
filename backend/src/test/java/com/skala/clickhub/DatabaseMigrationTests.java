@@ -38,13 +38,15 @@ class DatabaseMigrationTests {
 	private JdbcTemplate jdbcTemplate;
 
 	@Test
-	void appliesInitialMigrationWithExtensionsTablesAndSeedData() {
+	void appliesSchemaMigrationsWithExtensionsTablesAndSeedData() {
 		assertEquals(1, count("SELECT count(*) FROM flyway_schema_history WHERE version = '1' AND success"));
+		assertEquals(1, count("SELECT count(*) FROM flyway_schema_history WHERE version = '2' AND success"));
 		assertEquals(2, count("SELECT count(*) FROM pg_extension WHERE extname IN ('pgcrypto', 'vector')"));
-		assertEquals(22, count("SELECT count(*) FROM pg_tables "
+		assertEquals(25, count("SELECT count(*) FROM pg_tables "
 				+ "WHERE schemaname = 'public' AND tablename <> 'flyway_schema_history'"));
 		assertEquals(14, count("SELECT count(*) FROM categories"));
 		assertEquals(15, count("SELECT count(*) FROM technologies"));
+		assertEquals(5, count("SELECT count(*) FROM community_boards"));
 	}
 
 	private int count(String sql) {
