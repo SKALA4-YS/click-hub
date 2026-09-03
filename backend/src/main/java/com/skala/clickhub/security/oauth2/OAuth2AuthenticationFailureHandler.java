@@ -7,7 +7,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 
@@ -28,10 +27,8 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
                 ? oAuth2Exception.getError().getErrorCode()
                 : "oauth2_login_failed";
 
-        String redirectUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("error", errorCode)
-                .build()
-                .toUriString();
+        String redirectUrl = redirectUri + "#error=" + java.net.URLEncoder.encode(
+                errorCode, java.nio.charset.StandardCharsets.UTF_8);
 
         response.sendRedirect(redirectUrl);
     }

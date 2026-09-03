@@ -1,79 +1,49 @@
-import { mount } from '@vue/test-utils'
-import { createPinia } from 'pinia'
-import { describe, expect, it } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import router from '@/router'
 import InsightsView from '@/views/InsightsView.vue'
 
-function mountInsights() {
-  return mount(InsightsView, {
-    global: {
-      stubs: {
-        RouterLink: {
-          props: ['to'],
-          template: '<a :href="typeof to === \'string\' ? to : to.path"><slot /></a>',
-        },
-      },
-    },
-  })
+const getWeeklyInsight = vi.hoisted(() => vi.fn())
+vi.mock('@/api/insights', () => ({ getWeeklyInsight }))
+
+const weeklyInsight = {
+  weekStart: '2026-09-01',
+  headline: '실제 주간 인사이트',
+  trends: [{ topic: 'Vue', direction: 'UP', changeRate: 12.5 }],
+  watchlist: ['pgvector', 'Spring Boot'],
+  modelName: 'MVP seed',
+  generatedAt: '2026-09-04T00:00:00Z',
 }
 
 describe('InsightsView', () => {
-  it('shows the Figma weekly trend ranking in its numbered order', () => {
-    const wrapper = mountInsights()
-
-    expect(wrapper.get('h1').text()).toContain('AI 개발 트렌드')
-    expect(wrapper.text()).toContain('WEEKLY AI TREND REPORT · 2026년 9월 1주')
-    expect(wrapper.findAll('[data-testid="hero-metric"]')).toHaveLength(3)
-    expect(wrapper.text()).toContain('이번 주 인사이트 리포트 다운로드')
-    expect(wrapper.text()).toContain('트렌드 키워드로 바로 프로젝트 시작하기')
-    expect(wrapper.get('[aria-label="이전 주 리포트"]').exists()).toBe(true)
-    expect(wrapper.get('[aria-label="다음 주 리포트"]').exists()).toBe(true)
-    expect(wrapper.findAll('[data-testid="trend-ranking-card"]')).toHaveLength(4)
-    expect(wrapper.findAll('[data-testid="trend-ranking-card"]')[0].text()).toContain(
-      'Local LLMs On-Device AI',
-    )
-    expect(wrapper.findAll('[data-testid="trend-ranking-card"]')[3].text()).toContain(
-      'Multimodal RAG Pipeline',
-    )
+  beforeEach(() => {
+    getWeeklyInsight.mockReset().mockResolvedValue(weeklyInsight)
   })
 
-  it('marks the active Figma trend filter and switches its visible ranking', async () => {
-    const wrapper = mountInsights()
+  it('renders the weekly insight returned by the backend', async () => {
+    const wrapper = mount(InsightsView)
+    await flushPromises()
 
-    await wrapper.get('button[aria-label="급상승 검색어 트렌드"]').trigger('click')
-
-    expect(wrapper.findAll('[role="group"] button')).toHaveLength(5)
-    expect(
-      wrapper.get('button[aria-label="급상승 검색어 트렌드"]').attributes('aria-pressed'),
-    ).toBe('true')
-    expect(wrapper.findAll('[data-testid="trend-ranking-card"]')).toHaveLength(2)
-    expect(wrapper.text()).toContain('AI Voice Agent')
-    expect(wrapper.text()).not.toContain('Multimodal RAG Pipeline')
+    expect(wrapper.get('h1').text()).toBe('실제 주간 인사이트')
+    expect(wrapper.text()).toContain('Vue')
+    expect(wrapper.text()).toContain('+12.5%')
+    expect(wrapper.text()).toContain('pgvector')
+    expect(wrapper.text()).toContain('Spring Boot')
+    expect(getWeeklyInsight).toHaveBeenCalledOnce()
   })
 
-  it('shows point rows, the fourth sidebar CTA, and the 2 by 2 technology stack', () => {
-    const wrapper = mountInsights()
+  it('shows a retryable API error and retries the request', async () => {
+    getWeeklyInsight
+      .mockRejectedValueOnce(new Error('인사이트 연결 실패'))
+      .mockResolvedValueOnce(weeklyInsight)
+    const wrapper = mount(InsightsView)
+    await flushPromises()
 
-    expect(wrapper.findAll('[data-testid="trend-point-row"]')).toHaveLength(4)
-    expect(wrapper.text()).toContain('B2B 채택 1위')
-    expect(wrapper.get('[data-testid="trend-discussion-cta"]').text()).toContain('트렌드 토론방')
-    expect(wrapper.get('[data-testid="emerging-stacks"]').classes()).toContain('sm:grid-cols-2')
-    expect(wrapper.text()).toContain('Supabase 34%')
-    expect(wrapper.text()).toContain('DeepSeek 가성비 1위')
-    expect(wrapper.get('[data-testid="maker-opportunities"]').text()).toContain(
-      '이번 주 주목해야 할 AI 프로덕트 기회',
-    )
-  })
+    expect(wrapper.get('[role="alert"]').text()).toBe('인사이트 연결 실패')
+    await wrapper.get('button').trigger('click')
+    await flushPromises()
 
-  it('navigates a ranked trend to an existing project detail page', async () => {
-    await router.push('/projects/prj_301')
-    await router.isReady()
-    const wrapper = mount(
-      { template: '<RouterView />' },
-      { global: { plugins: [router, createPinia()] } },
-    )
-
-    expect(wrapper.text()).toContain('DevFlow Analytics')
+    expect(getWeeklyInsight).toHaveBeenCalledTimes(2)
+    expect(wrapper.text()).toContain('실제 주간 인사이트')
   })
 })

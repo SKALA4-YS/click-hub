@@ -1,37 +1,44 @@
-import { mockProjects, mockComments } from '@/data/mockProjects'
+import { apiClient } from '@/api/client'
 
-// 실제 API 명세(기획서 12장, 확정 시)로 교체될 자리.
-// 기획서의 "Interface First" 원칙에 따라 호출부(views/components)는 이 모듈의 함수 시그니처만 알면 되도록 유지한다.
-const MOCK_DELAY_MS = 200
-
-function delay(value) {
-  return new Promise((resolve) => setTimeout(() => resolve(value), MOCK_DELAY_MS))
+export function getProject(id) {
+  return apiClient.get(`/v1/projects/${id}`)
 }
 
-export function fetchFeed({ category = 'all' } = {}) {
-  const items =
-    category === 'all'
-      ? mockProjects
-      : mockProjects.filter((project) => project.category === category)
-  return delay(items)
+export function createProject(project) {
+  return apiClient.post('/v1/projects', { auth: 'required', body: project })
 }
 
-export function fetchTop100() {
-  const ranked = [...mockProjects].sort((a, b) => b.stats.unique_likes - a.stats.unique_likes)
-  return delay(ranked)
+export function updateProject(id, project) {
+  return apiClient.patch(`/v1/projects/${id}`, { auth: 'required', body: project })
 }
 
-export function fetchProjectById(id) {
-  const project = mockProjects.find((item) => item.id === id) ?? null
-  return delay(project)
+export function submitProject(id) {
+  return apiClient.post(`/v1/projects/${id}/submit`, { auth: 'required' })
 }
 
-export function fetchCommentsByProjectId(id) {
-  return delay(mockComments.filter((comment) => comment.project_id === id))
+export function deleteProject(id) {
+  return apiClient.delete(`/v1/projects/${id}`, { auth: 'required' })
 }
 
 export function recordOutboundClick(id) {
-  // POST /v1/projects/{id}/outbound-clicks 자리 — 목업 단계에서는 로그만 남긴다.
-  console.info(`[mock] outbound click recorded for ${id}`)
-  return delay({ ok: true })
+  return apiClient.post(`/v1/projects/${id}/outbound-clicks`)
+}
+
+export function toggleProjectLike(id) {
+  return apiClient.put(`/v1/projects/${id}/like`, { auth: 'required' })
+}
+
+export function toggleProjectFavorite(id) {
+  return apiClient.put(`/v1/projects/${id}/favorite`, { auth: 'required' })
+}
+
+export function getProjectComments(id) {
+  return apiClient.get(`/v1/projects/${id}/comments`)
+}
+
+export function createProjectComment(id, body) {
+  return apiClient.post(`/v1/projects/${id}/comments`, {
+    auth: 'required',
+    body: { body },
+  })
 }

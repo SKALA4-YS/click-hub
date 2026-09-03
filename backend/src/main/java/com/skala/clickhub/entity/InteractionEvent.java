@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
@@ -42,11 +43,13 @@ public class InteractionEvent {
 
     // interaction_event_type만 스키마에서 소문자 라벨이라 전용 컨버터를 쓴다(EventTypeConverter 주석 참고).
     @Convert(converter = EventTypeConverter.class)
-    @Column(nullable = false)
+    @ColumnTransformer(write = "?::interaction_event_type")
+    @Column(columnDefinition = "interaction_event_type", nullable = false)
     private EventType eventType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "actor_kind", nullable = false)
     private ActorKind actorKind;
 
     @Column(nullable = false)

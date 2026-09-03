@@ -77,7 +77,9 @@ public class SecurityConfig {
                         // §12 "인증: 선택" — 토큰이 있으면 개인화, 없어도 접근은 허용해야 하는 조회 API
                         .requestMatchers(HttpMethod.GET,
                                 "/v1/projects/{id}", "/v1/search", "/v1/feed",
-                                "/v1/rankings/**", "/v1/insights/weekly", "/v1/tutorials"
+                                "/v1/projects/{id}/comments", "/v1/creators/{id}",
+                                "/v1/catalog/**", "/v1/rankings/**",
+                                "/v1/insights/weekly", "/v1/tutorials"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/projects/{id}/outbound-clicks").permitAll()
                         // 커뮤니티 게시판은 목록/상세/댓글 조회까지 전부 로그인 사용자 전용이다

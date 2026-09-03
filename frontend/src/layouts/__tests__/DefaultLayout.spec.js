@@ -13,6 +13,9 @@ import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import router from '@/router'
 
 async function mountAt(path) {
+  if (path === '/onboarding') {
+    window.sessionStorage.setItem('clickhub.accessToken', 'test-token')
+  }
   await router.push(path)
   await router.isReady()
 
@@ -26,6 +29,7 @@ async function mountAt(path) {
 describe('DefaultLayout route shells', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    window.sessionStorage.clear()
   })
 
   it.each(['/login', '/signup', '/onboarding'])(

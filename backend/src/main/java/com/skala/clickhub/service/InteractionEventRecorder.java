@@ -1,6 +1,7 @@
 package com.skala.clickhub.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.skala.clickhub.entity.ActorKind;
 import com.skala.clickhub.entity.AnonymousSession;
 import com.skala.clickhub.entity.EventType;
@@ -37,6 +38,17 @@ public class InteractionEventRecorder {
 
     @Transactional
     public void record(EventType eventType, Project project, UUID userIdOrNull) {
+        record(eventType, project, userIdOrNull, JSON.createObjectNode());
+    }
+
+    @Transactional
+    public void recordToggle(EventType eventType, Project project, UUID userId, boolean enabled) {
+        ObjectNode context = JSON.createObjectNode();
+        context.put("enabled", enabled);
+        record(eventType, project, userId, context);
+    }
+
+    private void record(EventType eventType, Project project, UUID userIdOrNull, ObjectNode context) {
         ActorKind actorKind = userIdOrNull != null ? ActorKind.USER : ActorKind.ANONYMOUS;
         UUID actorKey = userIdOrNull != null ? userIdOrNull : newAnonymousActorKey();
 
@@ -45,7 +57,7 @@ public class InteractionEventRecorder {
                 .actorKind(actorKind)
                 .actorKey(actorKey)
                 .project(project)
-                .context(JSON.createObjectNode())
+                .context(context)
                 .build());
     }
 

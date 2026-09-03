@@ -3,21 +3,21 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import LoginView from '@/views/LoginView.vue'
-import { useAuthStore } from '@/stores/auth'
 
-const push = vi.fn()
+const route = vi.hoisted(() => ({ query: {} }))
 
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push }),
+  useRoute: () => route,
 }))
 
 describe('LoginView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    push.mockReset()
+    window.sessionStorage.clear()
+    route.query = {}
   })
 
-  it('renders the dedicated sign-in page structure from the design', () => {
+  it('renders the dedicated Google sign-in page structure', () => {
     const wrapper = mount(LoginView)
 
     expect(wrapper.get('a[href="/"]').text()).toContain('홈으로 돌아가기')
@@ -26,65 +26,39 @@ describe('LoginView', () => {
     expect(wrapper.text()).toContain(
       '배포된 사이트 프로젝트의 성과를 확인하고 전 세계 메이커들과 피드백을 나누세요.',
     )
-    expect(wrapper.get('button[name="google-login"]').text()).toContain('Google로 3초 만에 로그인')
+    expect(wrapper.get('[name="google-login"]').text()).toContain('Google로 3초 만에 로그인')
     expect(wrapper.text()).toContain('추천')
-    expect(wrapper.text()).toContain('또는 이메일로 로그인')
     expect(wrapper.text()).toContain('1,400+명의 인디 메이커 활동 중')
     expect(wrapper.text()).toContain('주간 핫 프로젝트 #1')
     expect(wrapper.text()).toContain('984')
     expect(wrapper.text()).toContain('256-bit SSL 엔드투엔드 암호화 보안 적용')
   })
 
-  it('provides labelled email, password, keep-login, and password visibility controls', async () => {
+  it('links directly to the backend Google authorization endpoint', () => {
     const wrapper = mount(LoginView)
 
-    expect(wrapper.get('input[type="email"]').attributes('placeholder')).toBe('maker@domain.com')
-    expect(wrapper.get('input[type="password"]').attributes('placeholder')).toBe(
-      '비밀번호를 입력하세요',
-    )
-    expect(wrapper.get('input[type="checkbox"]').attributes('name')).toBe('keep-logged-in')
-    expect(wrapper.text()).toContain('안전한 PC에서만 권장')
-    expect(wrapper.text()).toContain('비밀번호를 잊으셨나요?')
-    expect(wrapper.get('button[name="toggle-password"]').attributes('aria-label')).toContain('보기')
-
-    await wrapper.get('button[name="toggle-password"]').trigger('click')
-
-    expect(wrapper.get('input[name="password"]').attributes('type')).toBe('text')
-    expect(wrapper.get('button[name="toggle-password"]').attributes('aria-label')).toContain(
-      '숨기기',
+    expect(wrapper.get('[name="google-login"]').attributes('href')).toBe(
+      'http://localhost:8080/v1/auth/google',
     )
   })
 
-  it('keeps invalid email sign-in on the form and describes the correction', async () => {
+  it('remembers the protected destination before leaving for Google', async () => {
+    route.query = { redirect: '/favorites?category=ai' }
     const wrapper = mount(LoginView)
+    wrapper.get('[name="google-login"]').element.addEventListener('click', (event) => {
+      event.preventDefault()
+    })
 
-    await wrapper.get('form').trigger('submit')
+    await wrapper.get('[name="google-login"]').trigger('click')
 
-    expect(push).not.toHaveBeenCalled()
-    expect(wrapper.get('[role="alert"]').text()).toContain('이메일 주소를 입력해주세요')
+    expect(window.sessionStorage.getItem('clickhub.oauthReturnPath')).toBe('/favorites?category=ai')
   })
 
-  it('moves to onboarding for Google and valid local static sign-in actions', async () => {
+  it('does not expose a fake email or password login', () => {
     const wrapper = mount(LoginView)
 
-    await wrapper.get('button[name="google-login"]').trigger('click')
-    expect(useAuthStore().isLoggedIn).toBe(true)
-    expect(push).toHaveBeenLastCalledWith('/onboarding')
-
-    useAuthStore().logout()
-    await wrapper.get('input[name="email"]').setValue('maker@domain.com')
-    await wrapper.get('input[name="password"]').setValue('secret123')
-    await wrapper.get('form').trigger('submit')
-
-    expect(useAuthStore().isLoggedIn).toBe(true)
-    expect(push).toHaveBeenLastCalledWith('/onboarding')
-  })
-
-  it('offers the static signup route without a dead forgot-password link', () => {
-    const wrapper = mount(LoginView)
-
-    expect(wrapper.get('a[href="/signup"]').text()).toContain('회원가입하기')
-    expect(wrapper.find('a[href="#"]').exists()).toBe(false)
-    expect(wrapper.find('button:disabled').exists()).toBe(false)
+    expect(wrapper.find('input[type="email"]').exists()).toBe(false)
+    expect(wrapper.find('input[type="password"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('MVP1은 Google 로그인만 지원합니다')
   })
 })

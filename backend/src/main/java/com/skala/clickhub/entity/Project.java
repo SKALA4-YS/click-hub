@@ -58,7 +58,8 @@ public class Project extends BaseTimeEntity {
     private String repositoryUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "pricing_type", nullable = false)
     private PricingType pricing;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
@@ -73,7 +74,8 @@ public class Project extends BaseTimeEntity {
     private JsonNode screenshots;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "project_status", nullable = false)
     private ProjectStatus status;
 
     private String rejectionReason;

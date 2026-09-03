@@ -14,6 +14,25 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
     Optional<Project> findByIdAndStatus(UUID id, ProjectStatus status);
 
+    @Query("""
+            SELECT project FROM Project project
+            JOIN FETCH project.owner
+            LEFT JOIN FETCH project.primaryCategory
+            WHERE project.owner.id = :ownerId
+            ORDER BY project.createdAt DESC
+            """)
+    List<Project> findAllByOwnerId(@Param("ownerId") UUID ownerId);
+
+    @Query("""
+            SELECT project FROM Project project
+            JOIN FETCH project.owner
+            LEFT JOIN FETCH project.primaryCategory
+            WHERE project.owner.id = :ownerId AND project.status = :status
+            ORDER BY project.publishedAt DESC, project.id ASC
+            """)
+    List<Project> findAllByOwnerIdAndStatus(@Param("ownerId") UUID ownerId,
+                                             @Param("status") ProjectStatus status);
+
     /**
      * 통합 검색 — 기획서 5장 기준으로 "AI 없이도 항상 동작"하는 키워드 + 메타데이터 필터.
      *

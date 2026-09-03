@@ -1,50 +1,130 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import SiteCard from '@/components/card/SiteCard.vue'
-import { mockProjectDetails, getRelatedProjects } from '@/data/mockProjectDetail'
+import { toProjectDetailViewModel, toSiteCardProject } from '@/api/adapters/projects'
+import {
+  createProjectComment,
+  getProject,
+  getProjectComments,
+  recordOutboundClick,
+  toggleProjectFavorite,
+  toggleProjectLike,
+} from '@/api/projects'
+import { searchProjects } from '@/api/search'
+import { getCreator, toggleCreatorSubscription } from '@/api/users'
 import { useAuthStore } from '@/stores/auth'
 import { formatRelativeTime } from '@/utils/formatRelativeTime'
 
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 
-const project = computed(() => mockProjectDetails[route.params.id])
-const relatedProjects = computed(() => (project.value ? getRelatedProjects(project.value.id) : []))
+const project = ref(null)
+const relatedProjects = ref([])
+const isLoading = ref(true)
+const errorMessage = ref('')
 
 const isLiked = ref(false)
 const isFavorited = ref(false)
 const isSubscribed = ref(false)
 const isDescriptionExpanded = ref(false)
 const commentDraft = ref('')
-const localComments = ref([])
+const isSaving = ref(false)
 
-function toggleLike() {
-  isLiked.value = !isLiked.value
+function requireLogin() {
+  if (auth.isLoggedIn) return true
+  router.push({ name: 'login', query: { redirect: route.fullPath } })
+  return false
 }
-function toggleFavorite() {
-  isFavorited.value = !isFavorited.value
+
+async function toggleLike() {
+  if (!requireLogin() || isSaving.value) return
+  isSaving.value = true
+  try {
+    const response = await toggleProjectLike(project.value.id)
+    isLiked.value = response.liked
+    project.value.stats.likes = response.likeCount
+  } finally {
+    isSaving.value = false
+  }
 }
-function toggleSubscribe() {
-  isSubscribed.value = !isSubscribed.value
+async function toggleFavorite() {
+  if (!requireLogin() || isSaving.value) return
+  isSaving.value = true
+  try {
+    const previous = isFavorited.value
+    const response = await toggleProjectFavorite(project.value.id)
+    isFavorited.value = response.favorited
+    project.value.stats.favorites += response.favorited ? (previous ? 0 : 1) : previous ? -1 : 0
+  } finally {
+    isSaving.value = false
+  }
+}
+async function toggleSubscribe() {
+  if (!requireLogin() || isSaving.value) return
+  isSaving.value = true
+  try {
+    const response = await toggleCreatorSubscription(project.value.owner.id)
+    isSubscribed.value = response.subscribed
+  } finally {
+    isSaving.value = false
+  }
 }
 
 function handleVisit() {
   window.open(project.value.site_url, '_blank', 'noopener')
+  void recordOutboundClick(project.value.id).catch(() => {})
 }
 
-function submitComment() {
+async function submitComment() {
   const body = commentDraft.value.trim()
-  if (!body) return
-  localComments.value.unshift({
-    id: `local_${Date.now()}`,
-    author: auth.user?.display_name ?? '나',
-    body,
-    created_at: new Date().toISOString(),
-    likes: 0,
-  })
-  commentDraft.value = ''
+  if (!body || !requireLogin() || isSaving.value) return
+  isSaving.value = true
+  try {
+    const comment = await createProjectComment(project.value.id, body)
+    project.value.comments.unshift({
+      id: comment.id,
+      author: comment.authorName,
+      author_id: comment.authorId,
+      body: comment.body,
+      created_at: comment.createdAt,
+    })
+    project.value.stats.comments += 1
+    commentDraft.value = ''
+  } finally {
+    isSaving.value = false
+  }
 }
+
+async function loadProject() {
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const detail = await getProject(route.params.id)
+    const [comments, creator, related] = await Promise.all([
+      getProjectComments(detail.id),
+      getCreator(detail.ownerId),
+      searchProjects({ category: detail.categorySlug }),
+    ])
+    project.value = toProjectDetailViewModel(detail, comments, creator)
+    isLiked.value = project.value.liked_by_me
+    isFavorited.value = project.value.favorited_by_me
+    isSubscribed.value = project.value.subscribed_by_me
+    relatedProjects.value = related.items
+      .filter((item) => item.id !== detail.id)
+      .slice(0, 3)
+      .map(toSiteCardProject)
+  } catch (error) {
+    project.value = null
+    errorMessage.value = error.message
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(loadProject)
+watch(() => route.params.id, loadProject)
 
 function formatCount(value) {
   return new Intl.NumberFormat('ko-KR').format(value ?? 0)
@@ -69,9 +149,13 @@ const rankBadgeClass = computed(
 </script>
 
 <template>
-  <div v-if="!project" class="flex flex-col items-center gap-4 py-24 text-center">
+  <div v-if="isLoading" class="py-24 text-center text-sm text-body-light">
+    프로젝트를 불러오는 중입니다.
+  </div>
+
+  <div v-else-if="!project" class="flex flex-col items-center gap-4 py-24 text-center">
     <p class="text-lg font-semibold text-heading-light dark:text-heading-dark">
-      프로젝트를 찾을 수 없습니다.
+      {{ errorMessage || '프로젝트를 찾을 수 없습니다.' }}
     </p>
     <RouterLink to="/" class="text-primary-600 hover:underline">홈으로 돌아가기</RouterLink>
   </div>
@@ -215,7 +299,7 @@ const rankBadgeClass = computed(
                 d="M10 17.5s-6.5-4.1-8.4-8.1C.4 6.6 1.7 3.5 4.7 3c1.9-.3 3.6.6 4.3 2 .7-1.4 2.4-2.3 4.3-2 3 .5 4.3 3.6 3.1 6.4-1.9 4-8.4 8.1-8.4 8.1z"
               />
             </svg>
-            {{ formatCount(project.stats.likes + (isLiked ? 1 : 0)) }}
+            {{ formatCount(project.stats.likes) }}
           </button>
           <button
             type="button"
@@ -237,13 +321,13 @@ const rankBadgeClass = computed(
             >
               <path stroke-width="1.5" d="M5 3a1 1 0 00-1 1v13l6-3 6 3V4a1 1 0 00-1-1H5z" />
             </svg>
-            북마크 {{ formatCount(project.stats.favorites + (isFavorited ? 1 : 0)) }}
+            북마크 {{ formatCount(project.stats.favorites) }}
           </button>
           <span class="px-2 text-body-light dark:text-body-dark"
             >외부 클릭 {{ formatCount(project.stats.views) }}</span
           >
           <span class="px-2 text-body-light dark:text-body-dark"
-            >피드백 {{ project.stats.comments + localComments.length }}</span
+            >피드백 {{ project.stats.comments }}</span
           >
         </div>
       </div>
@@ -296,9 +380,7 @@ const rankBadgeClass = computed(
     <section class="rounded-2xl border border-divider/20 bg-white p-6">
       <h2 class="font-headline text-lg font-bold text-heading-light dark:text-heading-dark">
         도움이 되는 피드백
-        <span class="ml-1 text-sm font-medium text-body-light">{{
-          project.stats.comments + localComments.length
-        }}</span>
+        <span class="ml-1 text-sm font-medium text-body-light">{{ project.stats.comments }}</span>
       </h2>
 
       <div v-if="auth.isLoggedIn" class="flex flex-col gap-2">
@@ -325,11 +407,7 @@ const rankBadgeClass = computed(
       </p>
 
       <ul class="flex flex-col gap-4">
-        <li
-          v-for="comment in [...localComments, ...project.comments]"
-          :key="comment.id"
-          class="flex gap-3"
-        >
+        <li v-for="comment in project.comments" :key="comment.id" class="flex gap-3">
           <span
             class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-xs font-bold text-body-light dark:bg-surface-dark-2 dark:text-body-dark"
           >
@@ -346,7 +424,7 @@ const rankBadgeClass = computed(
           </div>
         </li>
         <li
-          v-if="project.comments.length === 0 && localComments.length === 0"
+          v-if="project.comments.length === 0"
           class="text-sm text-body-light dark:text-body-dark"
         >
           아직 댓글이 없어요. 첫 피드백을 남겨보세요!

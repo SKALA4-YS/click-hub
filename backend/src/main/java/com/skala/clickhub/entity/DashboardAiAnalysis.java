@@ -42,7 +42,8 @@ public class DashboardAiAnalysis {
     private Project project;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(columnDefinition = "analysis_type", nullable = false)
     private AnalysisType analysisType;
 
     /** TODO: daterange 커스텀 UserType 필요 — 현재는 원문 텍스트로만 다룸 */
