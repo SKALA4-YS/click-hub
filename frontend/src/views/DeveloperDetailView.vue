@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { toSiteCardProject } from '@/api/adapters/projects'
+import { deleteProject, submitProject } from '@/api/projects'
 import { getCreator, getMyProjects, toggleCreatorSubscription } from '@/api/users'
 import SiteCard from '@/components/card/SiteCard.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -49,6 +50,34 @@ async function toggleSubscription() {
     const result = await toggleCreatorSubscription(creatorId.value)
     creator.value.subscribedByMe = result.subscribed
     creator.value.subscriberCount += result.subscribed ? 1 : -1
+  } finally {
+    isSaving.value = false
+  }
+}
+
+async function submitDraft(project) {
+  if (isSaving.value) return
+  isSaving.value = true
+  errorMessage.value = ''
+  try {
+    const result = await submitProject(project.id)
+    project.status = result.status
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isSaving.value = false
+  }
+}
+
+async function removeProject(project) {
+  if (isSaving.value) return
+  isSaving.value = true
+  errorMessage.value = ''
+  try {
+    await deleteProject(project.id)
+    projects.value = projects.value.filter((item) => item.id !== project.id)
+  } catch (error) {
+    errorMessage.value = error.message
   } finally {
     isSaving.value = false
   }
@@ -120,7 +149,32 @@ watch(creatorId, loadCreator)
           등록된 프로젝트가 없습니다.
         </p>
         <div v-else class="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <SiteCard v-for="project in projects" :key="project.id" :project="project" />
+          <article v-for="project in projects" :key="project.id">
+            <SiteCard :project="project" />
+            <div v-if="isMine" class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <span class="rounded bg-neutral-100 px-2 py-1">{{ project.status }}</span>
+              <RouterLink
+                :to="`/projects/${project.id}/edit`"
+                class="font-semibold text-primary-700"
+                >수정</RouterLink
+              >
+              <button
+                v-if="project.status === 'DRAFT'"
+                type="button"
+                class="font-semibold text-primary-700"
+                @click="submitDraft(project)"
+              >
+                검토 요청
+              </button>
+              <button
+                type="button"
+                class="font-semibold text-danger"
+                @click="removeProject(project)"
+              >
+                삭제
+              </button>
+            </div>
+          </article>
         </div>
       </section>
     </template>

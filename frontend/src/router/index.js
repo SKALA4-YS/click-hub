@@ -68,6 +68,12 @@ export const routes = [
     component: () => import('../views/ProjectDetailView.vue'),
   },
   {
+    path: '/projects/:id/edit',
+    name: 'project-edit',
+    component: () => import('../views/ProjectEditView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/rankings',
     name: 'rankings',
     component: () => import('../views/ProjectListView.vue'),
@@ -86,6 +92,12 @@ export const routes = [
     path: '/community',
     name: 'community',
     component: () => import('../views/CommunityBoardView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/community/posts/:id',
+    name: 'community-post-detail',
+    component: () => import('../views/CommunityPostDetailView.vue'),
     meta: { requiresAuth: true },
   },
   {

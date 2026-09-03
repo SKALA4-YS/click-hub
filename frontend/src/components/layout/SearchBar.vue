@@ -1,7 +1,7 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { mockProjectList } from '@/data/mockProjectList'
-import { dataQualificationSuggestions } from '@/data/searchSuggestions'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { getCategories } from '@/api/catalog'
+import { searchProjects } from '@/api/search'
 import clearIcon from '@/assets/figma/clear.svg'
 import diagonalArrowIcon from '@/assets/figma/diagonal-arrow.svg'
 import filterChevronIcon from '@/assets/figma/filter-chevron.svg'
@@ -11,9 +11,6 @@ import searchIcon from '@/assets/figma/search.svg'
 import slidersIcon from '@/assets/figma/sliders.svg'
 import suggestionSearchIcon from '@/assets/figma/suggestion-search.svg'
 
-// GET /api/v1/search?q=&category=&tags=&tech=&pricing= 자리.
-// 자동완성 결과를 내려주는 별도 API는 명세에 없어서, 지금은 제목·카테고리 기준으로
-// 화면에서 직접 후보를 뽑는다. 상세 필터 항목은 검색 API의 쿼리 파라미터에 맞춰 구성했다.
 const query = ref('')
 const isOpen = ref(false)
 const showAdvanced = ref(false)
@@ -25,30 +22,35 @@ const restoringFocus = ref(false)
 const activeIndex = ref(-1)
 
 const categoryFilter = ref('')
-const pricingFilter = ref('')
+const suggestions = ref([])
+const searchError = ref('')
+let searchTimer
 
-const categoryOptions = [
-  { slug: 'developer-tools', label: '개발자 도구' },
-  { slug: 'design-creative', label: '디자인/크리에이티브' },
-  { slug: 'content-entertainment', label: '콘텐츠/엔터테인먼트' },
-  { slug: 'ai-service', label: 'AI 서비스' },
-  { slug: 'productivity-work', label: '생산성/업무' },
-  { slug: 'other', label: '기타' },
-]
-const pricingOptions = [
-  { value: 'FREE', label: '무료' },
-  { value: 'FREEMIUM', label: '프리미엄' },
-  { value: 'PAID', label: '유료' },
-]
+const categoryOptions = ref([])
 
-const suggestions = computed(() => {
-  if (!autocompleteEnabled.value) return []
-  const q = query.value.trim().toLowerCase()
-  if (!q) return []
-  if (q === '데이터 자격') return dataQualificationSuggestions
-  return mockProjectList
-    .filter((p) => p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
-    .slice(0, 4)
+async function loadSuggestions() {
+  const searchTerm = query.value.trim()
+  if (!autocompleteEnabled.value || !searchTerm) {
+    suggestions.value = []
+    searchError.value = ''
+    return
+  }
+  try {
+    const page = await searchProjects({
+      q: searchTerm,
+      category: categoryFilter.value || undefined,
+    })
+    suggestions.value = page.items.slice(0, 4)
+    searchError.value = ''
+  } catch (error) {
+    suggestions.value = []
+    searchError.value = error.message
+  }
+}
+
+watch([query, categoryFilter, autocompleteEnabled], () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => void loadSuggestions(), 200)
 })
 
 watch(suggestions, (items) => {
@@ -131,10 +133,16 @@ function suggestionParts(title) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', handleOutsideClick)
+  try {
+    categoryOptions.value = await getCategories()
+  } catch {
+    categoryOptions.value = []
+  }
 })
 onBeforeUnmount(() => {
+  clearTimeout(searchTimer)
   document.removeEventListener('click', handleOutsideClick)
 })
 </script>
@@ -222,8 +230,11 @@ onBeforeUnmount(() => {
               </button>
             </li>
           </ul>
+          <p v-if="searchError" role="alert" class="px-4 py-3 text-sm text-danger">
+            {{ searchError }}
+          </p>
           <p
-            v-if="suggestions.length === 0 && query.trim()"
+            v-else-if="suggestions.length === 0 && query.trim()"
             class="px-4 py-3 text-sm text-body-light dark:text-body-dark"
           >
             일치하는 프로젝트가 없어요.
@@ -257,23 +268,14 @@ onBeforeUnmount(() => {
               ><img :src="slidersIcon" alt="" class="h-3 w-3" />원하는 조건이 더 있으신가요?</span
             >
           </div>
-          <div v-if="showAdvanced" class="grid grid-cols-2 gap-2 pt-2">
+          <div v-if="showAdvanced" class="grid gap-2 pt-2">
             <select
               v-model="categoryFilter"
               class="rounded-lg border border-divider/20 bg-surface-light-1 px-2 py-1.5 text-sm dark:border-divider/30 dark:bg-surface-dark-2"
             >
               <option value="">카테고리 전체</option>
               <option v-for="c in categoryOptions" :key="c.slug" :value="c.slug">
-                {{ c.label }}
-              </option>
-            </select>
-            <select
-              v-model="pricingFilter"
-              class="rounded-lg border border-divider/20 bg-surface-light-1 px-2 py-1.5 text-sm dark:border-divider/30 dark:bg-surface-dark-2"
-            >
-              <option value="">가격 전체</option>
-              <option v-for="p in pricingOptions" :key="p.value" :value="p.value">
-                {{ p.label }}
+                {{ c.name }}
               </option>
             </select>
           </div>

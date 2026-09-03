@@ -13,6 +13,7 @@ export function toSiteCardProject(project, overrides = {}) {
     tags: project.tags ?? [],
     owner_name: project.ownerName ?? project.owner_name ?? '',
     published_at: project.publishedAt ?? project.published_at ?? null,
+    status: project.status ?? 'PUBLISHED',
     stats: {
       likes: likeCount,
       comments: commentCount,

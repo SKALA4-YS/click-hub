@@ -17,8 +17,13 @@ function handleOutsideClick(event) {
 onMounted(() => document.addEventListener('click', handleOutsideClick))
 onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
 
+function toggleOpen() {
+  isOpen.value = !isOpen.value
+  if (isOpen.value) void notifications.load().catch(() => {})
+}
+
 function handleClick(notification) {
-  notifications.markRead(notification.id)
+  void notifications.markRead(notification.id)
   isOpen.value = false
 }
 </script>
@@ -29,7 +34,7 @@ function handleClick(notification) {
       type="button"
       class="relative rounded-full p-2 text-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
       title="알림"
-      @click="isOpen = !isOpen"
+      @click="toggleOpen"
     >
       <img :src="notificationIcon" alt="" class="h-5 w-5" />
       <span
@@ -48,7 +53,7 @@ function handleClick(notification) {
         <button
           type="button"
           class="text-xs text-primary-600 hover:underline"
-          @click="notifications.markAllRead"
+          @click="void notifications.markAllRead()"
         >
           전체 읽음
         </button>

@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -9,6 +9,20 @@ vi.hoisted(() => {
   })
 })
 
+const api = vi.hoisted(() => ({
+  getMyFavorites: vi.fn(),
+  getMySubscriptions: vi.fn(),
+  toggleCreatorSubscription: vi.fn(),
+  toggleProjectFavorite: vi.fn(),
+}))
+vi.mock('@/api/users', () => ({
+  getMyFavorites: api.getMyFavorites,
+  getMySubscriptions: api.getMySubscriptions,
+  toggleCreatorSubscription: api.toggleCreatorSubscription,
+  updateOnboarding: vi.fn(),
+  updateProfile: vi.fn(),
+}))
+vi.mock('@/api/projects', () => ({ toggleProjectFavorite: api.toggleProjectFavorite }))
 vi.mock('@/views/DeveloperDetailView.vue', () => ({
   default: { template: '<section><h1>김민준</h1><p>내 프로젝트</p></section>' },
 }))
@@ -20,47 +34,73 @@ import { useAuthStore } from '@/stores/auth'
 
 const routerLinkStub = {
   props: ['to'],
-  template:
-    '<a :href="typeof to === \'string\' ? to : to?.path || `/projects/${to?.params?.id}`"><slot /></a>',
-}
-
-function mountView(component) {
-  return mount(component, { global: { stubs: { RouterLink: routerLinkStub } } })
+  template: '<a :href="typeof to === \'string\' ? to : to?.path"><slot /></a>',
 }
 
 describe('member library pages', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useAuthStore().$patch({ user: { display_name: '김민준' } })
+    api.getMyFavorites.mockReset().mockResolvedValue([
+      {
+        id: 'project-1',
+        title: 'CodeSnap Pro',
+        description: 'API favorite',
+        categoryName: '개발자 도구',
+        ownerName: 'Maker',
+      },
+    ])
+    api.getMySubscriptions.mockReset().mockResolvedValue([
+      {
+        id: 'creator-1',
+        displayName: '김민준',
+        avatarUrl: null,
+        subscriberCount: 4,
+        projectCount: 2,
+      },
+    ])
+    api.toggleProjectFavorite.mockReset().mockResolvedValue({ favorited: false })
+    api.toggleCreatorSubscription.mockReset().mockResolvedValue({ subscribed: false })
   })
 
   it('uses the API-backed developer profile for my page', () => {
-    const wrapper = mountView(MyPageView)
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    useAuthStore().$patch({ user: { id: 'viewer', displayName: '김민준' } })
+    const wrapper = mount(MyPageView, {
+      global: { plugins: [pinia], stubs: { RouterLink: routerLinkStub } },
+    })
     expect(wrapper.text()).toContain('김민준')
     expect(wrapper.text()).toContain('내 프로젝트')
   })
 
-  it('shows the Figma favorite vault and filters saved projects', async () => {
-    const wrapper = mountView(FavoritesView)
-    expect(wrapper.get('h1').text()).toBe('즐겨찾기 보관함')
-    expect(wrapper.text()).toContain('18개 저장됨')
-    expect(wrapper.findAll('[data-testid="favorite-card"]')).toHaveLength(6)
-
-    await wrapper.get('input[name="favorite-search"]').setValue('CodeSnap')
-    expect(wrapper.findAll('[data-testid="favorite-card"]')).toHaveLength(1)
+  it('loads and removes server favorites', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    useAuthStore().$patch({ user: { id: 'viewer' } })
+    const wrapper = mount(FavoritesView, {
+      global: { plugins: [pinia], stubs: { RouterLink: routerLinkStub } },
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('1개 저장됨')
     expect(wrapper.text()).toContain('CodeSnap Pro')
+    await wrapper.get('[aria-label="CodeSnap Pro 즐겨찾기 해제"]').trigger('click')
+    await flushPromises()
+    expect(api.toggleProjectFavorite).toHaveBeenCalledWith('project-1')
+    expect(wrapper.findAll('[data-testid="favorite-card"]')).toHaveLength(0)
   })
 
-  it('shows following summaries and lets a member unfollow locally', async () => {
-    const wrapper = mountView(FollowingView)
-    expect(wrapper.get('h1').text()).toContain('내 팔로잉 관리')
-    expect(wrapper.text()).toContain('팔로잉 메이커')
-    expect(wrapper.text()).toContain('14명')
-    expect(wrapper.text()).toContain('구독 알림 설정')
-    expect(wrapper.text()).toContain('추천 인디 메이커')
-    expect(wrapper.findAll('[data-testid="following-card"]')).toHaveLength(5)
-
-    await wrapper.get('button[aria-label="김민준 팔로우 해제"]').trigger('click')
-    expect(wrapper.findAll('[data-testid="following-card"]')).toHaveLength(4)
+  it('loads and removes server subscriptions', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    useAuthStore().$patch({ user: { id: 'viewer' } })
+    const wrapper = mount(FollowingView, {
+      global: { plugins: [pinia], stubs: { RouterLink: routerLinkStub } },
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('팔로잉 메이커 1명')
+    await wrapper.get('[aria-label="김민준 팔로우 해제"]').trigger('click')
+    await flushPromises()
+    expect(api.toggleCreatorSubscription).toHaveBeenCalledWith('creator-1')
+    expect(wrapper.findAll('[data-testid="following-card"]')).toHaveLength(0)
   })
 })

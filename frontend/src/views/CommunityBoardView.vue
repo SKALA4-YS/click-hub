@@ -1,271 +1,181 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+
+import { createCommunityPost, getCommunityBoards, getCommunityPosts } from '@/api/community'
 import CommunityPostList from '@/components/pages/community/CommunityPostList.vue'
-import { communityPosts } from '@/data/communityBoardFixture'
 
-const activePage = ref(1)
-const sort = ref('latest')
-const searchQuery = ref('')
-const resolvedOnly = ref(false)
-const postsPerPage = 6
+const boards = ref([])
+const activeBoard = ref('')
+const posts = ref([])
+const nextCursor = ref(null)
+const query = ref('')
+const isLoading = ref(true)
+const errorMessage = ref('')
+const showComposer = ref(false)
+const isSaving = ref(false)
+const form = reactive({ title: '', body: '' })
 
-const filteredPosts = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase()
-  const posts = communityPosts.filter((post) => {
-    const matchesQuery =
-      !query || `${post.title} ${post.summary} ${post.tags.join(' ')}`.toLowerCase().includes(query)
-    return matchesQuery && (!resolvedOnly.value || post.resolved)
-  })
-  if (sort.value === 'popular') return [...posts].sort((left, right) => right.likes - left.likes)
-  if (sort.value === 'comments')
-    return [...posts].sort((left, right) => right.comments - left.comments)
-  return posts
+const visiblePosts = computed(() => {
+  const needle = query.value.trim().toLowerCase()
+  return posts.value.filter((post) =>
+    `${post.title} ${post.authorName}`.toLowerCase().includes(needle),
+  )
 })
 
-const pageCount = computed(() =>
-  searchQuery.value || resolvedOnly.value
-    ? Math.max(1, Math.ceil(filteredPosts.value.length / postsPerPage))
-    : 12,
-)
-const visiblePosts = computed(() =>
-  filteredPosts.value.slice((activePage.value - 1) * postsPerPage, activePage.value * postsPerPage),
-)
+async function loadBoards() {
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    boards.value = await getCommunityBoards()
+    activeBoard.value = boards.value[0]?.slug ?? ''
+  } catch (error) {
+    errorMessage.value = error.message
+    isLoading.value = false
+  }
+}
 
-function selectPage(page) {
-  activePage.value = page
+async function loadPosts({ append = false } = {}) {
+  if (!activeBoard.value) {
+    isLoading.value = false
+    return
+  }
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const page = await getCommunityPosts(activeBoard.value, {
+      cursor: append ? nextCursor.value : undefined,
+    })
+    posts.value = append ? [...posts.value, ...page.items] : page.items
+    nextCursor.value = page.nextCursor
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isLoading.value = false
+  }
 }
-function setSort(nextSort) {
-  sort.value = nextSort
-  activePage.value = 1
+
+async function createPost() {
+  if (!form.title.trim() || !form.body.trim() || isSaving.value) return
+  isSaving.value = true
+  errorMessage.value = ''
+  try {
+    await createCommunityPost(activeBoard.value, {
+      title: form.title.trim(),
+      body: form.body.trim(),
+    })
+    form.title = ''
+    form.body = ''
+    showComposer.value = false
+    await loadPosts()
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isSaving.value = false
+  }
 }
-function resetPage() {
-  activePage.value = 1
-}
+
+watch(activeBoard, () => void loadPosts())
+onMounted(loadBoards)
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-[1120px] py-4 sm:py-8">
-    <section
-      class="mb-4 rounded-2xl border border-divider/15 bg-gradient-to-br from-surface-light-1 via-surface-light-1 to-primary-50 px-5 py-6 shadow-[0_10px_28px_rgba(15,14,71,0.04)] dark:border-blue-500/15 dark:from-surface-dark-1 dark:via-surface-dark-1 dark:to-primary-950 sm:flex sm:items-center sm:justify-between sm:px-7"
+  <section class="mx-auto w-full max-w-[1120px] py-4 sm:py-8" aria-labelledby="community-heading">
+    <header
+      class="rounded-2xl border border-divider/15 bg-white px-6 py-7 shadow-sm sm:flex sm:items-center sm:justify-between"
     >
       <div>
-        <p class="mb-2 text-xs font-semibold text-primary-600 dark:text-blue-300">MAKER COMMONS</p>
-        <h1
-          class="font-headline text-2xl font-extrabold tracking-tight text-heading-light dark:text-heading-dark"
-        >
+        <p class="text-xs font-semibold text-primary-600">MAKER COMMONS</p>
+        <h1 id="community-heading" class="mt-2 font-headline text-2xl font-extrabold">
           커뮤니티 게시판
         </h1>
-        <p class="mt-2 text-xs leading-5 text-body-light dark:text-body-dark">
-          사이드 프로젝트를 만들고 있는 사람들의 인사이트, 코드 리뷰와 협업, 솔직한 회고와 피드백
-          공간
+        <p class="mt-2 text-sm text-body-light">
+          프로젝트 경험과 질문을 실제 사용자들과 나누는 공간입니다.
         </p>
       </div>
-      <RouterLink
-        to="/login"
-        class="mt-5 inline-flex shrink-0 items-center justify-center rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 sm:mt-0"
-        >새 글 작성하기</RouterLink
+      <button
+        type="button"
+        class="mt-5 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white sm:mt-0"
+        @click="showComposer = !showComposer"
       >
-    </section>
-    <div class="mb-4 flex flex-wrap gap-2" aria-label="게시판 통계">
-      <span class="rounded-md bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white"
-        >전체글 1,248</span
-      ><span
-        class="rounded-md border border-divider/20 bg-surface-light-1 px-3 py-1.5 text-xs text-body-light dark:border-blue-500/15 dark:bg-surface-dark-1 dark:text-body-dark"
-        >자유게시판 412</span
-      ><span
-        class="rounded-md border border-divider/20 bg-surface-light-1 px-3 py-1.5 text-xs text-body-light dark:border-blue-500/15 dark:bg-surface-dark-1 dark:text-body-dark"
-        >정보공유 530</span
-      ><span
-        class="rounded-md border border-divider/20 bg-surface-light-1 px-3 py-1.5 text-xs text-body-light dark:border-blue-500/15 dark:bg-surface-dark-1 dark:text-body-dark"
-        >IT / Q&amp;A 306</span
+        새 글 작성하기
+      </button>
+    </header>
+
+    <form
+      v-if="showComposer"
+      class="mt-5 space-y-3 rounded-xl border border-divider/20 bg-white p-5"
+      @submit.prevent="createPost"
+    >
+      <input
+        v-model="form.title"
+        name="post-title"
+        maxlength="200"
+        required
+        class="w-full rounded-lg border border-divider/20 px-3 py-2"
+        placeholder="제목"
+      />
+      <textarea
+        v-model="form.body"
+        name="post-body"
+        maxlength="10000"
+        required
+        rows="5"
+        class="w-full rounded-lg border border-divider/20 px-3 py-2"
+        placeholder="내용"
+      />
+      <button
+        type="submit"
+        :disabled="isSaving"
+        class="rounded-lg bg-primary-600 px-5 py-2 text-sm font-bold text-white"
       >
+        {{ isSaving ? '등록 중...' : '게시글 등록' }}
+      </button>
+    </form>
+
+    <nav class="mt-5 flex flex-wrap gap-2" aria-label="커뮤니티 게시판">
+      <button
+        v-for="board in boards"
+        :key="board.id"
+        type="button"
+        :aria-pressed="activeBoard === board.slug"
+        class="rounded-lg px-4 py-2 text-sm font-semibold"
+        :class="
+          activeBoard === board.slug
+            ? 'bg-primary-600 text-white'
+            : 'border border-divider/20 bg-white'
+        "
+        @click="activeBoard = board.slug"
+      >
+        {{ board.name }}
+      </button>
+    </nav>
+
+    <input
+      v-model="query"
+      type="search"
+      class="mt-5 w-full rounded-lg border border-divider/20 bg-white px-4 py-3 text-sm"
+      placeholder="게시글 제목, 작성자 검색"
+    />
+
+    <p v-if="isLoading" class="py-16 text-center text-sm text-body-light">
+      게시글을 불러오는 중입니다.
+    </p>
+    <div v-else-if="errorMessage" class="py-16 text-center">
+      <p role="alert" class="text-sm text-danger">{{ errorMessage }}</p>
+      <button type="button" class="mt-4 font-semibold text-primary-600" @click="loadPosts()">
+        다시 시도
+      </button>
     </div>
-    <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px]">
-      <div>
-        <div
-          aria-label="게시글 정렬 및 필터"
-          class="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-divider/15 bg-surface-light-1 p-2 dark:border-blue-500/15 dark:bg-surface-dark-1"
-        >
-          <button
-            type="button"
-            class="rounded-md px-3 py-2 text-xs font-semibold"
-            :class="
-              sort === 'latest'
-                ? 'bg-primary-600 text-white'
-                : 'text-body-light dark:text-body-dark'
-            "
-            @click="setSort('latest')"
-          >
-            최신순</button
-          ><button
-            type="button"
-            class="rounded-md px-3 py-2 text-xs font-semibold"
-            :class="
-              sort === 'popular'
-                ? 'bg-primary-600 text-white'
-                : 'text-body-light dark:text-body-dark'
-            "
-            @click="setSort('popular')"
-          >
-            인기순 (Trending)</button
-          ><button
-            type="button"
-            class="rounded-md px-3 py-2 text-xs font-semibold"
-            :class="
-              sort === 'comments'
-                ? 'bg-primary-600 text-white'
-                : 'text-body-light dark:text-body-dark'
-            "
-            @click="setSort('comments')"
-          >
-            댓글 많은순</button
-          ><label class="flex items-center gap-1.5 px-2 text-xs text-body-light dark:text-body-dark"
-            ><input
-              v-model="resolvedOnly"
-              type="checkbox"
-              class="accent-primary-600"
-              @change="resetPage"
-            /># 해결된 질문만</label
-          ><input
-            v-model="searchQuery"
-            type="search"
-            placeholder="게시글 제목, 내용 검색"
-            class="min-w-[180px] flex-1 rounded-md border border-divider/20 bg-base-light px-3 py-2 text-xs text-heading-light outline-none placeholder:text-body-light focus:border-primary-600 dark:border-blue-500/15 dark:bg-base-dark dark:text-heading-dark"
-            @input="resetPage"
-          />
-        </div>
-        <CommunityPostList :posts="visiblePosts" />
-        <nav aria-label="게시글 페이지" class="mt-7 flex items-center justify-center gap-1">
-          <button
-            type="button"
-            aria-label="이전 페이지"
-            class="h-8 min-w-8 rounded-md text-xs text-body-light disabled:opacity-40 dark:text-body-dark"
-            :disabled="activePage === 1"
-            @click="selectPage(activePage - 1)"
-          >
-            이전</button
-          ><template v-for="page in [1, 2, 3, 4, 5]" :key="page"
-            ><button
-              type="button"
-              :aria-label="`${page}페이지`"
-              :aria-current="activePage === page ? 'page' : undefined"
-              class="h-8 min-w-8 rounded-md text-xs font-semibold"
-              :class="
-                activePage === page
-                  ? 'bg-primary-600 text-white'
-                  : 'text-body-light dark:text-body-dark'
-              "
-              @click="selectPage(page)"
-            >
-              {{ page }}
-            </button></template
-          ><span class="px-1 text-xs text-body-light dark:text-body-dark">…</span
-          ><button
-            type="button"
-            aria-label="12페이지"
-            class="h-8 min-w-8 rounded-md text-xs font-semibold text-body-light dark:text-body-dark"
-            @click="selectPage(12)"
-          >
-            12</button
-          ><button
-            type="button"
-            aria-label="다음 페이지"
-            class="h-8 min-w-8 rounded-md text-xs text-body-light disabled:opacity-40 dark:text-body-dark"
-            :disabled="activePage === pageCount"
-            @click="selectPage(activePage + 1)"
-          >
-            다음
-          </button>
-        </nav>
-      </div>
-      <aside class="space-y-4">
-        <section
-          class="rounded-2xl border border-divider/15 bg-surface-light-1 p-5 dark:border-blue-500/15 dark:bg-surface-dark-1"
-        >
-          <h2 class="font-headline text-sm font-bold text-heading-light dark:text-heading-dark">
-            메이커 커뮤니티 에티켓
-          </h2>
-          <ul class="mt-3 space-y-2 text-xs leading-5 text-body-light dark:text-body-dark">
-            <li>서로 존중과 격려를 기본으로 해주세요.</li>
-            <li>프로젝트 홍보는 맥락과 함께 공유해요.</li>
-            <li>도움이 된 답변에는 감사 인사를 남겨요.</li>
-          </ul>
-        </section>
-        <section
-          class="rounded-2xl border border-divider/15 bg-surface-light-1 p-5 dark:border-blue-500/15 dark:bg-surface-dark-1"
-        >
-          <h2 class="font-headline text-sm font-bold text-heading-light dark:text-heading-dark">
-            실시간 주간 핫포스트 TOP 5
-          </h2>
-          <ol class="mt-4 space-y-3">
-            <li
-              v-for="(post, index) in communityPosts.slice(2, 7)"
-              :key="post.id"
-              class="flex gap-2 text-xs"
-            >
-              <span class="font-bold text-primary-600 dark:text-blue-300">{{ index + 1 }}</span
-              ><span class="min-w-0 truncate text-body-light dark:text-body-dark">{{
-                post.title
-              }}</span>
-            </li>
-          </ol>
-        </section>
-        <section
-          class="rounded-2xl border border-divider/15 bg-surface-light-1 p-5 dark:border-blue-500/15 dark:bg-surface-dark-1"
-        >
-          <div class="flex items-center justify-between">
-            <h2 class="font-headline text-sm font-bold text-heading-light dark:text-heading-dark">
-              이번 주 우수 답변자
-            </h2>
-            <span
-              class="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700"
-              >Top Helpers</span
-            >
-          </div>
-          <ol class="mt-4 space-y-3 text-xs text-body-light dark:text-body-dark">
-            <li>Sarah Park <span class="float-right">24개 채택</span></li>
-            <li>정우진 (@woojin_ai) <span class="float-right">18개 채택</span></li>
-            <li>송하윤 (@haeun_fe) <span class="float-right">15개 채택</span></li>
-          </ol>
-        </section>
-        <section
-          class="rounded-2xl border border-divider/15 bg-surface-light-1 p-5 dark:border-blue-500/15 dark:bg-surface-dark-1"
-        >
-          <h2 class="font-headline text-sm font-bold text-heading-light dark:text-heading-dark">
-            인기 기술 &amp; 주제 태그
-          </h2>
-          <div class="mt-4 flex flex-wrap gap-2">
-            <span
-              v-for="tag in [
-                'Next.js',
-                'Vue.js',
-                'TailwindCSS',
-                'Spring Boot',
-                'Supabase',
-                '인디해커',
-                'SaaS',
-                'AI 프로젝트',
-                'MVP',
-              ]"
-              :key="tag"
-              class="rounded-md bg-neutral-100 px-2 py-1 text-xs text-body-light dark:bg-surface-dark-2 dark:text-body-dark"
-              >#{{ tag }}</span
-            >
-          </div>
-        </section>
-        <section class="rounded-2xl bg-gradient-to-br from-secondary to-primary-600 p-5 text-white">
-          <p class="text-xs font-semibold text-blue-100">9월 메이커 챌린지</p>
-          <h2 class="mt-3 font-headline text-lg font-bold">
-            30일 동안 MVP 런칭하고 첫 수익 만들기
-          </h2>
-          <RouterLink
-            to="/login"
-            class="mt-5 inline-flex rounded-lg bg-white px-3 py-2 text-xs font-semibold text-primary-700"
-            >챌린지 참가하기</RouterLink
-          >
-        </section>
-      </aside>
-    </div>
-  </div>
+    <template v-else>
+      <div class="mt-5"><CommunityPostList :posts="visiblePosts" /></div>
+      <button
+        v-if="nextCursor"
+        type="button"
+        class="mx-auto mt-6 block rounded-lg border border-divider/20 px-5 py-2 text-sm font-semibold"
+        @click="loadPosts({ append: true })"
+      >
+        더 보기
+      </button>
+    </template>
+  </section>
 </template>
