@@ -7,6 +7,69 @@
 
 ## 0. 변경 이력
 
+### 2026-09-03 (7차) — 실제 브라우저로 Google 로그인 E2E 테스트, 진짜 버그 2건 발견·수정
+"웹 사용자가 실제 쓰는 방식으로 모든 기능을 테스트해달라"는 요청에 따라 진행. 프론트엔드는 아직
+Vite/Vue 기본 템플릿 + 백엔드 헬스체크 위젯뿐이고, 백엔드도 Google 로그인 외 전부 스켈레톤이라 —
+"모든 기능"을 문자 그대로 테스트할 수는 없었지만, **실제로 존재하는 기능(Google 로그인 전체 플로우)은
+브라우저로 끝까지 실행**했다. 그 결과 지금까지의 컴파일/Testcontainers 테스트로는 전혀 잡을 수 없었던
+**실제 버그 2건**을 발견했다 — 둘 다 "실제 엔티티를 저장"하거나 "실제 라우팅을 태우는" 시나리오여야만
+드러나는데, `DatabaseMigrationTests`는 스키마 검증만 했지 실제 `repository.save()`나 컨트롤러 라우팅을
+한 번도 실행한 적이 없었기 때문이다.
+
+**절차**: Docker로 임시 pgvector 컨테이너(호스트 포트 5433, 기존 로컬 Postgres와 무관) 기동 →
+`SPRING_PROFILES_ACTIVE=oauth2` + 사용자가 실제 발급받은 Google Client ID/Secret으로 백엔드
+`bootRun` → 프론트 `npm run dev` → claude-in-chrome으로 실제 브라우저를 열어 `http://localhost:5173`
+(백엔드 연결 위젯 "Connected" 확인) → `http://localhost:8080/v1/auth/google` 직접 진입 →
+실제 Google 계정으로 로그인/동의 → 콜백까지 전부 실행.
+
+**버그 1 — JPA Auditing이 `LocalDateTime`을 넘기는데 필드는 전부 `OffsetDateTime`이라 모든 INSERT가 실패**
+`BaseTimeEntity`(`User`/`Project`/`ProjectComment`/`Tutorial`/`CommunityBoard`/`CommunityPost`/
+`CommunityPostComment`가 상속)를 통한 **첫 저장이 예외 없이 전부 실패**하는 상태였다. Spring Data JPA의
+기본 `CurrentDateTimeProvider`가 현재 시각을 `LocalDateTime`으로 만들어 넘기는데, `@CreatedDate`/
+`@LastModifiedDate` 필드는 PostgreSQL `timestamptz`에 맞춰 전부 `OffsetDateTime`으로 선언해 뒀고
+Hibernate가 이 변환을 거부해 `InvalidDataAccessApiUsageException`이 났다. 실제로 Google 로그인 시
+최초 `User` 생성 시도에서 발생 — **회원가입 자체가 100% 실패하는 상태**였다. `@CreationTimestamp`/
+`@UpdateTimestamp`(Hibernate 네이티브, `Category`/`Technology`/복합키 엔티티 등)는 이 경로를 타지 않아
+영향 없었다.
+- 수정: `JpaAuditingConfig`에 `OffsetDateTime.now()`를 직접 공급하는 `DateTimeProvider` 빈을 추가하고
+  `@EnableJpaAuditing(dateTimeProviderRef = "auditingDateTimeProvider")`로 연결.
+
+**버그 2 — `/v1/auth/**` 밑에 일반 API를 두면 OAuth2 라우팅과 충돌**
+로그인 자체는 성공했지만 그 직후 발급받은 JWT로 `GET /v1/auth/me`를 호출하면 컨트롤러에 도달하지도
+못하고 `InvalidClientRegistrationIdException: Invalid Client Registration with Id: me`가 났다.
+`oauth2Login().authorizationEndpoint().baseUri("/v1/auth")`를 설정하면 Spring Security가
+`"/v1/auth/{한 단계 경로}"` 형태의 모든 요청을 "그 이름의 OAuth2 registrationId로 로그인 시작"으로
+가로채 버린다 — `github`/`google`뿐 아니라 `me`도 예외가 아니었다.
+- 수정: `AuthController` → `UserController`로 옮기고 경로를 `/v1/auth/me` → **`/v1/users/me`**로 변경.
+  `/v1/auth/**`에는 이제 github/google 두 registrationId만 존재해야 한다는 경고 주석을
+  `SecurityConfig`/`UserController` 양쪽에 남김.
+
+**실측으로 전부 확인한 것**:
+1. `GET /v1/auth/google` → 실제 Google 계정 선택/동의 화면으로 정확한 PKCE 파라미터(`code_challenge`,
+   `nonce`, `state`, `scope=openid+profile`)로 리다이렉트됨
+2. 동의 후 `http://localhost:5173/oauth/callback?accessToken=...&refreshToken=...`로 최종 리다이렉트 —
+   실제 서명된 JWT(HS384) 발급 확인
+3. Postgres에 실제 `User` 행 생성 확인 (`auth_provider=GOOGLE`, `google_subject`=실제 Google 고유 ID,
+   `display_name`/`avatar_url`=실제 Google 프로필, `created_at`이 올바른 `timestamptz` 값으로 채워짐)
+4. 발급된 토큰으로 `GET /v1/users/me` → 200 + 정확한 프로필 JSON
+5. 토큰 없이/가짜 토큰으로 호출 → 401 + `ApiResponse` JSON (컨트롤러에 도달하지 않고 필터 단계에서 차단)
+6. `POST /v1/projects`(로그인 필요, 스텁) 토큰 없이 호출 → 401 JSON (프로젝트 등록 로직 실행 전에 인증
+   단계에서 정확히 차단됨)
+7. `GET /v1/rankings/projects`, `GET /v1/community/boards`(인증 불필요, 스텁) → 500 + `ApiResponse`
+   JSON (스택 트레이스 노출 없이 일관된 에러 포맷 유지 확인)
+8. CORS preflight(`OPTIONS /v1/projects`, Origin `http://localhost:5173`) → 정확한
+   `Access-Control-Allow-*` 헤더 전부 확인
+9. Swagger UI(`/swagger-ui/index.html`)와 OpenAPI 문서(`/v3/api-docs`) 정상 렌더링, Bearer Authorize
+   버튼 동작 확인
+10. 프론트엔드 `BackendStatus` 위젯이 실제 크로스 오리진 fetch로 "Connected to click-hub-backend" 표시
+
+**아직 테스트 불가능한 것 (프론트 UI·비즈니스 로직 부재)**: 프로젝트 등록/조회/좋아요/댓글/즐겨찾기/구독/
+검색/피드/랭킹/대시보드/인사이트/튜토리얼/커뮤니티 게시판 — 컨트롤러는 전부 있지만 로직이
+`UnsupportedOperationException`이고, 프론트엔드에는 이 기능들을 위한 화면이 아직 하나도 없다.
+
+**검증**: 수정 후 동일 토큰으로 `/v1/users/me` 재호출 시 200 정상 확인, 전체 흐름 재실행 없이 핫스왑
+검증 완료. 임시 Postgres 컨테이너/백엔드/프론트엔드 프로세스는 테스트 종료 후 전부 정리함.
+
 ### 2026-09-03 (6차) — GitHub/Google OAuth2 로그인 + 회원가입 실제 구현
 "회원가입/로그인이 되어 있는지 확인하고 안 되어 있으면 구현해달라"는 요청에 따라, 지금까지 전부
 `UnsupportedOperationException`이던 인증 흐름을 실제로 동작하게 만들었다. 이번이 이 프로젝트에서

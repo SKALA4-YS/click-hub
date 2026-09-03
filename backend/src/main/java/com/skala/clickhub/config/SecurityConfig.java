@@ -105,6 +105,12 @@ public class SecurityConfig {
         // §12의 "GET /v1/auth/github" 규격과 일치시킨다. 로그인 성공 시 실제 회원가입/조회와
         // JWT 발급은 OAuth2AuthenticationSuccessHandler가, 사용자 upsert는 CustomOAuth2UserService/
         // CustomOidcUserService가 담당한다.
+        // ⚠️ 실측으로 발견한 함정: baseUri("/v1/auth")를 설정하면 Spring Security가
+        // "/v1/auth/{한 단계 경로}" 요청을 전부 "그 이름의 registrationId로 로그인 시작"으로
+        // 해석해버린다. 그래서 "/v1/auth/me" 같은 일반 API를 여기 두면 컨트롤러에 도달하지도
+        // 못하고 InvalidClientRegistrationIdException이 난다 — 실제 로그인 테스트 중 발견하고
+        // UserController를 "/v1/users/me"로 옮겨서 해결했다. "/v1/auth/**" 아래에는
+        // github/google 두 registrationId 외에 다른 엔드포인트를 절대 추가하지 말 것.
         if (clientRegistrationRepositoryProvider.getIfAvailable() != null) {
             http.oauth2Login(oauth2 -> oauth2
                     .authorizationEndpoint(endpoint -> endpoint.baseUri("/v1/auth"))
