@@ -34,7 +34,8 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     image: click-hub-backend:local
     environment:
       CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS:-http://localhost:5173}"
@@ -43,6 +44,7 @@ services:
       DB_NAME: "${DB_NAME:-clickhub}"
       DB_USERNAME: "${DB_USERNAME:-clickhub}"
       DB_PASSWORD: "${DB_PASSWORD:-clickhub-local}"
+      DB_POOL_MAX_SIZE: "${DB_POOL_MAX_SIZE:-5}"
     depends_on:
       db:
         condition: service_healthy

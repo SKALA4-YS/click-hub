@@ -14,8 +14,7 @@ services:
     plan: free
     region: singapore
     branch: main
-    rootDir: backend
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./backend/Dockerfile
     dockerContext: .
     healthCheckPath: /actuator/health
     autoDeployTrigger: checksPass

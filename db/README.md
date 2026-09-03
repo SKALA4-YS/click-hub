@@ -8,7 +8,7 @@
 - 최초 스키마: `migration/V1__initial_schema.sql`
 - 로컬 데이터: `data/` 바인드 마운트, Git 제외
 
-`V1__initial_schema.sql`은 기본 테이블 22개와 조회 함수·트리거·인덱스·Seed 사전을 생성합니다. Backend의 Flyway 연동이 완료되면 빈 DB에서 최초 1회 자동 실행됩니다.
+`V1__initial_schema.sql`은 기본 테이블 22개와 조회 함수·트리거·인덱스·Seed 사전을 생성합니다. Backend가 기동될 때 Flyway가 빈 DB에 최초 1회 자동 실행합니다.
 
 ## 로컬 실행
 
