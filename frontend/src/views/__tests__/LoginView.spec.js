@@ -27,7 +27,7 @@ describe('LoginView', () => {
       '배포한 사이드 프로젝트를 알리고, 새로운 서비스를 발견해보세요.',
     )
     expect(wrapper.get('button').text()).toContain('Google로 시작하기')
-    expect(wrapper.get('button').attributes('aria-label')).toBe('Google 계정으로 시작하기')
+    expect(wrapper.get('button').attributes('aria-label')).toBeUndefined()
   })
 
   it('sets the static logged-in state and moves to onboarding after the Google action', async () => {

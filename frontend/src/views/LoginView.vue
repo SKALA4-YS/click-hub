@@ -39,7 +39,6 @@ function loginWithGoogle() {
 
       <button
         type="button"
-        aria-label="Google 계정으로 시작하기"
         class="flex min-h-12 w-full items-center justify-center rounded-xl border border-divider/30 bg-surface-light-1 px-4 text-sm font-semibold text-heading-light transition-colors hover:bg-primary-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 dark:border-blue-500/25 dark:bg-surface-dark-2 dark:text-heading-dark dark:hover:bg-primary-700"
         @click="loginWithGoogle"
       >
