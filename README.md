@@ -74,3 +74,5 @@ docker compose down
 Vercel과 Render 운영 배포 절차는 [DEPLOYMENT.md](DEPLOYMENT.md)를 참고하세요.
 
 기여 전에는 [CONTRIBUTING.md](CONTRIBUTING.md)를 읽어 주세요.
+
+팀원 개발 전 준비와 기능 병합 이후의 운영 절차는 [TEAM_WORKFLOW.md](TEAM_WORKFLOW.md)를 참고하세요.
