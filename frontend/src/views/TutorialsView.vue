@@ -11,14 +11,37 @@ import {
 } from '@/data/tutorials'
 
 const selectedFilter = ref('all')
+const copyStatus = ref('')
 
 const visibleSteps = computed(() =>
   roadmapSteps.filter((step) => selectedFilter.value === 'all' || step.id === selectedFilter.value),
 )
+
+function focusRoadmapStep(stepId) {
+  const step = document.getElementById(`roadmap-step-${stepId}`)
+
+  step?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+  step?.focus({ preventScroll: true })
+}
+
+async function copyPrompt(prompt) {
+  if (!navigator.clipboard?.writeText) {
+    copyStatus.value = '클립보드를 사용할 수 없습니다.'
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(prompt)
+    copyStatus.value = '프롬프트를 복사했습니다.'
+  } catch {
+    copyStatus.value = '클립보드를 사용할 수 없습니다.'
+  }
+}
 </script>
 
 <template>
   <div class="mx-auto max-w-[1180px] pb-8">
+    <p role="status" aria-live="polite" class="sr-only">{{ copyStatus }}</p>
     <nav
       aria-label="현재 위치"
       class="mb-8 text-xs font-semibold text-body-light dark:text-body-dark"
@@ -53,13 +76,17 @@ const visibleSteps = computed(() =>
           <div class="flex shrink-0 flex-wrap gap-3">
             <button
               type="button"
+              aria-label="1강부터 바로 시작하기"
               class="rounded-xl bg-primary-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary-700"
+              @click="focusRoadmapStep('planning')"
             >
               1강부터 바로 시작하기
             </button>
             <button
               type="button"
+              aria-label="첫 번째 프롬프트 템플릿 복사"
               class="rounded-xl border border-divider/25 bg-white px-5 py-3 text-sm font-bold text-heading-light transition-colors hover:bg-primary-50 dark:border-divider/35 dark:bg-surface-dark-2 dark:text-heading-dark dark:hover:bg-primary-900"
+              @click="copyPrompt(promptTemplates[0][1])"
             >
               실전 프롬프트 템플릿 복사
             </button>
@@ -97,9 +124,10 @@ const visibleSteps = computed(() =>
     </section>
 
     <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-      <main>
+      <section aria-labelledby="roadmap-title">
         <div class="mb-5 flex items-center justify-between">
           <h2
+            id="roadmap-title"
             class="border-l-4 border-primary-600 pl-3 font-headline text-xl font-extrabold text-heading-light dark:text-heading-dark"
           >
             단계별 실전 바이브 코딩 커리큘럼
@@ -112,7 +140,9 @@ const visibleSteps = computed(() =>
           <article
             v-for="step in visibleSteps"
             :key="step.step"
+            :id="`roadmap-step-${step.id}`"
             data-testid="roadmap-card"
+            tabindex="-1"
             class="rounded-2xl border bg-surface-light-1 p-6 shadow-sm transition-colors dark:bg-surface-dark-1"
             :class="
               step.recommended
@@ -149,12 +179,11 @@ const visibleSteps = computed(() =>
               ><span class="font-semibold text-primary-700 dark:text-primary-200">{{
                 step.outcome
               }}</span
-              ><button
-                type="button"
-                class="ml-auto rounded-lg border border-divider/25 px-3 py-1.5 font-semibold text-heading-light hover:bg-primary-50 dark:border-divider/35 dark:text-heading-dark dark:hover:bg-primary-900/50"
+              ><span
+                class="ml-auto rounded-lg border border-divider/25 px-3 py-1.5 font-semibold text-heading-light dark:border-divider/35 dark:text-heading-dark"
               >
                 {{ step.recommended ? '이어서 학습하기' : '학습하기' }}
-              </button>
+              </span>
             </div>
           </article>
         </div>
@@ -183,7 +212,9 @@ const visibleSteps = computed(() =>
                 </h3>
                 <button
                   type="button"
+                  :aria-label="`${index + 1}번 프롬프트 복사`"
                   class="rounded-lg border border-primary-200 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-50 dark:border-primary-700 dark:text-primary-200"
+                  @click="copyPrompt(prompt)"
                 >
                   프롬프트 복사
                 </button>
@@ -204,12 +235,9 @@ const visibleSteps = computed(() =>
             >
               바이브 코딩으로 런칭한 메이커들의 실제 쇼케이스
             </h2>
-            <button
-              type="button"
-              class="text-sm font-semibold text-primary-700 dark:text-primary-200"
-            >
+            <span class="text-sm font-semibold text-primary-700 dark:text-primary-200">
               더 많은 쇼케이스 보기
-            </button>
+            </span>
           </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <article
@@ -230,7 +258,7 @@ const visibleSteps = computed(() =>
             </article>
           </div>
         </section>
-      </main>
+      </section>
 
       <aside class="space-y-5">
         <section
@@ -248,7 +276,14 @@ const visibleSteps = computed(() =>
           >
             <span>2 / 5 완료</span><span>남은 시간 약 1시간 45분</span>
           </div>
-          <div class="mt-2 h-2 overflow-hidden rounded-full bg-primary-100 dark:bg-primary-900">
+          <div
+            role="progressbar"
+            aria-label="튜토리얼 진행률: 5개 중 2개 완료"
+            aria-valuemin="0"
+            aria-valuemax="5"
+            aria-valuenow="2"
+            class="mt-2 h-2 overflow-hidden rounded-full bg-primary-100 dark:bg-primary-900"
+          >
             <div class="h-full w-2/5 rounded-full bg-primary-500" />
           </div>
           <p class="mt-4 text-xs leading-5 text-body-light dark:text-body-dark">
@@ -256,7 +291,9 @@ const visibleSteps = computed(() =>
           </p>
           <button
             type="button"
+            aria-label="Step 3 이어서 학습하기"
             class="mt-4 w-full rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-700"
+            @click="focusRoadmapStep('ai')"
           >
             Step 3 이어서 학습하기
           </button>
