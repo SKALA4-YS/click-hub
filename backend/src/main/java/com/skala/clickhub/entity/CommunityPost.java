@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -55,4 +56,28 @@ public class CommunityPost extends BaseTimeEntity {
     private int viewCount;
 
     private OffsetDateTime deletedAt;
+
+    @Builder
+    private CommunityPost(CommunityBoard board, User author, String title, String body) {
+        this.board = board;
+        this.author = author;
+        this.title = title;
+        this.body = body;
+        this.status = CommunityPostStatus.PUBLISHED;
+        this.viewCount = 0;
+    }
+
+    public void update(String title, String body) {
+        this.title = title;
+        this.body = body;
+    }
+
+    /**
+     * 소프트 삭제 — status/deleted_at을 함께 바꾼다.
+     * DB CHECK 제약이 "DELETED면 deleted_at NOT NULL"을 강제하므로 둘을 분리해 설정하면 안 된다.
+     */
+    public void softDelete() {
+        this.status = CommunityPostStatus.DELETED;
+        this.deletedAt = OffsetDateTime.now();
+    }
 }

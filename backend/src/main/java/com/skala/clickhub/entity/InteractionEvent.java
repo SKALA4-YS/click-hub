@@ -1,7 +1,9 @@
 package com.skala.clickhub.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.skala.clickhub.entity.converter.EventTypeConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -37,7 +40,8 @@ public class InteractionEvent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
+    // interaction_event_type만 스키마에서 소문자 라벨이라 전용 컨버터를 쓴다(EventTypeConverter 주석 참고).
+    @Convert(converter = EventTypeConverter.class)
     @Column(nullable = false)
     private EventType eventType;
 
@@ -61,4 +65,15 @@ public class InteractionEvent {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
     private JsonNode context;
+
+    @Builder
+    private InteractionEvent(EventType eventType, ActorKind actorKind, UUID actorKey,
+                             Project project, OffsetDateTime occurredAt, JsonNode context) {
+        this.eventType = eventType;
+        this.actorKind = actorKind;
+        this.actorKey = actorKey;
+        this.project = project;
+        this.occurredAt = occurredAt == null ? OffsetDateTime.now() : occurredAt;
+        this.context = context;
+    }
 }

@@ -60,4 +60,11 @@ public class Notification {
     private OffsetDateTime createdAt;
 
     private OffsetDateTime readAt;
+
+    /** 이미 읽은 알림을 다시 읽음 처리해도 최초 읽은 시각을 덮어쓰지 않는다. */
+    public void markRead() {
+        if (this.readAt == null) {
+            this.readAt = OffsetDateTime.now();
+        }
+    }
 }
