@@ -10,6 +10,7 @@ RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
 
 COPY backend/src src
 COPY db/migration /workspace/db/migration
+COPY db/demo /workspace/db/demo
 RUN ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
