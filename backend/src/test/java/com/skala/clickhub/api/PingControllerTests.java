@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
+import com.skala.clickhub.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(properties = "clickhub.cors.allowed-origins=https://click-hub.vercel.app")
@@ -21,6 +23,11 @@ import org.springframework.web.context.WebApplicationContext;
 class PingControllerTests {
 
 	private static final String ALLOWED_ORIGIN = "https://click-hub.vercel.app";
+
+	// nodb 프로필엔 실제 UserRepository 빈이 없다 — JwtAuthenticationFilter가 이제 이걸 필요로
+	// 하므로 컨텍스트 로딩을 위해 Mockito 목으로 채운다 (이 테스트는 인증 로직을 검증하지 않음).
+	@MockitoBean
+	private UserRepository userRepository;
 
 	@Autowired
 	private WebApplicationContext context;
