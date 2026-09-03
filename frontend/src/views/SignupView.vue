@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -13,7 +13,6 @@ const form = reactive({
   marketing: false,
 })
 const errors = reactive({})
-const submitted = ref(false)
 const requiredAgreementsAccepted = computed(() => form.terms && form.privacy)
 
 function validate() {
@@ -26,14 +25,11 @@ function validate() {
   else if (form.password.length < 8) errors.password = '비밀번호는 8자 이상 입력해주세요.'
   if (form.password && form.passwordConfirmation !== form.password)
     errors.passwordConfirmation = '비밀번호가 일치하지 않습니다.'
-  if (!requiredAgreementsAccepted.value) errors.agreement = '필수 약관에 동의해주세요.'
   return Object.keys(errors).length === 0
 }
 
 async function submit() {
-  submitted.value = false
   if (!validate()) return
-  submitted.value = true
   await router.push('/onboarding')
 }
 </script>
@@ -187,21 +183,16 @@ async function submit() {
               class="h-4 w-4 accent-primary-600"
             /><span>[선택] 새로운 소식과 혜택을 받아볼게요.</span></label
           >
-          <p v-if="errors.agreement" data-error="agreement" class="text-xs text-danger">
-            {{ errors.agreement }}
-          </p>
         </fieldset>
         <button
           data-testid="signup-submit"
           type="submit"
+          @click.prevent="submit"
           :disabled="!requiredAgreementsAccepted"
           class="w-full rounded-lg bg-primary-600 py-3.5 text-sm font-bold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-primary-300"
         >
           가입하기
         </button>
-        <p v-if="submitted" role="status" class="text-center text-sm text-success">
-          가입 정보를 확인했습니다. 관심사를 설정해 주세요.
-        </p>
       </form>
       <p class="mt-6 text-center text-sm text-body-light dark:text-body-dark">
         이미 계정이 있으신가요?
