@@ -9,7 +9,15 @@ import com.skala.clickhub.dto.community.CommunityDtos.PostCreateRequest;
 import com.skala.clickhub.dto.community.CommunityDtos.PostCreateResponse;
 import com.skala.clickhub.dto.community.CommunityDtos.PostDetailResponse;
 import com.skala.clickhub.dto.community.CommunityDtos.PostSummaryResponse;
+import com.skala.clickhub.dto.community.CommunityDtos.PostUpdateRequest;
+import com.skala.clickhub.service.CommunityService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,56 +29,83 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * V1__initial_schema.sql의 community_boards/community_posts/community_post_comments 반영.
- * §12 API 명세에는 이 도메인이 없어 엔드포인트는 REST 컨벤션에 맞춰 추정했다 — 실제 화면 설계가
- * 나오면 재확인 필요.
+ * 커뮤니티 게시판 — 기획서 3장 "포함" 항목.
+ *
+ * 게시판은 목록/상세/댓글 조회까지 전부 로그인 사용자 전용이다(2026-09-03 확정).
+ * 게시판 식별자는 UUID가 아니라 slug(notice/free/share/qna)를 쓴다 — 시드 데이터 기준
+ * 고정값이라 프론트가 URL에 그대로 쓸 수 있고, 환경마다 달라지는 UUID를 노출하지 않아도 된다.
  */
 @RestController
 @RequestMapping("/v1/community")
+@RequiredArgsConstructor
 public class CommunityController {
 
-    // 인증: 없음
+    private final CommunityService communityService;
+
+    // 인증: 로그인
     @GetMapping("/boards")
     public ApiResponse<List<BoardResponse>> getBoards() {
-        throw new UnsupportedOperationException("not implemented");
+        return ApiResponse.success(communityService.getBoards());
     }
 
-    // 인증: 없음
-    @GetMapping("/boards/{boardId}/posts")
+    // 인증: 로그인
+    @GetMapping("/boards/{boardSlug}/posts")
     public ApiResponse<CursorPageResponse<PostSummaryResponse>> getPosts(
-            @PathVariable UUID boardId,
+            @PathVariable String boardSlug,
             @RequestParam(required = false) String cursor
     ) {
-        throw new UnsupportedOperationException("not implemented");
+        return ApiResponse.success(communityService.getPosts(boardSlug, cursor));
     }
 
     // 인증: 로그인
-    @PostMapping("/boards/{boardId}/posts")
+    @PostMapping("/boards/{boardSlug}/posts")
     public ApiResponse<PostCreateResponse> createPost(
-            @PathVariable UUID boardId,
-            @RequestBody PostCreateRequest request
+            @PathVariable String boardSlug,
+            @AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody PostCreateRequest request
     ) {
-        throw new UnsupportedOperationException("not implemented");
+        return ApiResponse.success(HttpStatus.CREATED, "등록되었습니다.",
+                communityService.createPost(boardSlug, userId, request));
     }
 
-    // 인증: 없음
+    // 인증: 로그인
     @GetMapping("/posts/{postId}")
-    public ApiResponse<PostDetailResponse> getPostDetail(@PathVariable UUID postId) {
-        throw new UnsupportedOperationException("not implemented");
+    public ApiResponse<PostDetailResponse> getPostDetail(@PathVariable UUID postId,
+                                                          @AuthenticationPrincipal UUID userId) {
+        return ApiResponse.success(communityService.getPostDetail(postId, userId));
     }
 
-    // 인증: 없음
+    // 인증: 작성자
+    @PatchMapping("/posts/{postId}")
+    public ApiResponse<Void> updatePost(@PathVariable UUID postId,
+                                        @AuthenticationPrincipal UUID userId,
+                                        @Valid @RequestBody PostUpdateRequest request) {
+        communityService.updatePost(postId, userId, request);
+        return ApiResponse.success(HttpStatus.OK, "수정되었습니다.", null);
+    }
+
+    // 인증: 작성자 — 소프트 삭제(status=DELETED)
+    @DeleteMapping("/posts/{postId}")
+    public ApiResponse<Void> deletePost(@PathVariable UUID postId,
+                                        @AuthenticationPrincipal UUID userId) {
+        communityService.deletePost(postId, userId);
+        return ApiResponse.success(HttpStatus.OK, "삭제되었습니다.", null);
+    }
+
+    // 인증: 로그인
     @GetMapping("/posts/{postId}/comments")
     public ApiResponse<List<CommentResponse>> getComments(@PathVariable UUID postId) {
-        throw new UnsupportedOperationException("not implemented");
+        return ApiResponse.success(communityService.getComments(postId));
     }
 
-    // 인증: 로그인
+    // 인증: 로그인 (1단계 대댓글까지 허용)
     @PostMapping("/posts/{postId}/comments")
     public ApiResponse<CommentResponse> createComment(
             @PathVariable UUID postId,
-            @RequestBody CommentCreateRequest request
+            @AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody CommentCreateRequest request
     ) {
-        throw new UnsupportedOperationException("not implemented");
+        return ApiResponse.success(HttpStatus.CREATED, "등록되었습니다.",
+                communityService.createComment(postId, userId, request));
     }
 }

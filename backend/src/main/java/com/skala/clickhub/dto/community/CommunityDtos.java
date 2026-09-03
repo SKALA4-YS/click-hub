@@ -1,5 +1,8 @@
 package com.skala.clickhub.dto.community;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -17,8 +20,13 @@ public final class CommunityDtos {
     ) {}
 
     public record PostCreateRequest(
-            String title,
-            String body
+            @NotBlank @Size(max = 200) String title,
+            @NotBlank @Size(max = 10000) String body
+    ) {}
+
+    public record PostUpdateRequest(
+            @NotBlank @Size(max = 200) String title,
+            @NotBlank @Size(max = 10000) String body
     ) {}
 
     public record PostCreateResponse(
@@ -40,12 +48,14 @@ public final class CommunityDtos {
             String title,
             String body,
             String authorName,
+            UUID authorId,
             int viewCount,
-            OffsetDateTime createdAt
+            OffsetDateTime createdAt,
+            boolean mine
     ) {}
 
     public record CommentCreateRequest(
-            String body,
+            @NotBlank @Size(max = 3000) String body,
             UUID parentId
     ) {}
 

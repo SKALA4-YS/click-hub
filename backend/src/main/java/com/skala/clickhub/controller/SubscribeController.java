@@ -2,6 +2,9 @@ package com.skala.clickhub.controller;
 
 import com.skala.clickhub.common.response.ApiResponse;
 import com.skala.clickhub.dto.subscribe.SubscribeDtos.SubscriptionResponse;
+import com.skala.clickhub.service.SubscriptionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,11 +12,15 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 public class SubscribeController {
+
+    private final SubscriptionService subscriptionService;
 
     // 인증: 로그인 - 사용자는 프로젝트가 아니라 "제작자"를 구독한다
     @PutMapping("/v1/creators/{id}/subscription")
-    public ApiResponse<SubscriptionResponse> toggleSubscription(@PathVariable UUID id) {
-        throw new UnsupportedOperationException("not implemented");
+    public ApiResponse<SubscriptionResponse> toggleSubscription(@PathVariable UUID id,
+                                                                 @AuthenticationPrincipal UUID userId) {
+        return ApiResponse.success(subscriptionService.toggle(userId, id));
     }
 }

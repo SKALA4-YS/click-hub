@@ -114,4 +114,31 @@ public class Project extends BaseTimeEntity {
         this.screenshots = screenshots;
         this.status = status;
     }
+
+    public void update(Category primaryCategory, String title, String description, String siteUrl,
+                       String repositoryUrl, PricingType pricing, String[] tags,
+                       String thumbnailUrl, JsonNode screenshots) {
+        this.primaryCategory = primaryCategory;
+        this.title = title;
+        this.description = description;
+        this.siteUrl = siteUrl;
+        this.repositoryUrl = repositoryUrl;
+        this.pricing = pricing;
+        this.tags = tags;
+        this.thumbnailUrl = thumbnailUrl;
+        this.screenshots = screenshots;
+    }
+
+    /**
+     * 게시 요청 (DRAFT → PENDING_REVIEW).
+     * 실제 상태 전이 규칙은 DB 트리거(validate_project_write)가 최종 검증하므로,
+     * 여기서는 화면에서 곧바로 안내할 수 있는 선행 조건만 확인한다.
+     */
+    public void submitForReview() {
+        this.status = ProjectStatus.PENDING_REVIEW;
+    }
+
+    public boolean isOwnedBy(UUID userId) {
+        return this.owner != null && this.owner.getId().equals(userId);
+    }
 }

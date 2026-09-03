@@ -82,8 +82,9 @@ public class SecurityConfig {
                                 "/v1/rankings/**", "/v1/insights/weekly", "/v1/tutorials"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/projects/{id}/outbound-clicks").permitAll()
-                        // 커뮤니티 게시판(V1 스키마 도메인) 조회는 인증 없이 열람 가능
-                        .requestMatchers(HttpMethod.GET, "/v1/community/**").permitAll()
+                        // 커뮤니티 게시판은 목록/상세/댓글 조회까지 전부 로그인 사용자 전용이다
+                        // (2026-09-03 확정). 그래서 아래 anyRequest().authenticated()에 그대로 걸린다 —
+                        // 이전에 있던 GET /v1/community/** permitAll 규칙은 이 방침에 맞춰 제거했다.
                         .anyRequest().authenticated()
                 )
                 // 인증/인가 실패도 컨트롤러 예외와 동일하게 ApiResponse 포맷으로 내려준다.
