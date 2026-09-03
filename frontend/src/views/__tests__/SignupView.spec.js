@@ -38,6 +38,12 @@ describe('SignupView', () => {
     expect(wrapper.get('h1').text()).toBe('Click-Hub에 오신 것을 환영합니다')
     expect(wrapper.text()).toContain('Google로 3초 만에 시작하기')
     expect(wrapper.text()).toContain('또는 이메일로 직접 가입')
+    expect(wrapper.text()).toContain(
+      '배포한 사이드 프로젝트를 세상에 알리고 전 세계 메이커들과 함께 피드백을 나누며 성장하세요.',
+    )
+    expect(wrapper.text()).toContain('지난 30일간 320개 프로젝트 런칭')
+    expect(wrapper.text()).toContain('주간 핫프로젝트 #1')
+    expect(wrapper.text()).toContain('984')
     expect(wrapper.findAll('input[type="password"]')).toHaveLength(1)
     expect(wrapper.get('[name="profile"]').attributes('aria-label')).toBe('이름 또는 닉네임')
     expect(wrapper.get('[name="email"]').attributes('aria-describedby')).toContain('email-helper')
@@ -91,14 +97,50 @@ describe('SignupView', () => {
   })
 
   it('keeps signup unavailable and exposes its disabled state until required agreements are selected', async () => {
-    const { wrapper } = await mountSignup()
+    const { router, wrapper } = await mountSignup()
 
-    expect(wrapper.get('[data-testid="signup-submit"]').attributes('disabled')).toBeDefined()
-    await wrapper.get('[data-testid="terms-agreement"]').setValue(true)
-    expect(wrapper.get('[data-testid="signup-submit"]').attributes('disabled')).toBeDefined()
-    await wrapper.get('[data-testid="privacy-agreement"]').setValue(true)
     expect(wrapper.get('[data-testid="signup-submit"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('[data-testid="signup-submit"]').attributes('aria-disabled')).toBe('true')
+    await wrapper.get('[data-testid="signup-submit"]').trigger('click')
+    expect(router.currentRoute.value.path).toBe('/signup')
+    await wrapper.get('[data-testid="terms-agreement"]').setValue(true)
+    expect(wrapper.get('[data-testid="signup-submit"]').attributes('aria-disabled')).toBe('true')
+    await wrapper.get('[data-testid="privacy-agreement"]').setValue(true)
+    expect(wrapper.get('[data-testid="signup-submit"]').attributes('aria-disabled')).toBe('false')
   })
+
+  it('links an invalid email error to its field and stays on signup', async () => {
+    const { router, wrapper } = await mountSignup()
+    await fillValidSignup(wrapper)
+    await wrapper.get('[name="email"]').setValue('not-an-email')
+
+    await wrapper.get('[data-testid="signup-submit"]').trigger('click')
+
+    expect(wrapper.get('#signup-email-error').text()).toBe('올바른 이메일 주소를 입력해주세요.')
+    expect(wrapper.get('[name="email"]').attributes('aria-describedby')).toBe(
+      'email-helper signup-email-error',
+    )
+    expect(router.currentRoute.value.path).toBe('/signup')
+  })
+
+  it.each(['short', 'abcdefgh!', '12345678!', 'clickhub12'])(
+    'rejects a password that does not satisfy the visible contract: %s',
+    async (password) => {
+      const { router, wrapper } = await mountSignup()
+      await fillValidSignup(wrapper)
+      await wrapper.get('[name="password"]').setValue(password)
+
+      await wrapper.get('[data-testid="signup-submit"]').trigger('click')
+
+      expect(wrapper.get('#signup-password-error').text()).toBe(
+        '영문, 숫자, 특수문자를 포함해 8자 이상 입력해주세요.',
+      )
+      expect(wrapper.get('[name="password"]').attributes('aria-describedby')).toContain(
+        'signup-password-error',
+      )
+      expect(router.currentRoute.value.path).toBe('/signup')
+    },
+  )
 
   it('navigates locally to onboarding after a valid email signup', async () => {
     const { router, wrapper } = await mountSignup()

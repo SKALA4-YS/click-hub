@@ -34,6 +34,13 @@ const allAgreements = computed({
   },
 })
 const requiredAgreementsAccepted = computed(() => form.terms && form.privacy)
+const passwordValid = computed(
+  () =>
+    form.password.length >= 8 &&
+    /[a-zA-Z]/.test(form.password) &&
+    /\d/.test(form.password) &&
+    /[^a-zA-Z\d]/.test(form.password),
+)
 const passwordLevel = computed(() => {
   if (!form.password) return 0
   let level = 0
@@ -56,7 +63,8 @@ function validate() {
   if (!form.email.trim()) errors.email = '이메일 주소를 입력해주세요.'
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
     errors.email = '올바른 이메일 주소를 입력해주세요.'
-  if (passwordLevel.value < 2) errors.password = '영문, 숫자를 포함해 8자 이상 입력해주세요.'
+  if (!passwordValid.value)
+    errors.password = '영문, 숫자, 특수문자를 포함해 8자 이상 입력해주세요.'
   return Object.keys(errors).length === 0
 }
 
@@ -77,17 +85,14 @@ async function startWithGoogle() {
     >
       <header class="text-center">
         <p
-          class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-bold text-primary-600"
+          class="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-bold text-primary-600"
         >
+          <span class="h-1.5 w-1.5 rounded-full bg-primary-600" aria-hidden="true"></span>
           인디 메이커를 위한 플랫폼
         </p>
         <div
           class="mt-3 flex items-center justify-center gap-2 font-headline text-xl font-extrabold text-secondary"
         >
-          <span
-            class="h-5 w-5 rounded-md bg-primary-600"
-            aria-label="Click-Hub 로고 placeholder"
-          ></span>
           <span>Click-Hub</span>
         </div>
         <h1
@@ -97,7 +102,8 @@ async function startWithGoogle() {
           Click-Hub에 오신 것을 환영합니다
         </h1>
         <p class="mt-2 text-[12px] leading-5 text-body-light">
-          배포한 사이드 프로젝트를 세상에 알리고<br />함께 고민하고 성장하세요.
+          배포한 사이드 프로젝트를 세상에 알리고 전 세계 메이커들과 함께 피드백을 나누며
+          성장하세요.
         </p>
       </header>
 
@@ -107,12 +113,7 @@ async function startWithGoogle() {
         class="mt-6 flex w-full items-center justify-between rounded-xl border border-[#e5e5ea] bg-white px-4 py-3 text-sm font-semibold text-[#34343f] shadow-sm hover:bg-neutral-50"
         @click="startWithGoogle"
       >
-        <span class="flex items-center gap-2"
-          ><span
-            class="grid h-5 w-5 place-items-center rounded-full border border-neutral-200 text-xs font-bold text-[#4285f4]"
-            >G</span
-          >Google로 3초 만에 시작하기</span
-        >
+        <span>Google로 3초 만에 시작하기</span>
         <span class="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] text-primary-600"
           >추천</span
         >
@@ -138,6 +139,7 @@ async function startWithGoogle() {
               autocomplete="nickname"
               placeholder="예: 김메이커 (maker_kim)"
               :aria-invalid="Boolean(errors.profile)"
+              :aria-describedby="errors.profile ? 'signup-profile-error' : undefined"
               class="w-full rounded-lg border bg-[#f4f4f6] px-3 py-2.5 pr-16 text-sm outline-none placeholder:text-neutral-400 focus:border-primary-600 focus:bg-white focus:ring-2 focus:ring-primary-100"
               :class="errors.profile ? 'border-danger' : 'border-transparent'"
             />
@@ -146,7 +148,13 @@ async function startWithGoogle() {
               >@handle</span
             >
           </div>
-          <p v-if="errors.profile" class="mt-1 text-[11px] text-danger">{{ errors.profile }}</p>
+          <p
+            v-if="errors.profile"
+            id="signup-profile-error"
+            class="mt-1 text-[11px] text-danger"
+          >
+            {{ errors.profile }}
+          </p>
         </div>
         <div>
           <label for="signup-email" class="mb-1.5 block text-xs font-bold text-[#34343f]"
@@ -159,15 +167,21 @@ async function startWithGoogle() {
             type="email"
             autocomplete="email"
             placeholder="maker@domain.com"
-            aria-describedby="email-helper"
+            :aria-describedby="errors.email ? 'email-helper signup-email-error' : 'email-helper'"
             :aria-invalid="Boolean(errors.email)"
             class="w-full rounded-lg border bg-[#f4f4f6] px-3 py-2.5 text-sm outline-none placeholder:text-neutral-400 focus:border-primary-600 focus:bg-white focus:ring-2 focus:ring-primary-100"
             :class="errors.email ? 'border-danger' : 'border-transparent'"
           />
           <p id="email-helper" class="mt-1 text-[10px] text-neutral-400">
-            계정 생성 및 프로젝트 소식을 수신할 이메일을 입력하세요.
+            계정 확인 및 배포 알림을 수신할 수 있는 이메일을 입력하세요.
           </p>
-          <p v-if="errors.email" class="mt-1 text-[11px] text-danger">{{ errors.email }}</p>
+          <p
+            v-if="errors.email"
+            id="signup-email-error"
+            class="mt-1 text-[11px] text-danger"
+          >
+            {{ errors.email }}
+          </p>
         </div>
         <div>
           <div class="mb-1.5 flex items-center justify-between">
@@ -184,6 +198,11 @@ async function startWithGoogle() {
               autocomplete="new-password"
               placeholder="••••••••"
               :aria-invalid="Boolean(errors.password)"
+              :aria-describedby="
+                errors.password
+                  ? 'signup-password-helper signup-password-error'
+                  : 'signup-password-helper'
+              "
               class="w-full rounded-lg border bg-[#f4f4f6] px-3 py-2.5 pr-12 text-sm outline-none placeholder:text-neutral-400 focus:border-primary-600 focus:bg-white focus:ring-2 focus:ring-primary-100"
               :class="errors.password ? 'border-danger' : 'border-transparent'"
             /><button
@@ -192,9 +211,12 @@ async function startWithGoogle() {
               :aria-label="passwordVisible ? '비밀번호 숨기기' : '비밀번호 보기'"
               @click="passwordVisible = !passwordVisible"
             >
-              보기
+              {{ passwordVisible ? '숨기기' : '보기' }}
             </button>
           </div>
+          <p id="signup-password-helper" class="sr-only">
+            영문, 숫자, 특수문자를 포함해 8자 이상 입력하세요.
+          </p>
           <div
             data-testid="password-strength"
             :data-level="passwordLevel"
@@ -207,7 +229,13 @@ async function startWithGoogle() {
               :class="{ 'is-active bg-primary-600': level <= passwordLevel }"
             ></span>
           </div>
-          <p v-if="errors.password" class="mt-1 text-[11px] text-danger">{{ errors.password }}</p>
+          <p
+            v-if="errors.password"
+            id="signup-password-error"
+            class="mt-1 text-[11px] text-danger"
+          >
+            {{ errors.password }}
+          </p>
         </div>
 
         <fieldset>
@@ -254,7 +282,7 @@ async function startWithGoogle() {
                 type="checkbox"
                 class="h-3.5 w-3.5 accent-primary-600"
               /><span>[필수] 서비스 이용약관 동의</span
-              ><a href="/terms" class="ml-auto text-neutral-400 underline">보기</a></label
+              ><span class="ml-auto text-neutral-400 underline">보기</span></label
             >
             <label class="flex items-center gap-2"
               ><input
@@ -263,7 +291,7 @@ async function startWithGoogle() {
                 type="checkbox"
                 class="h-3.5 w-3.5 accent-primary-600"
               /><span>[필수] 개인정보 수집 및 이용 동의</span
-              ><a href="/privacy" class="ml-auto text-neutral-400 underline">보기</a></label
+              ><span class="ml-auto text-neutral-400 underline">보기</span></label
             >
             <label class="flex items-center gap-2"
               ><input
@@ -271,7 +299,7 @@ async function startWithGoogle() {
                 data-testid="newsletter-agreement"
                 type="checkbox"
                 class="h-3.5 w-3.5 accent-primary-600"
-              /><span>[선택] 신규 프로젝트, 인사이트 뉴스레터 받기</span
+              /><span>[선택] 신규 프로젝트 런칭 &amp; 개발 트렌드 뉴스레터 받기</span
               ><span class="ml-auto text-neutral-400">주 1회</span></label
             >
           </div>
@@ -280,8 +308,8 @@ async function startWithGoogle() {
         <button
           data-testid="signup-submit"
           type="submit"
-          :disabled="!requiredAgreementsAccepted"
-          class="w-full rounded-full bg-primary-600 py-3 text-sm font-bold text-white shadow-[0_4px_8px_rgba(34,32,162,0.22)] transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-primary-300"
+          :aria-disabled="!requiredAgreementsAccepted"
+          class="w-full rounded-full bg-primary-600 py-3 text-sm font-bold text-white shadow-[0_4px_8px_rgba(34,32,162,0.22)] transition hover:bg-primary-700 aria-disabled:cursor-not-allowed"
           @click.prevent="completeSignup"
         >
           회원가입 완료하기 <span aria-hidden="true">→</span>
@@ -294,27 +322,20 @@ async function startWithGoogle() {
             >로그인하기</RouterLink
           >
         </p>
-        <p>256-bit SSL</p>
+        <p>256-bit SSL 보안 적용</p>
       </div>
     </div>
     <aside
       class="mt-3 flex items-center gap-2 rounded-lg border border-[#e7e7ec] bg-white px-3 py-2 text-[10px] text-[#555565] shadow-sm"
       aria-label="Click-Hub 활동 지표"
     >
-      <div class="flex -space-x-1">
-        <span
-          v-for="avatar in 3"
-          :key="avatar"
-          class="h-5 w-5 rounded-full border-2 border-white bg-neutral-300"
-        ></span>
-      </div>
       <p>
         <strong class="text-secondary">이미 1,400+ 명의 인디 메이커 활동 중</strong><br />지난
-        30일간 2,204개 프로젝트 런칭
+        30일간 320개 프로젝트 런칭
       </p>
-      <span class="ml-auto rounded-full bg-primary-50 px-2 py-1 text-primary-600"
-        >주간 추천 프로젝트 #1 · 좋아요 984</span
-      >
+      <span class="ml-auto rounded-full bg-primary-50 px-2 py-1 text-primary-600">
+        주간 핫프로젝트 #1 <strong class="ml-1">984</strong>
+      </span>
     </aside>
   </section>
 </template>
