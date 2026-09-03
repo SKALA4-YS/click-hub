@@ -4,6 +4,30 @@ import { describe, expect, it } from 'vitest'
 import SearchBar from '@/components/layout/SearchBar.vue'
 
 describe('SearchBar', () => {
+  it('uses distinct Figma surface and search-icon states when the combobox expands', async () => {
+    const wrapper = mount(SearchBar, { attachTo: document.body })
+    const input = wrapper.get('input[type="search"]')
+    const closedSurface = wrapper.get('div.relative > div')
+
+    expect(closedSurface.classes()).toContain('rounded-full')
+    expect(closedSurface.classes()).not.toContain('rounded-[17px]')
+    expect(closedSurface.classes()).not.toContain('p-0')
+    expect(closedSurface.get('img').classes()).toEqual(expect.arrayContaining(['h-4', 'w-4']))
+
+    await input.trigger('focus')
+
+    const openSurface = wrapper.get('[role="dialog"]')
+    expect(openSurface.classes()).toContain('rounded-[17px]')
+    expect(openSurface.classes()).not.toContain('rounded-full')
+    expect(openSurface.classes()).toContain('p-0')
+    expect(openSurface.classes()).not.toContain('px-4')
+    expect(openSurface.classes()).not.toContain('py-2')
+    expect(openSurface.get('img').classes()).toEqual(
+      expect.arrayContaining(['h-[19.787px]', 'w-[20.828px]']),
+    )
+    wrapper.unmount()
+  })
+
   it('opens its search overlay when the input receives focus', async () => {
     const wrapper = mount(SearchBar, { attachTo: document.body })
 

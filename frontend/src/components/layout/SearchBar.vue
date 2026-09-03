@@ -134,14 +134,20 @@ onBeforeUnmount(() => {
     <div
       :role="isOpen ? 'dialog' : undefined"
       :aria-label="isOpen ? '검색 제안' : undefined"
-      class="flex items-center gap-2 rounded-full border border-divider/20 bg-neutral-50 px-4 py-2 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-100 dark:border-divider/30 dark:bg-surface-dark-1"
+      class="flex items-center gap-2 border border-divider/20 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-100 dark:border-divider/30"
       :class="
-        isOpen &&
-        'absolute left-0 top-0 z-30 w-full flex-col overflow-hidden rounded-2xl bg-surface-light-1 p-0 shadow-lg dark:border-divider/25 dark:bg-surface-dark-1'
+        isOpen
+          ? 'absolute left-0 top-0 z-30 w-full flex-col overflow-hidden rounded-[17px] bg-surface-light-1 p-0 shadow-lg dark:border-divider/25 dark:bg-surface-dark-1'
+          : 'rounded-full bg-neutral-50 px-4 py-2 dark:bg-surface-dark-1'
       "
     >
       <div class="flex w-full min-w-0 items-center gap-2" :class="isOpen && 'px-4 py-3'">
-        <img :src="isOpen ? searchIcon : headerSearchIcon" alt="" class="h-4 w-4 shrink-0" />
+        <img
+          :src="isOpen ? searchIcon : headerSearchIcon"
+          alt=""
+          class="shrink-0"
+          :class="isOpen ? 'h-[19.787px] w-[20.828px]' : 'h-4 w-4'"
+        />
         <input
           ref="inputEl"
           v-model="query"
