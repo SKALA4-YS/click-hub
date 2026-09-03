@@ -29,7 +29,7 @@ function signupWithGoogle() {
       <AuthLogo />
 
       <div class="text-center">
-        <h1 class="text-xl font-bold">Click-Hub에 오신 것을 환영합니다</h1>
+        <h1 class="font-headline text-xl font-bold">Click-Hub에 오신 것을 환영합니다</h1>
         <p class="mt-2 text-sm text-neutral-500">
           배포한 사이드 프로젝트를 세상에 알리고 전 세계 메이커들과 함께 피드백을 나누며 성장하세요.
         </p>

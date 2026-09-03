@@ -19,7 +19,7 @@ function remove(id) {
   </div>
 
   <div v-else class="flex flex-col gap-4">
-    <h1 class="text-xl font-bold">즐겨찾기 보관함</h1>
+    <h1 class="font-headline text-xl font-bold">즐겨찾기 보관함</h1>
 
     <p v-if="favorites.length === 0" class="text-sm text-neutral-500">
       즐겨찾기한 프로젝트가 없습니다.

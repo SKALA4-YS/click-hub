@@ -51,7 +51,7 @@ function skip() {
         <div class="h-full w-1/3 rounded-full bg-primary-600" />
       </div>
 
-      <h1 class="mt-4 text-xl font-bold">어떤 사이드 프로젝트를 찾고 계신가요?</h1>
+      <h1 class="font-headline mt-4 text-xl font-bold">어떤 사이드 프로젝트를 찾고 계신가요?</h1>
       <p class="mt-2 text-sm text-neutral-500">
         관심사와 기술 스택을 선택하면 홈 피드를 맞춤으로 구성해 드려요. (건너뛰어도 됩니다)
       </p>

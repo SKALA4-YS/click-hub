@@ -29,7 +29,7 @@ function loginWithGoogle() {
       <AuthLogo />
 
       <div class="text-center">
-        <h1 class="text-xl font-bold">다시 오신 것을 환영해요</h1>
+        <h1 class="font-headline text-xl font-bold">다시 오신 것을 환영해요</h1>
         <p class="mt-2 text-sm text-neutral-500">
           배포된 사이드 프로젝트의 성과를 확인하고 전 세계 메이커들과 피드백을 나누세요.
         </p>

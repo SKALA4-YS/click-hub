@@ -21,7 +21,7 @@ defineProps({
           <path d="M12 3v9m0 0l8-4.5M12 12l-8-4.5M12 12v9" stroke-linejoin="round" />
         </svg>
       </span>
-      <span class="text-xl font-extrabold tracking-tight">Click-Hub</span>
+      <span class="font-headline text-xl font-extrabold tracking-tight">Click-Hub</span>
     </div>
   </div>
 </template>

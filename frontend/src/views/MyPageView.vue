@@ -40,7 +40,7 @@ function saveProfile() {
         {{ auth.user.avatar_initial }}
       </div>
       <div>
-        <h1 class="text-lg font-bold">{{ auth.user.display_name }}</h1>
+        <h1 class="font-headline text-lg font-bold">{{ auth.user.display_name }}</h1>
         <p class="text-sm text-neutral-500">등록한 프로젝트 {{ mockMyProjects.length }}개</p>
       </div>
     </section>
