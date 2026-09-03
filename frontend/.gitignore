@@ -37,3 +37,8 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Personal work journal, instructions & design references (Claude Code)
+worklogs/
+CLAUDE.md
+design/
