@@ -27,7 +27,7 @@ const auth = useAuthStore()
         ><img :src="cursorIcon" alt="" class="ml-0.5 h-4 w-4 -rotate-12" />
       </RouterLink>
 
-      <div class="min-w-0 flex-1">
+      <div class="min-w-0 flex-1 lg:flex-none lg:w-[462px]">
         <SearchBar />
       </div>
 

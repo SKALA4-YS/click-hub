@@ -29,7 +29,6 @@ const route = inject(routeLocationKey, { meta: {} })
         <div class="flex gap-4">
           <span>Privacy</span>
           <span>Terms</span>
-          <span>문의하기</span>
         </div>
       </div>
     </footer>

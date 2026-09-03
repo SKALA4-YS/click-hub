@@ -4,6 +4,39 @@ import { describe, expect, it } from 'vitest'
 import SearchBar from '@/components/layout/SearchBar.vue'
 
 describe('SearchBar', () => {
+  it('uses the Figma desktop overlay dimensions and one contextual end control', async () => {
+    const wrapper = mount(SearchBar, { attachTo: document.body })
+    const input = wrapper.get('input[type="search"]')
+
+    await input.setValue('데이터 자격')
+
+    const overlay = wrapper.get('[role="dialog"]')
+    expect(overlay.classes()).toEqual(expect.arrayContaining(['lg:w-[503px]', 'lg:h-[227.9px]']))
+    expect(wrapper.findAll('[aria-label="검색어 지우기"]')).toHaveLength(1)
+    expect(wrapper.find('[aria-label="검색 닫기"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('shows the three Figma data-qualification suggestions with their exported assets', async () => {
+    const wrapper = mount(SearchBar, { attachTo: document.body })
+    const input = wrapper.get('input[type="search"]')
+
+    await input.setValue('데이터 자격')
+
+    const options = wrapper.findAll('[role="option"]')
+    expect(options.map((option) => option.text())).toEqual([
+      '데이터 자격증 SQLD',
+      '데이터 자격증 ADsP',
+      '데이터 자격 공부 방법',
+    ])
+    for (const option of options) {
+      expect(option.findAll('img')).toHaveLength(2)
+      expect(option.find('img').classes()).toContain('suggestion-search-icon')
+      expect(option.findAll('img')[1].classes()).toContain('suggestion-arrow-icon')
+    }
+    wrapper.unmount()
+  })
+
   it('uses distinct Figma surface and search-icon states when the combobox expands', async () => {
     const wrapper = mount(SearchBar, { attachTo: document.body })
     const input = wrapper.get('input[type="search"]')

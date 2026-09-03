@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { mockProjectList } from '@/data/mockProjectList'
+import { dataQualificationSuggestions } from '@/data/searchSuggestions'
 import clearIcon from '@/assets/figma/clear.svg'
 import diagonalArrowIcon from '@/assets/figma/diagonal-arrow.svg'
 import filterChevronIcon from '@/assets/figma/filter-chevron.svg'
@@ -44,6 +45,7 @@ const suggestions = computed(() => {
   if (!autocompleteEnabled.value) return []
   const q = query.value.trim().toLowerCase()
   if (!q) return []
+  if (q === '데이터 자격') return dataQualificationSuggestions
   return mockProjectList
     .filter((p) => p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
     .slice(0, 4)
@@ -61,6 +63,14 @@ function open() {
 function clearQuery() {
   query.value = ''
   inputEl.value?.focus()
+}
+
+function handleEndControl() {
+  if (query.value) {
+    clearQuery()
+    return
+  }
+  close('button')
 }
 
 function applySuggestion(title) {
@@ -137,7 +147,7 @@ onBeforeUnmount(() => {
       class="flex items-center gap-2 border border-divider/20 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-100 dark:border-divider/30"
       :class="
         isOpen
-          ? 'absolute left-0 top-0 z-30 w-full flex-col overflow-hidden rounded-[17px] bg-surface-light-1 p-0 shadow-lg dark:border-divider/25 dark:bg-surface-dark-1'
+          ? 'absolute left-0 top-0 z-30 w-full flex-col overflow-hidden rounded-[17px] bg-surface-light-1 p-0 shadow-lg lg:h-[227.9px] lg:w-[503px] dark:border-divider/25 dark:bg-surface-dark-1'
           : 'rounded-full bg-neutral-50 px-4 py-2 dark:bg-surface-dark-1'
       "
     >
@@ -165,11 +175,11 @@ onBeforeUnmount(() => {
           @keydown="handleKeydown"
         />
         <button
-          v-if="query"
+          v-if="query || isOpen"
           type="button"
-          aria-label="검색어 지우기"
+          :aria-label="query ? '검색어 지우기' : '검색 닫기'"
           class="text-body-light hover:text-primary-600 dark:text-body-dark"
-          @click="clearQuery"
+          @click="handleEndControl"
         >
           <img :src="clearIcon" alt="" class="h-3 w-3" />
         </button>
@@ -191,7 +201,11 @@ onBeforeUnmount(() => {
                 @click="applySuggestion(item.title)"
               >
                 <span class="flex min-w-0 items-center gap-2">
-                  <img :src="suggestionSearchIcon" alt="" class="h-4 w-4 shrink-0" />
+                  <img
+                    :src="suggestionSearchIcon"
+                    alt=""
+                    class="suggestion-search-icon h-4 w-4 shrink-0"
+                  />
                   <span class="truncate text-heading-light dark:text-heading-dark"
                     ><span>{{ suggestionParts(item.title).prefix }}</span
                     ><strong class="font-bold text-primary-600">{{
@@ -200,7 +214,11 @@ onBeforeUnmount(() => {
                     ><span>{{ suggestionParts(item.title).suffix }}</span></span
                   >
                 </span>
-                <img :src="diagonalArrowIcon" alt="" class="h-3 w-3 shrink-0" />
+                <img
+                  :src="diagonalArrowIcon"
+                  alt=""
+                  class="suggestion-arrow-icon h-3 w-3 shrink-0"
+                />
               </button>
             </li>
           </ul>
@@ -285,18 +303,6 @@ onBeforeUnmount(() => {
               >도움말 <img :src="helpIcon" alt="" class="h-3 w-3"
             /></a>
           </div>
-          <button
-            type="button"
-            aria-label="검색 닫기"
-            class="inline-flex items-center gap-1 rounded-md px-1 py-1 hover:text-primary-600"
-            @click="close('button')"
-          >
-            닫기
-            <kbd
-              class="rounded border border-divider/20 bg-neutral-50 px-1 py-0.5 font-mono text-[10px] text-body-light dark:border-divider/30 dark:bg-surface-dark-2 dark:text-body-dark"
-              >ESC</kbd
-            >
-          </button>
         </div>
       </template>
     </div>
