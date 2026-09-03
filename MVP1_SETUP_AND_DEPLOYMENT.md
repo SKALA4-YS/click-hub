@@ -195,10 +195,11 @@ Render Free Web Service는 15분 동안 inbound traffic이 없으면 중지되�
 ## 9. 현재 배포 상태
 
 - 로컬 Compose: 검증 완료
-- GitHub 기능 브랜치: 배포 준비 완료
-- Vercel: 실제 계정 연결과 URL 확정 필요
+- GitHub 기능 브랜치: PR #31 생성 완료
+- Vercel: PR Preview build 성공, Deployment Protection으로 비로그인 공개 검증은 대기
 - Render: 실제 Blueprint 생성과 secret 입력 필요
 - Google OAuth: 실제 client credential과 운영 redirect URI 등록 필요
 
-운영 배포가 끝나면 실제 FE·BE URL과 검증 일시를 [MVP1_VERIFICATION_REPORT.md](./MVP1_VERIFICATION_REPORT.md)에 추가한다.
+Preview URL이 Vercel SSO로 이동하면 빌드 실패가 아니라 Deployment Protection 정책이다. 팀원이 공개 URL로 함께 검증하려면 Vercel Project Settings에서 보호 범위를 확인하거나, 허용된 계정으로 접속하거나, production 배포 후 공개 URL에서 점검한다. 보호를 변경하기 전에는 프로젝트의 접근 정책을 먼저 확인한다.
 
+운영 배포가 끝나면 실제 FE·BE URL과 검증 일시를 [MVP1_VERIFICATION_REPORT.md](./MVP1_VERIFICATION_REPORT.md)에 추가한다.

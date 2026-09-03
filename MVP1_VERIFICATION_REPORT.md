@@ -73,15 +73,23 @@ DATABASE_PORT=15432 docker compose -p click-hub-mvp1 up --build -d
 - 이미지 업로드와 AI 자동 분석 등 제외 기능은 MVP1 이후 기능이라고 명시한다.
 - demo 콘텐츠는 운영 schema migration과 분리돼 `demo` profile에서만 적용된다.
 
-## 6. 미검증 항목과 다음 조치
+## 6. GitHub와 Vercel Preview 확인
+
+- 기능 브랜치를 GitHub에 push하고 `develop` 대상 PR #31을 생성했다.
+- GitHub CI의 Frontend, Backend, Container Build 세 job이 모두 통과했다.
+- Vercel Preview deployment 상태는 성공이다.
+- Preview URL의 `/`와 `/projects/<uuid>`에 비로그인 HEAD 요청을 보내면 Vercel SSO로 HTTP 302 이동한다. Deployment Protection 때문에 공개 SPA rewrite와 Backend API 연결은 판정하지 않았다.
+
+CI에는 `actions/checkout@v4`, `actions/setup-node@v4`, `actions/setup-java@v4`의 Node 20 전환 및 `setup-java@v4` 지원 종료 예고가 표시됐다. 현재 검사는 통과했지만 별도 유지보수 변경으로 action major version을 갱신해야 한다.
+
+## 7. 미검증 항목과 다음 조치
 
 | 항목 | 미검증 이유 | 완료 방법 |
 | --- | --- | --- |
 | 실제 Google 로그인 | Google client credential 없음 | Console URI 등록 후 브라우저 수동 시나리오 수행 |
-| Vercel 배포 | CLI·프로젝트 연결 없음 | GitHub main 연결, Root `frontend`, FE env 설정 |
+| Vercel 공개 검증 | Preview가 Deployment Protection 대상 | 접근 정책 확인 후 Preview 또는 production URL 점검 |
 | Render 배포 | CLI·workspace/secret 연결 없음 | Blueprint 생성, `sync:false` secret 입력 |
 | 공개 CORS·callback | 공개 URL 미확정 | 양쪽 URL 확정 후 체크리스트 실행 |
 | 시각 브라우저 QA | 현재 세션에 제어 가능한 브라우저 없음 | 로컬 또는 배포 URL에서 주요 route 수동 확인 |
 
 따라서 현재 결과는 “로컬에서 실제 동작하는 MVP1”에는 해당하지만 “공개 배포까지 완료된 MVP1”로는 판정하지 않는다. 외부 계정 설정 후 [MVP1_SETUP_AND_DEPLOYMENT.md](./MVP1_SETUP_AND_DEPLOYMENT.md)의 배포 후 점검표를 통과하고 실제 URL을 기록해야 최종 완료다.
-
