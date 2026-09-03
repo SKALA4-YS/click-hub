@@ -8,7 +8,7 @@ async function mountSignup() {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/', component: { template: '<div>Home</div>' } },
+      { path: '/', component: { template: '<main>Home page</main>' } },
       { path: '/login', component: { template: '<main>Login page</main>' } },
       { path: '/onboarding', component: { template: '<main>Onboarding page</main>' } },
       { path: '/signup', component: SignupView },
@@ -16,95 +16,93 @@ async function mountSignup() {
   })
   await router.push('/signup')
   await router.isReady()
-
   return {
     router,
     wrapper: mount({ template: '<RouterView />' }, { global: { plugins: [router] } }),
   }
 }
 
-async function fillValidFields(wrapper) {
-  await wrapper.get('[name="name"]').setValue('클릭허브')
-  await wrapper.get('[name="email"]').setValue('hello@clickhub.dev')
-  await wrapper.get('[name="password"]').setValue('clickhub123!')
-  await wrapper.get('[name="passwordConfirmation"]').setValue('clickhub123!')
-}
-
-async function acceptRequiredAgreements(wrapper) {
+async function fillValidSignup(wrapper) {
+  await wrapper.get('[name="profile"]').setValue('김메이커')
+  await wrapper.get('[name="email"]').setValue('maker@clickhub.dev')
+  await wrapper.get('[name="password"]').setValue('clickhub12!')
   await wrapper.get('[data-testid="terms-agreement"]').setValue(true)
   await wrapper.get('[data-testid="privacy-agreement"]').setValue(true)
 }
 
 describe('SignupView', () => {
-  it('keeps the visible submit button disabled until both required agreements are accepted', async () => {
+  it('renders the Figma signup copy and single password field accessibly', async () => {
     const { wrapper } = await mountSignup()
-    const submit = wrapper.get('[data-testid="signup-submit"]')
 
-    expect(submit.attributes('disabled')).toBeDefined()
-    await submit.trigger('click')
-    expect(wrapper.find('[data-error="agreement"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('인디 메이커를 위한 플랫폼')
+    expect(wrapper.get('h1').text()).toBe('Click-Hub에 오신 것을 환영합니다')
+    expect(wrapper.text()).toContain('Google로 3초 만에 시작하기')
+    expect(wrapper.text()).toContain('또는 이메일로 직접 가입')
+    expect(wrapper.findAll('input[type="password"]')).toHaveLength(1)
+    expect(wrapper.get('[name="profile"]').attributes('aria-label')).toBe('이름 또는 닉네임')
+    expect(wrapper.get('[name="email"]').attributes('aria-describedby')).toContain('email-helper')
+  })
+
+  it('updates the four-stage password strength indicator from empty to strong', async () => {
+    const { wrapper } = await mountSignup()
+
+    expect(wrapper.get('[data-testid="password-strength"]').attributes('data-level')).toBe('0')
+    await wrapper.get('[name="password"]').setValue('clickhub12!')
+    expect(wrapper.get('[data-testid="password-strength"]').attributes('data-level')).toBe('4')
+    expect(wrapper.findAll('[data-testid="password-strength"] span.is-active')).toHaveLength(4)
+  })
+
+  it('toggles selected technology and position chips independently', async () => {
+    const { wrapper } = await mountSignup()
+    const next = wrapper.get('[data-chip="Next.js"]')
+    const designer = wrapper.get('[data-chip="디자이너"]')
+
+    await next.trigger('click')
+    await designer.trigger('click')
+
+    expect(next.attributes('aria-pressed')).toBe('true')
+    expect(designer.attributes('aria-pressed')).toBe('true')
+    expect(wrapper.get('[data-chip="Vue.js"]').attributes('aria-pressed')).toBe('false')
+  })
+
+  it('selects and clears every agreement from the all-agreements control', async () => {
+    const { wrapper } = await mountSignup()
+    const all = wrapper.get('[data-testid="all-agreements"]')
+
+    await all.setValue(true)
+    expect(wrapper.get('[data-testid="terms-agreement"]').element.checked).toBe(true)
+    expect(wrapper.get('[data-testid="privacy-agreement"]').element.checked).toBe(true)
+    expect(wrapper.get('[data-testid="newsletter-agreement"]').element.checked).toBe(true)
+
+    await all.setValue(false)
+    expect(wrapper.get('[data-testid="terms-agreement"]').element.checked).toBe(false)
+    expect(wrapper.get('[data-testid="privacy-agreement"]').element.checked).toBe(false)
+    expect(wrapper.get('[data-testid="newsletter-agreement"]').element.checked).toBe(false)
+  })
+
+  it('reflects individual agreement changes in the all-agreements control', async () => {
+    const { wrapper } = await mountSignup()
 
     await wrapper.get('[data-testid="terms-agreement"]').setValue(true)
-    expect(submit.attributes('disabled')).toBeDefined()
     await wrapper.get('[data-testid="privacy-agreement"]').setValue(true)
-    expect(submit.attributes('disabled')).toBeUndefined()
+    await wrapper.get('[data-testid="newsletter-agreement"]').setValue(true)
+
+    expect(wrapper.get('[data-testid="all-agreements"]').element.checked).toBe(true)
   })
 
-  it('shows field errors after the user clicks an enabled invalid signup button without navigating', async () => {
-    const { router, wrapper } = await mountSignup()
-    await acceptRequiredAgreements(wrapper)
+  it('keeps signup unavailable and exposes its disabled state until required agreements are selected', async () => {
+    const { wrapper } = await mountSignup()
 
-    await wrapper.get('[data-testid="signup-submit"]').trigger('click')
-
-    expect(wrapper.get('[data-error="name"]').text()).toBe('이름을 입력해주세요.')
-    expect(wrapper.get('[data-error="email"]').text()).toBe('이메일을 입력해주세요.')
-    expect(wrapper.get('[data-error="password"]').text()).toBe('비밀번호를 입력해주세요.')
-    expect(router.currentRoute.value.path).toBe('/signup')
+    expect(wrapper.get('[data-testid="signup-submit"]').attributes('disabled')).toBeDefined()
+    await wrapper.get('[data-testid="terms-agreement"]').setValue(true)
+    expect(wrapper.get('[data-testid="signup-submit"]').attributes('disabled')).toBeDefined()
+    await wrapper.get('[data-testid="privacy-agreement"]').setValue(true)
+    expect(wrapper.get('[data-testid="signup-submit"]').attributes('disabled')).toBeUndefined()
   })
 
-  it('rejects an invalid email address without navigating', async () => {
+  it('navigates locally to onboarding after a valid email signup', async () => {
     const { router, wrapper } = await mountSignup()
-    await fillValidFields(wrapper)
-    await wrapper.get('[name="email"]').setValue('not-an-email')
-    await acceptRequiredAgreements(wrapper)
-
-    await wrapper.get('[data-testid="signup-submit"]').trigger('click')
-
-    expect(wrapper.get('[data-error="email"]').text()).toBe('올바른 이메일 주소를 입력해주세요.')
-    expect(router.currentRoute.value.path).toBe('/signup')
-  })
-
-  it('rejects a short password without navigating', async () => {
-    const { router, wrapper } = await mountSignup()
-    await fillValidFields(wrapper)
-    await wrapper.get('[name="password"]').setValue('short')
-    await wrapper.get('[name="passwordConfirmation"]').setValue('short')
-    await acceptRequiredAgreements(wrapper)
-
-    await wrapper.get('[data-testid="signup-submit"]').trigger('click')
-
-    expect(wrapper.get('[data-error="password"]').text()).toBe('비밀번호는 8자 이상 입력해주세요.')
-    expect(router.currentRoute.value.path).toBe('/signup')
-  })
-
-  it('rejects a mismatched password confirmation without navigating', async () => {
-    const { router, wrapper } = await mountSignup()
-    await fillValidFields(wrapper)
-    await wrapper.get('[name="passwordConfirmation"]').setValue('different-password')
-    await acceptRequiredAgreements(wrapper)
-
-    await wrapper.get('[data-testid="signup-submit"]').trigger('click')
-
-    expect(wrapper.get('#signup-password-confirmation-error').text()).toBe(
-      '비밀번호가 일치하지 않습니다.',
-    )
-    expect(router.currentRoute.value.path).toBe('/signup')
-  })
-
-  it('navigates to onboarding after the user clicks a valid signup button', async () => {
-    const { router, wrapper } = await mountSignup()
-    await fillValidFields(wrapper)
-    await acceptRequiredAgreements(wrapper)
+    await fillValidSignup(wrapper)
 
     await wrapper.get('[data-testid="signup-submit"]').trigger('click')
     await new Promise((resolve) => setTimeout(resolve))
@@ -113,7 +111,16 @@ describe('SignupView', () => {
     expect(wrapper.text()).toContain('Onboarding page')
   })
 
-  it('takes the visible login link to the login route', async () => {
+  it('takes the Google start CTA through the same local onboarding route', async () => {
+    const { router, wrapper } = await mountSignup()
+
+    await wrapper.get('[data-testid="google-signup"]').trigger('click')
+    await new Promise((resolve) => setTimeout(resolve))
+
+    expect(router.currentRoute.value.path).toBe('/onboarding')
+  })
+
+  it('takes the login link to the login route', async () => {
     const { router, wrapper } = await mountSignup()
 
     await wrapper.get('a[href="/login"]').trigger('click')
