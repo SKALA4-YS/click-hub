@@ -12,6 +12,7 @@ import com.skala.clickhub.repository.DeveloperRankingRepository;
 import com.skala.clickhub.repository.NotificationRepository;
 import com.skala.clickhub.repository.ProjectDailyMetricRepository;
 import com.skala.clickhub.repository.ProjectRankingRepository;
+import com.skala.clickhub.repository.ProjectCommentRepository;
 import com.skala.clickhub.repository.ProjectReactionRepository;
 import com.skala.clickhub.repository.ProjectRepository;
 import com.skala.clickhub.repository.ProjectTechnologyRepository;
@@ -43,6 +44,9 @@ public abstract class NoDbRepositoryMocks {
 
     @MockitoBean
     protected ProjectReactionRepository projectReactionRepository;
+
+    @MockitoBean
+    protected ProjectCommentRepository projectCommentRepository;
 
     @MockitoBean
     protected CategoryRepository categoryRepository;

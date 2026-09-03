@@ -35,6 +35,10 @@ public enum ErrorCode {
     // 반응 - 7장 "사용자당 프로젝트 1회"
     ALREADY_REACTED(HttpStatus.CONFLICT, "REACTION_001", "이미 반응을 남긴 프로젝트입니다."),
 
+    // 프로젝트 댓글 (§5) — 커뮤니티 게시글 댓글(COMMUNITY_003/004)과 별도 프리픽스
+    PROJECT_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_001", "댓글을 찾을 수 없습니다."),
+    NOT_COMMENT_AUTHOR(HttpStatus.FORBIDDEN, "COMMENT_002", "댓글 작성자만 삭제할 수 있습니다."),
+
     // 구독 - 7장 "제작자를 구독"
     CANNOT_SUBSCRIBE_SELF(HttpStatus.BAD_REQUEST, "SUBSCRIBE_001", "자기 자신은 구독할 수 없습니다."),
 

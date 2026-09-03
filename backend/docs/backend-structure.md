@@ -7,6 +7,44 @@
 
 ## 0. 변경 이력
 
+### 2026-09-03 (9차) — Reactions/Favorites/Comments 기능(§5) 실제 구현
+`api-spec-draft.md` §5(좋아요/즐겨찾기 토글, 내 즐겨찾기 목록, 프로젝트 댓글 CRUD) 구현. 그사이
+다른 팀원들이 §2(Projects)/§3(Search·Feed)/§6~9를 이미 `develop`에 병합해 둔 덕분에, `ProjectReaction`/
+`ProjectComment` 엔티티, `ProjectReactionRepository`(읽기 전용 — 자체 주석에 "토글은 §5 몫"이라고
+명시돼 있었음), `ProjectService.toDetail`의 `likeCount`/`likedByMe` 계산, `InteractionEventRecorder`가
+이미 마련돼 있었다 — 이번엔 남은 쓰기 경로(토글, 댓글 CRUD)만 채우면 됐다.
+
+**신규**: `repository/ProjectCommentRepository.java`(목록은 네이티브 LIMIT/OFFSET, 단건은
+`LEFT JOIN FETCH author`), `service/ReactionService.java`(`CommunityService`처럼 좋아요/즐겨찾기/댓글을
+한 서비스에 묶음).
+**수정**: `entity/ProjectComment.java`에 `softDelete()` 추가(그동안 없었음), `repository/ProjectRepository.java`에
+`findFavoritedByUser` 네이티브 쿼리 추가, `controller/ReactionController.java`/`FavoriteController.java`
+스텁을 실구현으로 교체 + `GET .../comments`/`DELETE .../comments/{commentId}`/`GET /v1/me/favorites`
+신규 추가, `exception/ErrorCode.java`에 `PROJECT_COMMENT_NOT_FOUND`/`NOT_COMMENT_AUTHOR` 추가,
+`SecurityConfig`의 선택 인증 GET 목록에 `/v1/projects/{id}/comments` 추가.
+
+**설계 포인트**: 랭킹 뷰(`project_top100_7d` 등)가 쓰는 `project_daily_metrics.unique_likes`/
+`unique_commenters`는 `project_reactions`/`project_comments`가 아니라 `interaction_events`
+(`event_type='like_set'|'comment_created'`)에서 집계된다 — 그래서 토글/댓글 작성마다
+`InteractionEventRecorder.record(...)`도 함께 호출해야 랭킹에 반영된다(좋아요는 켜든 끄든 매번
+`LIKE_SET` 기록). `GET /v1/me/favorites` 응답은 새 DTO를 만들지 않고 이미 있던
+`ProjectDtos.SummaryResponse`를 재사용했다(`FeedService.toItem`과 동일한 필드 매핑).
+
+**테스트 중 발견한 실제 버그**: `ReactionIntegrationTest`가 `InteractionEventRecorder`를 거치는
+첫 테스트였는데, Testcontainers `@DynamicPropertySource`가 `spring.datasource.url`을 통째로
+덮어쓰면서 기본 설정의 `?stringtype=unspecified`가 사라져 `interaction_events.actor_kind`(네이티브
+Postgres enum) INSERT가 `column is of type actor_kind but expression is of type character varying`로
+깨졌다. `RankingIntegrationTest`/`DatabaseMigrationTests`는 이 경로를 안 타서 지금까지 드러나지
+않았던 잠재 버그였다 — 이번 테스트 파일의 URL에만 `&stringtype=unspecified`를 추가해 해결(다른
+기존 테스트는 그대로 둠, 필요해지면 각자 같은 방식으로 고치면 됨).
+
+**검증**: `ReactionIntegrationTest`(토글 on/off, 즐겨찾기 목록, 댓글 작성/목록/삭제(작성자
+검증 포함), 인증 여부별 접근 제어) 전부 통과, 전체 스위트(`nodb` 포함, `NoDbRepositoryMocks`에
+`ProjectCommentRepository` 목 추가) 회귀 없음. 임시 Postgres + `bootRun` + 직접 발급한 JWT로 실제
+좋아요/즐겨찾기/댓글 CRUD를 curl로 실행 — 프로젝트 상세의 `likeCount`/`likedByMe`가 즉시 반영되는
+것, `interaction_events`에 `like_set`(2건, on/off) / `favorite_set`(2건) / `comment_created`(1건)가
+정확히 기록되는 것까지 실측 확인. 임시 컨테이너/프로세스는 종료 후 정리함.
+
 ### 2026-09-03 (8차) — Rankings 기능(§4) 실제 구현: `GET /v1/rankings/projects`, `GET /v1/rankings/developers`
 `api-spec-draft.md`(10개 기능 그룹으로 재정리된 최신 API 명세 — §12 기반 구버전 명세를 대체)의
 1번(Auth)에 이어 4번(Rankings)을 순서대로 구현. 경로 프리픽스는 `api-spec-draft.md`가 `/api/v1`을

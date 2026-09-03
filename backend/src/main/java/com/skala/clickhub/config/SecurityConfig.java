@@ -78,7 +78,7 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         // §12 "인증: 선택" — 토큰이 있으면 개인화, 없어도 접근은 허용해야 하는 조회 API
                         .requestMatchers(HttpMethod.GET,
-                                "/v1/projects/{id}", "/v1/search", "/v1/feed",
+                                "/v1/projects/{id}", "/v1/projects/{id}/comments", "/v1/search", "/v1/feed",
                                 "/v1/rankings/**", "/v1/insights/weekly", "/v1/tutorials"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/projects/{id}/outbound-clicks").permitAll()

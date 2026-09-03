@@ -73,4 +73,16 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
             LIMIT :limit OFFSET :offset
             """, nativeQuery = true)
     List<Project> findHomeFeed(@Param("limit") int limit, @Param("offset") int offset);
+
+    /** 내 즐겨찾기 목록(§5, GET /v1/me/favorites) — 즐겨찾기한 순서(최신 순)로 정렬. */
+    @Query(value = """
+            SELECT p.* FROM projects p
+            JOIN project_reactions r ON r.project_id = p.id
+            WHERE r.user_id = :userId AND r.type = 'FAVORITE'
+            ORDER BY r.created_at DESC, p.id
+            LIMIT :limit OFFSET :offset
+            """, nativeQuery = true)
+    List<Project> findFavoritedByUser(@Param("userId") UUID userId,
+                                      @Param("limit") int limit,
+                                      @Param("offset") int offset);
 }

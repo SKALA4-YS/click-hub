@@ -47,4 +47,8 @@ public class ProjectComment extends BaseTimeEntity {
         this.author = author;
         this.body = body;
     }
+
+    public void softDelete() {
+        this.deletedAt = OffsetDateTime.now();
+    }
 }
