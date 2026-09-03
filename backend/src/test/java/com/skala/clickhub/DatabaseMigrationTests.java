@@ -43,10 +43,10 @@ class DatabaseMigrationTests {
 
 	@Test
 	void appliesMigrationsWithExtensionsTablesAndSeedData() {
-		assertEquals(2, count("SELECT count(*) FROM flyway_schema_history WHERE version IN ('1', '2') AND success"));
+		assertEquals(3, count("SELECT count(*) FROM flyway_schema_history WHERE version IN ('1', '2', '3') AND success"));
 		assertEquals(2, count("SELECT count(*) FROM pg_extension WHERE extname IN ('pgcrypto', 'vector')"));
-		// V1 22개 테이블 + V2가 추가하는 user_onboarding_interest_categories 1개 = 23개
-		assertEquals(23, count("SELECT count(*) FROM pg_tables "
+		// V1 22개 + V2 관심 카테고리 1개 + V3 온보딩 프로필/관심 기술 2개 = 25개
+		assertEquals(25, count("SELECT count(*) FROM pg_tables "
 				+ "WHERE schemaname = 'public' AND tablename <> 'flyway_schema_history'"));
 		assertEquals(14, count("SELECT count(*) FROM categories"));
 		assertEquals(15, count("SELECT count(*) FROM technologies"));

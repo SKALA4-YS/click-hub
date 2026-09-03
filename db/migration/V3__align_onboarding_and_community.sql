@@ -1,55 +1,9 @@
--- Align the deployed V1 schema with the current Click HUB domain contract.
-BEGIN;
-
-DO $$ BEGIN
-  CREATE TYPE social_login_provider AS ENUM ('GOOGLE', 'GITHUB');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+-- V3: Extend the V2 social login schema with onboarding details and align
+-- the community domain with the current Click HUB contract.
 
 DO $$ BEGIN
   CREATE TYPE community_post_status AS ENUM ('PUBLISHED', 'DELETED');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS auth_provider social_login_provider,
-  ADD COLUMN IF NOT EXISTS google_subject varchar(255);
-
--- Existing GitHub users can be migrated safely. Earlier rows with no provider
--- remain NULL because their original identity provider cannot be reconstructed.
-UPDATE users
-SET auth_provider = 'GITHUB'
-WHERE auth_provider IS NULL
-  AND github_user_id IS NOT NULL;
-
-ALTER TABLE users
-  DROP CONSTRAINT IF EXISTS users_auth_provider_identity_ck;
-
-ALTER TABLE users
-  ADD CONSTRAINT users_auth_provider_identity_ck CHECK (
-    auth_provider IS NULL
-    OR (auth_provider = 'GOOGLE' AND nullif(btrim(google_subject), '') IS NOT NULL)
-    OR auth_provider = 'GITHUB'
-  );
-
-ALTER TABLE users
-  DROP CONSTRAINT IF EXISTS users_google_subject_nonempty_ck;
-
-ALTER TABLE users
-  ADD CONSTRAINT users_google_subject_nonempty_ck
-  CHECK (google_subject IS NULL OR btrim(google_subject) <> '');
-
-CREATE UNIQUE INDEX IF NOT EXISTS users_google_subject_uq
-ON users (google_subject)
-WHERE google_subject IS NOT NULL;
-
-CREATE TABLE IF NOT EXISTS user_onboarding_interest_categories (
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  category_id uuid NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (user_id, category_id)
-);
-
-CREATE INDEX IF NOT EXISTS user_onboarding_interest_categories_category_idx
-ON user_onboarding_interest_categories (category_id, user_id);
 
 CREATE TABLE IF NOT EXISTS user_onboarding_profiles (
   user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -208,5 +162,3 @@ ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,
   display_order = EXCLUDED.display_order;
-
-COMMIT;
