@@ -20,6 +20,11 @@ const router = createRouter({
       component: () => import('../views/OnboardingView.vue'),
     },
     {
+      path: '/mypage',
+      name: 'mypage',
+      component: () => import('../views/MyPageView.vue'),
+    },
+    {
       path: '/notifications',
       name: 'notifications',
       component: () => import('../views/NotificationsView.vue'),

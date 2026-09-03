@@ -12,13 +12,24 @@ export const useAuthStore = defineStore('auth', {
   },
   actions: {
     mockLoginWithGoogle() {
-      this.user = { display_name: '김민준', avatar_initial: '김' }
+      this.user = {
+        display_name: '김민준',
+        avatar_initial: '김',
+        new_project_notifications: true,
+      }
     },
     completeOnboarding({ goals, categories, techStacks }) {
       this.onboarding = { goals, categories, techStacks, completed_at: new Date().toISOString() }
     },
     skipOnboarding() {
       this.onboarding = { skipped: true, completed_at: new Date().toISOString() }
+    },
+    updateProfile({ display_name, new_project_notifications }) {
+      if (!this.user) return
+      if (display_name !== undefined) this.user.display_name = display_name
+      if (new_project_notifications !== undefined) {
+        this.user.new_project_notifications = new_project_notifications
+      }
     },
     logout() {
       this.user = null
