@@ -1,0 +1,27 @@
+name: Bug
+description: 재현 가능한 오류를 보고합니다.
+title: "[Bug] "
+labels:
+  - "type:bug"
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 오류 설명
+      description: 실제 동작과 기대 동작을 설명해 주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 재현 절차
+      placeholder: "1. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 환경
+      description: OS, 브라우저, Node 또는 Java 버전을 적어 주세요.
+    validations:
+      required: true

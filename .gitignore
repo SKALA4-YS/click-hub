@@ -1,0 +1,30 @@
+# macOS and editors
+.DS_Store
+.idea/
+*.iml
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local project materials
+/doc/
+/outputs/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+
+# Backend
+backend/.gradle/
+backend/build/
+backend/out/
+
+# Logs
+*.log
+
+# Local agent state
+/.agent/
