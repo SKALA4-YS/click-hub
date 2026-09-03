@@ -7,6 +7,48 @@
 
 ## 0. 변경 이력
 
+### 2026-09-03 (9차) — 실제 Google 로그인 재검증, 탈퇴 계정 재로그인 시 500 나는 버그 발견·수정
+"1번(Auth) 기능을 가짜 데이터로 테스트하고 실제 구글 인증까지 확인해달라"는 요청에 따라, `develop`에
+병합된 최신 스캐폴딩(V3 마이그레이션 포함) 기준으로 실제 Google 계정으로 로그인 플로우를 다시
+끝까지 실행했다. 정상 로그인/재로그인/`GET /v1/users/me`/무효 토큰 4종/탈퇴 계정 토큰 재사용까지는
+전부 기대대로 동작했지만, **탈퇴한 계정으로 다시 로그인을 시도하는 경로**에서 새 버그를 발견했다.
+
+**버그 1 — 탈퇴 계정 재로그인 시 `BusinessException`이 인증 실패로 인식되지 못하고 그대로 터짐**
+`OAuth2UserSyncService.assertNotDeleted()`가 던지는 `BusinessException(ACCOUNT_DELETED)`는
+`AuthenticationException`이 아니라서, `CustomOidcUserService.loadUser()`에서 던져도 Spring
+Security의 OAuth2 로그인 필터가 "인증 실패"로 인식하지 못한다 — `OAuth2AuthenticationFailureHandler`를
+거치지 않고 그대로 서블릿 밖으로 전파돼 500이 났고, 그 직후 내부 `/error` 포워딩이 보안 필터를 다시
+타면서 엉뚱하게 401 "인증이 필요합니다" JSON이 브라우저에 노출됐다(실측 확인).
+- 수정: `CustomOAuth2UserService`/`CustomOidcUserService`에서 `BusinessException`을 잡아
+  `OAuth2AuthenticationException`으로 감싸 다시 던지도록 변경 — 이제 실패 핸들러가 정상 동작한다.
+
+**버그 2 — 위 수정으로 처음 실제 실행된 실패 핸들러 경로에서 `StackOverflowError` 발견**
+버그 1을 고치고 나니, 아무 데서도 쓰이지 않던 `SecurityConfig`의
+`AuthenticationManager authenticationManager(AuthenticationConfiguration config)` 빈
+(`config.getAuthenticationManager()`를 그대로 위임)이 자기 자신을 참조하는 전형적인 Spring
+Security 함정이라 `StackOverflowError`를 일으킨다는 걸 실측으로 발견했다. JWT 인증 필터는
+`AuthenticationManager.authenticate()`를 호출하지 않고 `SecurityContext`에 직접 인증 객체를
+심는 방식이라 이 빈은 애초에 코드 어디에서도 쓰이지 않는 죽은 코드였다.
+- 수정: 해당 빈과 관련 import(`AuthenticationManager`, `AuthenticationConfiguration`) 완전 삭제.
+
+**추가 개선**: `OAuth2AuthenticationFailureHandler`가 항상 고정 문자열
+`?error=oauth2_login_failed`만 내려주던 것을, 예외에 실린 `OAuth2Error` 코드(예: 탈퇴 계정이면
+`AUTH_003`)를 그대로 넘기도록 바꿔 프론트가 구체적인 실패 사유를 구분할 수 있게 했다.
+
+**절차**: Docker로 임시 pgvector 컨테이너(호스트 포트 55433) 기동 → `SPRING_PROFILES_ACTIVE=oauth2` +
+`.env`에 저장된 실제 Google Client ID/Secret으로 `bootRun`(포트 8080 — Google Cloud Console에 등록된
+redirect URI와 일치시켜야 함, 8080이 아닌 다른 포트로 띄우면 `redirect_uri_mismatch`가 남을 실측
+확인) → 프론트 `npm run dev`(포트 5173, 이번에 `@tailwindcss/vite` 등 새 의존성이 추가돼 있어 `npm
+install` 재실행 필요했음) → claude-in-chrome으로 실제 Google 계정 로그인. 참고로 프론트엔드의
+"Google로 3초 만에 로그인" 버튼은 아직 실제 OAuth 리다이렉트에 연결돼 있지 않아(클릭해도 아무 반응
+없음, 콘솔 에러도 없음 — 프론트 팀 작업 진행 중으로 보임) 백엔드 `GET /v1/auth/google`에 직접
+접속해 테스트했다.
+
+**검증**: `./gradlew clean compileJava compileTestJava test` 전체 통과(9건) 확인 후 실제 Postgres+
+Google 계정으로 재실행 — 정상 로그인, 탈퇴 계정 재로그인(`?error=AUTH_003`로 정상 리다이렉트),
+탈퇴 해제 후 재로그인까지 3단계 모두 기대대로 동작 확인. 코드는 `fix/oauth2-account-deleted-login`
+브랜치(develop 기준, Rankings PR과 분리)에 커밋·푸시함. 임시 컨테이너/프로세스는 종료 후 정리함.
+
 ### 2026-09-03 (8차) — Rankings 기능(§4) 실제 구현: `GET /v1/rankings/projects`, `GET /v1/rankings/developers`
 `api-spec-draft.md`(10개 기능 그룹으로 재정리된 최신 API 명세 — §12 기반 구버전 명세를 대체)의
 1번(Auth)에 이어 4번(Rankings)을 순서대로 구현. 경로 프리픽스는 `api-spec-draft.md`가 `/api/v1`을
