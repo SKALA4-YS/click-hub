@@ -20,6 +20,7 @@ const route = inject(routeLocationKey, { meta: {} })
     </main>
     <footer
       v-if="!route.meta.standalone"
+      data-testid="app-footer"
       class="border-t border-divider/20 py-6 text-sm text-body-light dark:border-divider/20 dark:text-body-dark"
     >
       <div

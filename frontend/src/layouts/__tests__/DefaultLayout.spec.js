@@ -34,8 +34,8 @@ describe('DefaultLayout route shells', () => {
       const wrapper = await mountAt(path)
 
       expect(router.currentRoute.value.meta.standalone).toBe(true)
-      expect(wrapper.find('header').exists()).toBe(false)
-      expect(wrapper.find('footer').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="app-header"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="app-footer"]').exists()).toBe(false)
       expect(wrapper.find('main').classes()).toContain('max-w-none')
     },
   )
@@ -45,8 +45,8 @@ describe('DefaultLayout route shells', () => {
     await nextTick()
 
     expect(router.currentRoute.value.meta.standalone).not.toBe(true)
-    expect(wrapper.find('header').exists()).toBe(true)
-    expect(wrapper.find('footer').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="app-header"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="app-footer"]').exists()).toBe(true)
     expect(wrapper.find('main').classes()).toContain('max-w-[1280px]')
     expect(wrapper.find('footer').text()).toContain('© 2026 CLICK-HUB. ALL RIGHTS RESERVED.')
     expect(wrapper.find('footer').text()).toContain('Privacy')
