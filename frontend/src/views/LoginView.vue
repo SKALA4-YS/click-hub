@@ -8,7 +8,7 @@ const auth = useAuthStore()
 function loginWithGoogle() {
   // TODO: 실제 Google OAuth 플로우로 교체 (백엔드 엔드포인트 확정 후)
   auth.mockLoginWithGoogle()
-  router.push('/')
+  router.push('/onboarding')
 }
 </script>
 

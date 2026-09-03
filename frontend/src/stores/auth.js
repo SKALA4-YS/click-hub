@@ -5,6 +5,7 @@ import { defineStore } from 'pinia'
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
+    onboarding: null,
   }),
   getters: {
     isLoggedIn: (state) => state.user !== null,
@@ -13,8 +14,12 @@ export const useAuthStore = defineStore('auth', {
     mockLoginWithGoogle() {
       this.user = { display_name: '김민준', avatar_initial: '김' }
     },
+    completeOnboarding({ goals, categories, techStacks }) {
+      this.onboarding = { goals, categories, techStacks, completed_at: new Date().toISOString() }
+    },
     logout() {
       this.user = null
+      this.onboarding = null
     },
   },
 })
