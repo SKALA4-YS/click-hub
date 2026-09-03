@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
+import com.skala.clickhub.support.NoDbRepositoryMocks;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(properties = "clickhub.cors.allowed-origins=https://click-hub.vercel.app")
 @ActiveProfiles("nodb")
-class PingControllerTests {
+class PingControllerTests extends NoDbRepositoryMocks {
 
 	private static final String ALLOWED_ORIGIN = "https://click-hub.vercel.app";
 

@@ -10,10 +10,25 @@ const router = createRouter({
       component: HomeView,
     },
     {
+      path: '/rankings',
+      name: 'rankings',
+      component: () => import('../views/RankingView.vue'),
+    },
+    {
+      path: '/projects/:id',
+      name: 'project-detail',
+      component: () => import('../views/ProjectDetailView.vue'),
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
       meta: { standalone: true },
+    },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: () => import('../views/SignupView.vue'),
     },
     {
       path: '/onboarding',
