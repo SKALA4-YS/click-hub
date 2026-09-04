@@ -13,6 +13,12 @@ vi.mock('@/api/client', () => ({
   getApiUrl: (path) => `https://api.clickhub.test${path}`,
 }))
 
+import {
+  approveProject,
+  getAdminProjectDetail,
+  getPendingProjects,
+  rejectProject,
+} from '@/api/admin'
 import { getGoogleLoginUrl, getMe } from '@/api/auth'
 import { getCategories, getTechnologies } from '@/api/catalog'
 import {
@@ -151,6 +157,25 @@ describe('domain API modules', () => {
     expect(client.get).toHaveBeenCalledWith('/v1/creators/creator-id')
     expect(client.put).toHaveBeenCalledWith('/v1/creators/creator-id/subscription', {
       auth: 'required',
+    })
+  })
+
+  it('uses admin-only endpoints for project approval review', () => {
+    getPendingProjects()
+    getAdminProjectDetail('project-id')
+    approveProject('project-id')
+    rejectProject('project-id', '스크린샷이 실제 화면과 다릅니다.')
+
+    expect(client.get).toHaveBeenCalledWith('/v1/admin/projects', { auth: 'required' })
+    expect(client.get).toHaveBeenCalledWith('/v1/admin/projects/project-id', {
+      auth: 'required',
+    })
+    expect(client.post).toHaveBeenCalledWith('/v1/admin/projects/project-id/approve', {
+      auth: 'required',
+    })
+    expect(client.post).toHaveBeenCalledWith('/v1/admin/projects/project-id/reject', {
+      auth: 'required',
+      body: { reason: '스크린샷이 실제 화면과 다릅니다.' },
     })
   })
 })
