@@ -39,7 +39,7 @@ import {
   toggleProjectFavorite,
   toggleProjectLike,
 } from '@/api/projects'
-import { getDeveloperRankings, getProjectRankings } from '@/api/rankings'
+import { getDeveloperRankings } from '@/api/rankings'
 import { searchProjects } from '@/api/search'
 import { getTutorials } from '@/api/tutorials'
 import {
@@ -66,7 +66,6 @@ describe('domain API modules', () => {
   it('maps public discovery requests to their API paths and query parameters', () => {
     getFeed({ cursor: 'feed-cursor' })
     searchProjects({ q: 'vue', category: 'developer-tools', tags: ['web'], tech: ['vue'] })
-    getProjectRankings()
     getDeveloperRankings()
     getTutorials({ type: 'ARTICLE', difficulty: 'BEGINNER', tech: 'vue' })
     getWeeklyInsight()
@@ -87,7 +86,6 @@ describe('domain API modules', () => {
           },
         },
       ],
-      ['/v1/rankings/projects'],
       ['/v1/rankings/developers'],
       ['/v1/tutorials', { query: { type: 'ARTICLE', difficulty: 'BEGINNER', tech: 'vue' } }],
       ['/v1/insights/weekly'],

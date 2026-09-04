@@ -23,18 +23,6 @@ export function toSiteCardProject(project, overrides = {}) {
   }
 }
 
-export function mergeRankingsWithProjects(rankings, projects) {
-  const projectsById = new Map(projects.map((project) => [project.id, project]))
-  const ranked = rankings
-    .map((ranking) => {
-      const project = projectsById.get(ranking.projectId)
-      return project ? { ...project, rank: ranking.rank, score: ranking.score } : null
-    })
-    .filter(Boolean)
-  const rankedIds = new Set(ranked.map((project) => project.id))
-  return [...ranked, ...projects.filter((project) => !rankedIds.has(project.id))]
-}
-
 export function toProjectDetailViewModel(project, comments = [], creator = null) {
   const techStack = (project.techStacks ?? []).reduce((groups, item) => {
     const group = item.group || 'OTHER'

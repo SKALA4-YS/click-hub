@@ -13,13 +13,21 @@ describe('shared shell routes', () => {
 
   it.each([
     ['/oauth/callback', 'oauth-callback'],
-    ['/rankings/developers', 'developer-rankings'],
+    ['/projects', 'projects'],
+    ['/rankings', 'rankings'],
     ['/developers/42', 'developer-detail'],
   ])('resolves %s to the %s lazy page route', (path, name) => {
     const resolved = router.resolve(path)
 
     expect(resolved.name).toBe(name)
     expect(resolved.matched[0].components.default).toEqual(expect.any(Function))
+  })
+
+  it('redirects the legacy developer ranking URL to the canonical ranking page', () => {
+    const resolved = router.resolve('/rankings/developers')
+
+    expect(resolved.name).toBe('developer-rankings')
+    expect(resolved.matched[0].redirect).toEqual({ name: 'rankings' })
   })
 
   it('redirects the legacy password signup route to Google login', () => {

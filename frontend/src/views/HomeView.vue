@@ -3,9 +3,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import CategoryTabs from '@/components/layout/CategoryTabs.vue'
 import SiteSection from '@/components/section/SiteSection.vue'
 import SiteCard from '@/components/card/SiteCard.vue'
-import { toSiteCardProject, mergeRankingsWithProjects } from '@/api/adapters/projects'
+import { toSiteCardProject } from '@/api/adapters/projects'
 import { getFeed } from '@/api/feed'
-import { getProjectRankings } from '@/api/rankings'
 import { getCreator, getMySubscriptions } from '@/api/users'
 import { useAuthStore } from '@/stores/auth'
 
@@ -13,7 +12,6 @@ const auth = useAuthStore()
 
 const selectedCategory = ref(null)
 const feedProjects = ref([])
-const rankedProjects = ref([])
 const followedProjects = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
@@ -23,7 +21,6 @@ function filterByCategory(items) {
   return items.filter((item) => item.category_slug === selectedCategory.value)
 }
 
-const topRankedProjects = computed(() => filterByCategory(rankedProjects.value).slice(0, 6))
 const recommendedProjects = computed(() => filterByCategory(feedProjects.value).slice(0, 6))
 const followingProjects = computed(() => filterByCategory(followedProjects.value).slice(0, 6))
 
@@ -31,9 +28,8 @@ async function loadPublicFeed() {
   isLoading.value = true
   errorMessage.value = ''
   try {
-    const [feed, rankings] = await Promise.all([getFeed(), getProjectRankings()])
+    const feed = await getFeed()
     feedProjects.value = feed.items.map(toSiteCardProject)
-    rankedProjects.value = mergeRankingsWithProjects(rankings, feedProjects.value)
   } catch (error) {
     errorMessage.value = error.message
   } finally {
@@ -77,16 +73,10 @@ watch(() => auth.isLoggedIn, loadFollowedProjects, { immediate: true })
       </button>
     </section>
 
-    <SiteSection v-else title="Top 100" badge="HOT" moreTo="/rankings" :items="topRankedProjects">
-      <template #default="{ item, index }">
-        <SiteCard :project="item" :rank="index + 1" />
-      </template>
-    </SiteSection>
-
     <SiteSection
       v-if="!isLoading && !errorMessage"
       title="최신 프로젝트"
-      moreTo="/rankings?sort=latest"
+      moreTo="/projects"
       :items="recommendedProjects"
     >
       <template #default="{ item }">

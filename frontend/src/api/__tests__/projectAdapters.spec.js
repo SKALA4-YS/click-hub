@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { mergeRankingsWithProjects, toSiteCardProject } from '@/api/adapters/projects'
+import { toSiteCardProject } from '@/api/adapters/projects'
 
 describe('project API adapters', () => {
   it('maps the backend camelCase DTO to the existing card view model', () => {
@@ -24,18 +24,5 @@ describe('project API adapters', () => {
       owner_name: '메이커',
       stats: { likes: 3, comments: 0, views: 0 },
     })
-  })
-
-  it('orders known feed projects by backend ranking and preserves unranked projects', () => {
-    const projects = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
-    const result = mergeRankingsWithProjects(
-      [
-        { projectId: 'b', rank: 1, score: 9 },
-        { projectId: 'a', rank: 2, score: 8 },
-      ],
-      projects,
-    )
-
-    expect(result.map(({ id }) => id)).toEqual(['b', 'a', 'c'])
   })
 })

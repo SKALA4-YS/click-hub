@@ -19,19 +19,20 @@ describe('DeveloperRankingView', () => {
     ])
   })
 
-  it('renders developer rankings returned by the backend', async () => {
+  it('renders maker rankings returned by the backend', async () => {
     const wrapper = mount(DeveloperRankingView, {
       global: { stubs: { RouterLink: routerLinkStub } },
     })
     await flushPromises()
 
-    expect(wrapper.text()).toContain('개발자 랭킹 Top Indie Makers')
+    expect(wrapper.text()).toContain('메이커 랭킹 Top Makers')
+    expect(wrapper.text()).toContain('활동 점수')
     expect(wrapper.text()).toContain('김민준')
     expect(wrapper.get('a[href="/developers/creator-1"]')).toBeTruthy()
     expect(getDeveloperRankings).toHaveBeenCalledOnce()
   })
 
-  it('filters the loaded ranking by display name', async () => {
+  it('filters the loaded maker ranking by display name', async () => {
     const wrapper = mount(DeveloperRankingView, {
       global: { stubs: { RouterLink: routerLinkStub } },
     })

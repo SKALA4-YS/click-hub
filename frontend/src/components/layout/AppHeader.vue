@@ -45,7 +45,7 @@ const auth = useAuthStore()
           to="/rankings"
           class="hover:text-primary-600"
           active-class="text-primary-600 dark:text-blue-400"
-          >랭킹</RouterLink
+          >메이커 랭킹</RouterLink
         >
         <RouterLink
           to="/tutorials"

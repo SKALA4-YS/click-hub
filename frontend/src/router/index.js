@@ -57,6 +57,11 @@ export const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/projects',
+    name: 'projects',
+    component: () => import('../views/ProjectListView.vue'),
+  },
+  {
     path: '/projects/new',
     name: 'project-register',
     component: () => import('../views/ProjectRegisterView.vue'),
@@ -76,12 +81,12 @@ export const routes = [
   {
     path: '/rankings',
     name: 'rankings',
-    component: () => import('../views/ProjectListView.vue'),
+    component: () => import('../views/DeveloperRankingView.vue'),
   },
   {
     path: '/rankings/developers',
     name: 'developer-rankings',
-    component: () => import('../views/DeveloperRankingView.vue'),
+    redirect: { name: 'rankings' },
   },
   {
     path: '/developers/:id',

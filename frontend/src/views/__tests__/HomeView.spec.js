@@ -7,13 +7,11 @@ import { useAuthStore } from '@/stores/auth'
 
 const api = vi.hoisted(() => ({
   getFeed: vi.fn(),
-  getProjectRankings: vi.fn(),
   getMySubscriptions: vi.fn(),
   getCreator: vi.fn(),
 }))
 
 vi.mock('@/api/feed', () => ({ getFeed: api.getFeed }))
-vi.mock('@/api/rankings', () => ({ getProjectRankings: api.getProjectRankings }))
 vi.mock('@/api/users', () => ({
   getMySubscriptions: api.getMySubscriptions,
   getCreator: api.getCreator,
@@ -55,28 +53,25 @@ describe('HomeView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     api.getFeed.mockReset().mockResolvedValue({ items: projects, nextCursor: null, hasNext: false })
-    api.getProjectRankings.mockReset().mockResolvedValue([
-      { rank: 1, projectId: 'project-2', title: '실제 프로젝트 B', score: 10 },
-      { rank: 2, projectId: 'project-1', title: '실제 프로젝트 A', score: 8 },
-    ])
     api.getMySubscriptions.mockReset().mockResolvedValue([])
     api.getCreator.mockReset()
   })
 
-  it('renders backend feed and ranking data instead of mock projects', async () => {
+  it('renders the latest backend feed without a project ranking section', async () => {
     const wrapper = mountHome()
     await flushPromises()
 
-    expect(wrapper.findAll('h2').map((heading) => heading.text())).toContain('Top 100')
+    expect(wrapper.findAll('h2').map((heading) => heading.text())).toContain('최신 프로젝트')
+    expect(wrapper.text()).not.toContain('Top 100')
+    expect(wrapper.text()).not.toContain('HOT')
     expect(
       wrapper
         .findAll('.grid h3')
         .map((heading) => heading.text())
         .slice(0, 2),
-    ).toEqual(['실제 프로젝트 B', '실제 프로젝트 A'])
+    ).toEqual(['실제 프로젝트 A', '실제 프로젝트 B'])
     expect(wrapper.text()).toContain('Backend 피드에서 받은 프로젝트')
     expect(api.getFeed).toHaveBeenCalledOnce()
-    expect(api.getProjectRankings).toHaveBeenCalledOnce()
   })
 
   it('filters API results by the selected category', async () => {

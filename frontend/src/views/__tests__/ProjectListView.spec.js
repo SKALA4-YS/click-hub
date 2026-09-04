@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const api = vi.hoisted(() => ({
   getCategories: vi.fn(),
-  getProjectRankings: vi.fn(),
   searchProjects: vi.fn(),
 }))
 const route = vi.hoisted(() => ({ query: {} }))
@@ -13,7 +12,6 @@ vi.mock('vue-router', () => ({
   useRoute: () => route,
 }))
 vi.mock('@/api/catalog', () => ({ getCategories: api.getCategories }))
-vi.mock('@/api/rankings', () => ({ getProjectRankings: api.getProjectRankings }))
 vi.mock('@/api/search', () => ({ searchProjects: api.searchProjects }))
 
 import ProjectListView from '@/views/ProjectListView.vue'
@@ -52,10 +50,6 @@ describe('ProjectListView', () => {
       { id: 'category-1', slug: 'developer-tools', name: '개발자 도구' },
       { id: 'category-2', slug: 'ai-service', name: 'AI 서비스' },
     ])
-    api.getProjectRankings.mockReset().mockResolvedValue([
-      { rank: 1, projectId: 'project-1', score: 10 },
-      { rank: 2, projectId: 'project-2', score: 8 },
-    ])
     api.searchProjects.mockReset().mockResolvedValue({
       items: projects,
       nextCursor: null,
@@ -68,8 +62,8 @@ describe('ProjectListView', () => {
     await flushPromises()
 
     expect(wrapper.findAll('.project-grid h3').map((card) => card.text())).toEqual([
-      '프로젝트 A',
       '프로젝트 B',
+      '프로젝트 A',
     ])
     expect(wrapper.get('[aria-label="프로젝트 수"]').text()).toBe('2개 프로젝트')
     expect(wrapper.get('button[aria-label="AI 서비스 카테고리"]')).toBeTruthy()
@@ -90,16 +84,15 @@ describe('ProjectListView', () => {
     })
   })
 
-  it('sorts loaded API results by publication date', async () => {
+  it('sorts loaded API results by publication date without rank badges', async () => {
     const wrapper = mountProjectList()
     await flushPromises()
-
-    await wrapper.get('[aria-label="프로젝트 정렬"]').setValue('latest')
 
     expect(wrapper.findAll('.project-grid h3').map((card) => card.text())).toEqual([
       '프로젝트 B',
       '프로젝트 A',
     ])
+    expect(wrapper.text()).not.toContain('위')
   })
 
   it('appends the next cursor page', async () => {
@@ -117,19 +110,6 @@ describe('ProjectListView', () => {
 
     expect(api.searchProjects).toHaveBeenLastCalledWith({ q: '', category: null, cursor: 'next' })
     expect(wrapper.findAll('.project-grid h3')).toHaveLength(2)
-  })
-
-  it('honors ?sort=latest from the route instead of falling back to popular', async () => {
-    route.query = { sort: 'latest' }
-    const wrapper = mountProjectList()
-    await flushPromises()
-
-    expect(wrapper.get('[aria-label="프로젝트 정렬"]').element.value).toBe('latest')
-    expect(wrapper.text()).toContain('최신 프로젝트 전체보기')
-    expect(wrapper.findAll('.project-grid h3').map((card) => card.text())).toEqual([
-      '프로젝트 B',
-      '프로젝트 A',
-    ])
   })
 
   it('searches using ?q= from the route and reflects it in the title', async () => {

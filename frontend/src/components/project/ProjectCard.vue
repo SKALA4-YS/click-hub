@@ -4,10 +4,6 @@ defineProps({
     type: Object,
     required: true,
   },
-  rank: {
-    type: Number,
-    default: null,
-  },
 })
 
 const categoryLabel = {
@@ -39,12 +35,6 @@ const categoryBadgeClass = {
     <div
       class="relative flex aspect-video items-center justify-center bg-gradient-to-br from-primary-100 to-primary-300 text-primary-800 dark:from-primary-900 dark:to-secondary-hover dark:text-primary-100"
     >
-      <span
-        v-if="rank"
-        class="absolute left-3 top-3 rounded-full bg-primary-600 px-2.5 py-1 text-xs font-bold text-white"
-      >
-        {{ rank }}위
-      </span>
       <span class="text-lg font-bold">{{ project.title }}</span>
     </div>
 
