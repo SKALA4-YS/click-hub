@@ -10,8 +10,11 @@ import { searchProjects } from '@/api/search'
 
 const route = useRoute()
 
+const SORT_OPTIONS = ['popular', 'latest', 'recommended']
+
 const selectedCategory = ref(route.query.category ?? null)
-const sortOption = ref(route.query.sort === 'recommended' ? 'recommended' : 'popular')
+const searchQuery = ref(route.query.q ?? '')
+const sortOption = ref(SORT_OPTIONS.includes(route.query.sort) ? route.query.sort : 'popular')
 const viewMode = ref('grid')
 const categories = ref([{ slug: null, label: '전체' }])
 const projects = ref([])
@@ -21,9 +24,12 @@ const hasNext = ref(false)
 const isLoading = ref(true)
 const errorMessage = ref('')
 
-const pageTitle = computed(() =>
-  sortOption.value === 'recommended' ? '맞춤 추천 전체보기' : 'Top 100 사이트 전체보기',
-)
+const pageTitle = computed(() => {
+  if (searchQuery.value.trim()) return `'${searchQuery.value.trim()}' 검색 결과`
+  if (sortOption.value === 'recommended') return '맞춤 추천 전체보기'
+  if (sortOption.value === 'latest') return '최신 프로젝트 전체보기'
+  return 'Top 100 사이트 전체보기'
+})
 
 const visibleProjects = computed(() => {
   const items = [...projects.value]
@@ -43,6 +49,7 @@ async function loadProjects({ append = false } = {}) {
   errorMessage.value = ''
   try {
     const result = await searchProjects({
+      q: searchQuery.value.trim(),
       category: selectedCategory.value,
       cursor: append ? nextCursor.value : undefined,
     })
@@ -57,7 +64,13 @@ async function loadProjects({ append = false } = {}) {
   }
 }
 
-watch(selectedCategory, () => loadProjects())
+watch([selectedCategory, searchQuery], () => loadProjects())
+watch(
+  () => route.query.q,
+  (q) => {
+    searchQuery.value = q ?? ''
+  },
+)
 
 onMounted(async () => {
   const [catalogResult, rankingResult] = await Promise.allSettled([
@@ -115,7 +128,11 @@ onMounted(async () => {
               aria-label="목록 보기"
               :aria-pressed="viewMode === 'list'"
               class="rounded px-2 py-1 text-xs"
-              :class="viewMode === 'list' ? 'bg-primary-600 text-white' : 'text-body-light'"
+              :class="
+                viewMode === 'list'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-body-light dark:text-body-dark'
+              "
               @click="viewMode = 'list'"
             >
               목록
@@ -125,7 +142,11 @@ onMounted(async () => {
               aria-label="그리드 보기"
               :aria-pressed="viewMode === 'grid'"
               class="rounded px-2 py-1 text-xs"
-              :class="viewMode === 'grid' ? 'bg-primary-600 text-white' : 'text-body-light'"
+              :class="
+                viewMode === 'grid'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-body-light dark:text-body-dark'
+              "
               @click="viewMode = 'grid'"
             >
               그리드

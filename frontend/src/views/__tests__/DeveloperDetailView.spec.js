@@ -10,12 +10,19 @@ const api = vi.hoisted(() => ({
   getCreator: vi.fn(),
   getMyProjects: vi.fn(),
   toggleCreatorSubscription: vi.fn(),
+  getProjectRankings: vi.fn(),
 }))
 
 vi.mock('@/api/users', () => ({
-  ...api,
+  getCreator: api.getCreator,
+  getMyProjects: api.getMyProjects,
+  toggleCreatorSubscription: api.toggleCreatorSubscription,
   updateOnboarding: vi.fn(),
   updateProfile: vi.fn(),
+}))
+
+vi.mock('@/api/rankings', () => ({
+  getProjectRankings: api.getProjectRankings,
 }))
 
 async function mountView({ path = '/developers/creator-id', loggedIn = false } = {}) {
@@ -57,6 +64,7 @@ describe('DeveloperDetailView', () => {
     })
     api.getMyProjects.mockReset().mockResolvedValue([])
     api.toggleCreatorSubscription.mockReset().mockResolvedValue({ subscribed: true })
+    api.getProjectRankings.mockReset().mockResolvedValue([])
   })
 
   it('shows a creator and published projects from the backend', async () => {

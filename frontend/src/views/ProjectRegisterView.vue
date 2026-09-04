@@ -39,6 +39,10 @@ function addTag() {
   tagDraft.value = ''
 }
 
+function removeTag(tag) {
+  form.tags = form.tags.filter((item) => item !== tag)
+}
+
 function toggleTechnology(slug) {
   form.technologySlugs = form.technologySlugs.includes(slug)
     ? form.technologySlugs.filter((item) => item !== slug)
@@ -86,7 +90,7 @@ onMounted(async () => {
 
 <template>
   <section v-if="!auth.isLoggedIn" class="mx-auto max-w-[900px] py-28 text-center">
-    <p class="text-body-light">프로젝트를 등록하려면 먼저 로그인해주세요.</p>
+    <p class="text-body-light dark:text-body-dark">프로젝트를 등록하려면 먼저 로그인해주세요.</p>
     <RouterLink
       to="/login"
       class="mt-5 inline-flex rounded-lg bg-primary-600 px-6 py-3 text-sm font-bold text-white"
@@ -99,9 +103,15 @@ onMounted(async () => {
     data-testid="project-registration-success"
     class="mx-auto max-w-[900px] py-16 text-center"
   >
-    <h1 class="font-headline text-3xl font-extrabold">프로젝트 검토 요청이 완료되었습니다.</h1>
-    <p class="mt-4 text-sm text-body-light">{{ form.title }} · 현재 상태 {{ submittedStatus }}</p>
-    <p class="mt-2 text-sm text-body-light">관리자 승인 후 공개 피드와 랭킹에 표시됩니다.</p>
+    <h1 class="font-headline text-3xl font-extrabold text-heading-light dark:text-heading-dark">
+      프로젝트 검토 요청이 완료되었습니다.
+    </h1>
+    <p class="mt-4 text-sm text-body-light dark:text-body-dark">
+      {{ form.title }} · 현재 상태 {{ submittedStatus }}
+    </p>
+    <p class="mt-2 text-sm text-body-light dark:text-body-dark">
+      관리자 승인 후 공개 피드와 랭킹에 표시됩니다.
+    </p>
     <div class="mt-7 flex justify-center gap-3">
       <a
         :href="form.siteUrl"
@@ -119,29 +129,33 @@ onMounted(async () => {
   </section>
 
   <form v-else class="mx-auto max-w-[900px] space-y-6 pb-14" @submit.prevent="submitProject">
-    <header class="border-b border-divider/20 pb-6">
-      <h1 class="font-headline text-3xl font-extrabold">새 프로젝트 등록하기</h1>
-      <p class="mt-2 text-sm text-body-light">
+    <header class="border-b border-divider/20 pb-6 dark:border-divider/30">
+      <h1 class="font-headline text-3xl font-extrabold text-heading-light dark:text-heading-dark">
+        새 프로젝트 등록하기
+      </h1>
+      <p class="mt-2 text-sm text-body-light dark:text-body-dark">
         실제로 배포된 프로젝트 정보를 저장하고 검토를 요청합니다.
       </p>
     </header>
     <p v-if="requestError" role="alert" class="text-sm text-danger">{{ requestError }}</p>
 
-    <section class="grid gap-5 rounded-2xl border border-divider/20 bg-white p-6 sm:grid-cols-2">
+    <section
+      class="grid gap-5 rounded-2xl border border-divider/20 bg-white p-6 sm:grid-cols-2 dark:border-divider/30 dark:bg-surface-dark-1"
+    >
       <label class="text-sm font-semibold"
         >프로젝트 이름<input
           v-model="form.title"
           name="title"
           required
           maxlength="160"
-          class="mt-2 w-full rounded-lg border border-divider/20 px-3 py-2"
+          class="mt-2 w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-heading-light dark:border-divider/30 dark:bg-base-dark dark:text-heading-dark"
       /></label>
       <label class="text-sm font-semibold"
         >대표 카테고리<select
           v-model="form.categorySlug"
           name="category"
           required
-          class="mt-2 w-full rounded-lg border border-divider/20 px-3 py-2"
+          class="mt-2 w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-heading-light dark:border-divider/30 dark:bg-base-dark dark:text-heading-dark"
         >
           <option value="" disabled>선택</option>
           <option v-for="item in categories" :key="item.id" :value="item.slug">
@@ -156,7 +170,7 @@ onMounted(async () => {
           required
           maxlength="500"
           rows="5"
-          class="mt-2 w-full rounded-lg border border-divider/20 px-3 py-2"
+          class="mt-2 w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-heading-light dark:border-divider/30 dark:bg-base-dark dark:text-heading-dark"
         />
       </label>
       <label class="text-sm font-semibold"
@@ -165,20 +179,20 @@ onMounted(async () => {
           name="siteUrl"
           required
           type="url"
-          class="mt-2 w-full rounded-lg border border-divider/20 px-3 py-2"
+          class="mt-2 w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-heading-light dark:border-divider/30 dark:bg-base-dark dark:text-heading-dark"
           placeholder="https://"
       /></label>
       <label class="text-sm font-semibold"
         >GitHub 저장소 URL<input
           v-model="form.repositoryUrl"
           type="url"
-          class="mt-2 w-full rounded-lg border border-divider/20 px-3 py-2"
+          class="mt-2 w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-heading-light dark:border-divider/30 dark:bg-base-dark dark:text-heading-dark"
           placeholder="https://github.com/..."
       /></label>
       <label class="text-sm font-semibold"
         >가격 정책<select
           v-model="form.pricing"
-          class="mt-2 w-full rounded-lg border border-divider/20 px-3 py-2"
+          class="mt-2 w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-heading-light dark:border-divider/30 dark:bg-base-dark dark:text-heading-dark"
         >
           <option value="UNKNOWN">미정</option>
           <option value="FREE">무료</option>
@@ -192,8 +206,16 @@ onMounted(async () => {
           <span
             v-for="tag in form.tags"
             :key="tag"
-            class="rounded-full bg-primary-50 px-3 py-1 text-xs"
-            >#{{ tag }}</span
+            class="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 text-xs"
+            >#{{ tag }}
+            <button
+              type="button"
+              :aria-label="`${tag} 태그 삭제`"
+              class="text-primary-700 hover:text-primary-900"
+              @click="removeTag(tag)"
+            >
+              ×
+            </button></span
           ><input
             v-model="tagDraft"
             class="min-w-48 rounded-lg border border-divider/20 px-3 py-2 text-sm"
@@ -204,25 +226,32 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section class="rounded-2xl border border-divider/20 bg-white p-6">
-      <h2 class="font-headline text-lg font-bold">기술 스택</h2>
+    <section
+      class="rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1"
+    >
+      <h2 class="font-headline text-lg font-bold text-heading-light dark:text-heading-dark">
+        기술 스택
+      </h2>
       <div v-for="(items, group) in technologyGroups" :key="group" class="mt-4">
-        <h3 class="text-xs font-bold text-body-light">{{ group }}</h3>
+        <h3 class="text-xs font-bold text-body-light dark:text-body-dark">{{ group }}</h3>
         <div class="mt-2 flex flex-wrap gap-2">
           <button
             v-for="item in items"
             :key="item.id"
             type="button"
             :aria-pressed="form.technologySlugs.includes(item.slug)"
-            class="rounded-full border border-divider/20 px-3 py-1.5 text-xs"
-            :class="form.technologySlugs.includes(item.slug) && 'bg-primary-50 text-primary-700'"
+            class="rounded-full border border-divider/20 px-3 py-1.5 text-xs text-heading-light dark:border-divider/30 dark:text-heading-dark"
+            :class="
+              form.technologySlugs.includes(item.slug) &&
+              'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900 dark:text-primary-100'
+            "
             @click="toggleTechnology(item.slug)"
           >
             {{ item.name }}
           </button>
         </div>
       </div>
-      <p class="mt-5 text-xs text-body-light">
+      <p class="mt-5 text-xs text-body-light dark:text-body-dark">
         이미지 업로드와 URL 자동 분석은 MVP1 범위에 포함되지 않습니다.
       </p>
     </section>

@@ -75,25 +75,27 @@ onMounted(load)
 
 <template>
   <section class="mx-auto max-w-[900px] pb-14">
-    <p v-if="isLoading" class="py-20 text-center text-sm text-body-light">
+    <p v-if="isLoading" class="py-20 text-center text-sm text-body-light dark:text-body-dark">
       게시글을 불러오는 중입니다.
     </p>
     <p v-else-if="errorMessage" role="alert" class="py-20 text-center text-sm text-danger">
       {{ errorMessage }}
     </p>
     <template v-else>
-      <article class="rounded-2xl border border-divider/20 bg-white p-6">
+      <article
+        class="rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1"
+      >
         <template v-if="isEditing">
           <input
             v-model="editForm.title"
             aria-label="게시글 제목 수정"
-            class="w-full rounded-lg border border-divider/20 px-3 py-2"
+            class="w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-heading-light dark:border-divider/30 dark:bg-base-dark dark:text-heading-dark"
           />
           <textarea
             v-model="editForm.body"
             aria-label="게시글 내용 수정"
             rows="8"
-            class="mt-3 w-full rounded-lg border border-divider/20 px-3 py-2"
+            class="mt-3 w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-heading-light dark:border-divider/30 dark:bg-base-dark dark:text-heading-dark"
           />
           <button
             type="button"
@@ -104,11 +106,19 @@ onMounted(load)
           </button>
         </template>
         <template v-else>
-          <h1 class="font-headline text-2xl font-extrabold">{{ post.title }}</h1>
-          <p class="mt-2 text-xs text-body-light">
+          <h1
+            class="font-headline text-2xl font-extrabold text-heading-light dark:text-heading-dark"
+          >
+            {{ post.title }}
+          </h1>
+          <p class="mt-2 text-xs text-body-light dark:text-body-dark">
             {{ post.authorName }} · 조회 {{ post.viewCount }}
           </p>
-          <p class="mt-6 whitespace-pre-wrap text-sm leading-7">{{ post.body }}</p>
+          <p
+            class="mt-6 whitespace-pre-wrap text-sm leading-7 text-heading-light dark:text-heading-dark"
+          >
+            {{ post.body }}
+          </p>
           <div v-if="post.mine" class="mt-5 flex gap-2">
             <button
               type="button"
@@ -128,15 +138,19 @@ onMounted(load)
         </template>
       </article>
 
-      <section class="mt-6 rounded-2xl border border-divider/20 bg-white p-6">
-        <h2 class="font-headline text-lg font-bold">댓글 {{ comments.length }}개</h2>
+      <section
+        class="mt-6 rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1"
+      >
+        <h2 class="font-headline text-lg font-bold text-heading-light dark:text-heading-dark">
+          댓글 {{ comments.length }}개
+        </h2>
         <form class="mt-4 flex gap-2" @submit.prevent="addComment">
           <input
             v-model="commentBody"
             aria-label="댓글 내용"
             maxlength="3000"
             required
-            class="min-w-0 flex-1 rounded-lg border border-divider/20 px-3 py-2"
+            class="min-w-0 flex-1 rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-heading-light dark:border-divider/30 dark:bg-base-dark dark:text-heading-dark"
             placeholder="댓글을 입력하세요"
           />
           <button
@@ -147,10 +161,12 @@ onMounted(load)
             등록
           </button>
         </form>
-        <ul class="mt-5 divide-y divide-divider/15">
+        <ul class="mt-5 divide-y divide-divider/15 dark:divide-divider/25">
           <li v-for="comment in comments" :key="comment.id" class="py-4 text-sm">
-            <strong>{{ comment.authorName }}</strong>
-            <p class="mt-2">{{ comment.body }}</p>
+            <strong class="text-heading-light dark:text-heading-dark">{{
+              comment.authorName
+            }}</strong>
+            <p class="mt-2 text-heading-light dark:text-heading-dark">{{ comment.body }}</p>
           </li>
         </ul>
       </section>
