@@ -52,6 +52,7 @@ public class ProjectService {
     private final TechnologyRepository technologyRepository;
     private final UserRepository userRepository;
     private final InteractionEventRecorder interactionEventRecorder;
+    private final CategoryThumbnailProvider categoryThumbnailProvider;
 
     /**
      * 프로젝트 등록. schema.sql의 validate_project_write 트리거가 신규 행을 DRAFT로만 허용하므로
@@ -61,17 +62,19 @@ public class ProjectService {
     public CreateResponse create(UUID ownerId, CreateRequest request) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        Category category = resolveCategory(request.categorySlug());
 
         Project project = Project.builder()
                 .owner(owner)
-                .primaryCategory(resolveCategory(request.categorySlug()))
+                .primaryCategory(category)
                 .title(request.title())
                 .description(request.description())
                 .siteUrl(request.siteUrl())
                 .repositoryUrl(request.repositoryUrl())
                 .pricing(parsePricing(request.pricing()))
                 .tags(toTagArray(request.tags()))
-                .thumbnailUrl(request.thumbnailUrl())
+                .thumbnailUrl(categoryThumbnailProvider.resolve(
+                        request.thumbnailUrl(), category == null ? null : category.getSlug()))
                 .screenshots(toScreenshotJson(request.screenshots()))
                 .status(ProjectStatus.DRAFT)
                 .build();

@@ -1,10 +1,12 @@
 package com.skala.clickhub;
 
+import com.skala.clickhub.dto.project.ProjectDtos.CreateRequest;
 import com.skala.clickhub.dto.reaction.ReactionDtos.CommentCreateRequest;
 import com.skala.clickhub.dto.user.UserDtos.OnboardingUpdateRequest;
 import com.skala.clickhub.dto.user.UserDtos.ProfileUpdateRequest;
 import com.skala.clickhub.service.CatalogService;
 import com.skala.clickhub.service.EngagementService;
+import com.skala.clickhub.service.ProjectService;
 import com.skala.clickhub.service.SubscriptionService;
 import com.skala.clickhub.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +66,9 @@ class MvpPersistenceIntegrationTest {
 
     @Autowired
     private CatalogService catalogService;
+
+    @Autowired
+    private ProjectService projectService;
 
     @BeforeEach
     void seedUsersAndProject() {
@@ -136,6 +141,41 @@ class MvpPersistenceIntegrationTest {
         var creator = userService.getCreator(CREATOR_ID, VIEWER_ID);
         assertThat(creator.subscriberCount()).isOne();
         assertThat(creator.subscribedByMe()).isTrue();
+    }
+
+    @Test
+    void appliesCategoryThumbnailOnlyWhenCreateRequestHasNoThumbnail() {
+        var defaulted = projectService.create(VIEWER_ID, new CreateRequest(
+                "카테고리 기본 이미지 프로젝트",
+                "썸네일을 입력하지 않은 프로젝트",
+                "https://example.com/category-thumbnail",
+                null,
+                "FREE",
+                List.of("demo"),
+                null,
+                List.of(),
+                List.of(),
+                "developer-tools"
+        ));
+
+        assertThat(projectService.getDetail(defaulted.id(), VIEWER_ID).thumbnailUrl())
+                .contains("images.unsplash.com/photo-1498050108023-c5249f4df085");
+
+        var explicit = projectService.create(VIEWER_ID, new CreateRequest(
+                "직접 이미지 프로젝트",
+                "명시한 썸네일을 사용하는 프로젝트",
+                "https://example.com/explicit-thumbnail",
+                null,
+                "FREE",
+                List.of("demo"),
+                "https://example.com/thumbnail.png",
+                List.of(),
+                List.of(),
+                "developer-tools"
+        ));
+
+        assertThat(projectService.getDetail(explicit.id(), VIEWER_ID).thumbnailUrl())
+                .isEqualTo("https://example.com/thumbnail.png");
     }
 
     private void insertUser(UUID id, String subject, String displayName) {
