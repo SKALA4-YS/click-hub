@@ -27,6 +27,7 @@ public enum ErrorCode {
     PROJECT_URL_UNREACHABLE(HttpStatus.BAD_REQUEST, "PROJECT_002", "접속 가능한 URL이 아닙니다."),
     NOT_PROJECT_OWNER(HttpStatus.FORBIDDEN, "PROJECT_003", "프로젝트 소유자만 접근할 수 있습니다."),
     INVALID_PROJECT_STATE(HttpStatus.CONFLICT, "PROJECT_004", "현재 상태에서는 처리할 수 없는 요청입니다."),
+    PROJECT_CATEGORY_REQUIRED(HttpStatus.BAD_REQUEST, "PROJECT_005", "승인하려면 대표 카테고리가 필요합니다."),
 
     // 카탈로그 (categories / technologies) — 등록 시 slug로 참조한다
     CATEGORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "CATALOG_001", "존재하지 않는 카테고리입니다."),

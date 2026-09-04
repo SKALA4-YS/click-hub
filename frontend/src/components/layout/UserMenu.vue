@@ -59,6 +59,14 @@ function handleLogout() {
       >
         팔로잉 관리
       </RouterLink>
+      <RouterLink
+        v-if="auth.isAdmin"
+        to="/admin/projects"
+        class="block px-4 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        @click="isOpen = false"
+      >
+        관리자 승인
+      </RouterLink>
       <hr class="my-1 border-neutral-200 dark:border-neutral-800" />
       <button
         type="button"

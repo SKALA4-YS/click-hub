@@ -81,20 +81,23 @@ onMounted(loadBoards)
 <template>
   <section class="mx-auto w-full max-w-[1120px] py-4 sm:py-8" aria-labelledby="community-heading">
     <header
-      class="rounded-2xl border border-divider/15 bg-white px-6 py-7 shadow-sm sm:flex sm:items-center sm:justify-between"
+      class="mb-4 rounded-2xl border border-divider/15 bg-gradient-to-br from-surface-light-1 via-surface-light-1 to-primary-50 px-5 py-6 shadow-[0_10px_28px_rgba(15,14,71,0.04)] dark:border-blue-500/15 dark:from-surface-dark-1 dark:via-surface-dark-1 dark:to-primary-950 sm:flex sm:items-center sm:justify-between sm:px-7"
     >
       <div>
-        <p class="text-xs font-semibold text-primary-600">MAKER COMMONS</p>
-        <h1 id="community-heading" class="mt-2 font-headline text-2xl font-extrabold">
+        <p class="mb-2 text-xs font-semibold text-primary-600 dark:text-blue-300">MAKER COMMONS</p>
+        <h1
+          id="community-heading"
+          class="font-headline text-2xl font-extrabold tracking-tight text-heading-light dark:text-heading-dark"
+        >
           커뮤니티 게시판
         </h1>
-        <p class="mt-2 text-sm text-body-light">
+        <p class="mt-2 text-xs leading-5 text-body-light dark:text-body-dark">
           프로젝트 경험과 질문을 실제 사용자들과 나누는 공간입니다.
         </p>
       </div>
       <button
         type="button"
-        class="mt-5 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white sm:mt-0"
+        class="mt-5 inline-flex shrink-0 items-center justify-center rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 sm:mt-0"
         @click="showComposer = !showComposer"
       >
         새 글 작성하기
@@ -103,7 +106,7 @@ onMounted(loadBoards)
 
     <form
       v-if="showComposer"
-      class="mt-5 space-y-3 rounded-xl border border-divider/20 bg-white p-5"
+      class="mb-4 space-y-3 rounded-xl border border-divider/20 bg-surface-light-1 p-5 dark:border-blue-500/15 dark:bg-surface-dark-1"
       @submit.prevent="createPost"
     >
       <input
@@ -111,7 +114,7 @@ onMounted(loadBoards)
         name="post-title"
         maxlength="200"
         required
-        class="w-full rounded-lg border border-divider/20 px-3 py-2"
+        class="w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-sm text-heading-light outline-none focus:border-primary-600 dark:border-blue-500/15 dark:bg-base-dark dark:text-heading-dark"
         placeholder="제목"
       />
       <textarea
@@ -120,29 +123,32 @@ onMounted(loadBoards)
         maxlength="10000"
         required
         rows="5"
-        class="w-full rounded-lg border border-divider/20 px-3 py-2"
+        class="w-full rounded-lg border border-divider/20 bg-base-light px-3 py-2 text-sm text-heading-light outline-none focus:border-primary-600 dark:border-blue-500/15 dark:bg-base-dark dark:text-heading-dark"
         placeholder="내용"
       />
       <button
         type="submit"
         :disabled="isSaving"
-        class="rounded-lg bg-primary-600 px-5 py-2 text-sm font-bold text-white"
+        class="rounded-lg bg-primary-600 px-5 py-2 text-sm font-bold text-white hover:bg-primary-700"
       >
         {{ isSaving ? '등록 중...' : '게시글 등록' }}
       </button>
     </form>
 
-    <nav class="mt-5 flex flex-wrap gap-2" aria-label="커뮤니티 게시판">
+    <nav
+      class="flex flex-wrap gap-2 rounded-xl border border-divider/15 bg-surface-light-1 p-2 dark:border-blue-500/15 dark:bg-surface-dark-1"
+      aria-label="커뮤니티 게시판"
+    >
       <button
         v-for="board in boards"
         :key="board.id"
         type="button"
         :aria-pressed="activeBoard === board.slug"
-        class="rounded-lg px-4 py-2 text-sm font-semibold"
+        class="rounded-md px-3 py-2 text-xs font-semibold"
         :class="
           activeBoard === board.slug
             ? 'bg-primary-600 text-white'
-            : 'border border-divider/20 bg-white'
+            : 'text-body-light dark:text-body-dark'
         "
         @click="activeBoard = board.slug"
       >
@@ -153,11 +159,11 @@ onMounted(loadBoards)
     <input
       v-model="query"
       type="search"
-      class="mt-5 w-full rounded-lg border border-divider/20 bg-white px-4 py-3 text-sm"
+      class="mt-3 w-full rounded-md border border-divider/20 bg-base-light px-3 py-2 text-xs text-heading-light outline-none placeholder:text-body-light focus:border-primary-600 dark:border-blue-500/15 dark:bg-base-dark dark:text-heading-dark"
       placeholder="게시글 제목, 작성자 검색"
     />
 
-    <p v-if="isLoading" class="py-16 text-center text-sm text-body-light">
+    <p v-if="isLoading" class="py-16 text-center text-sm text-body-light dark:text-body-dark">
       게시글을 불러오는 중입니다.
     </p>
     <div v-else-if="errorMessage" class="py-16 text-center">
@@ -171,7 +177,7 @@ onMounted(loadBoards)
       <button
         v-if="nextCursor"
         type="button"
-        class="mx-auto mt-6 block rounded-lg border border-divider/20 px-5 py-2 text-sm font-semibold"
+        class="mx-auto mt-6 block rounded-lg border border-divider/20 px-5 py-2 text-sm font-semibold text-body-light dark:border-blue-500/15 dark:text-body-dark"
         @click="loadPosts({ append: true })"
       >
         더 보기

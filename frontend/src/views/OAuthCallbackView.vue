@@ -29,17 +29,23 @@ onMounted(async () => {
 
 <template>
   <main class="grid min-h-screen place-items-center px-4" aria-live="polite">
-    <section class="w-full max-w-md rounded-2xl border border-divider/20 bg-white p-8 text-center">
+    <section
+      class="w-full max-w-md rounded-2xl border border-divider/20 bg-white p-8 text-center dark:border-divider/30 dark:bg-surface-dark-1"
+    >
       <template v-if="errorMessage">
-        <h1 class="text-xl font-bold text-heading-light">로그인을 완료하지 못했습니다</h1>
+        <h1 class="text-xl font-bold text-heading-light dark:text-heading-dark">
+          로그인을 완료하지 못했습니다
+        </h1>
         <p role="alert" class="mt-3 text-sm text-danger">{{ errorMessage }}</p>
         <RouterLink class="mt-6 inline-block font-semibold text-primary-600" to="/login">
           로그인 화면으로 돌아가기
         </RouterLink>
       </template>
       <template v-else>
-        <h1 class="text-xl font-bold text-heading-light">Google 로그인을 확인하고 있습니다</h1>
-        <p class="mt-3 text-sm text-body-light">잠시만 기다려주세요.</p>
+        <h1 class="text-xl font-bold text-heading-light dark:text-heading-dark">
+          Google 로그인을 확인하고 있습니다
+        </h1>
+        <p class="mt-3 text-sm text-body-light dark:text-body-dark">잠시만 기다려주세요.</p>
       </template>
     </section>
   </main>

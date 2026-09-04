@@ -30,6 +30,7 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     isLoggedIn: (state) => state.user !== null,
+    isAdmin: (state) => state.user?.role === 'ADMIN',
   },
   actions: {
     async restoreSession() {

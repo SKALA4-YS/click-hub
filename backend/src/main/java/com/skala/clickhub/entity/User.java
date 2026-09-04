@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -27,6 +28,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+// 홈피드/검색처럼 Project를 여러 건 조회한 뒤 owner를 지연로딩할 때, 건마다 SELECT하지 않고
+// "WHERE id IN (...)"로 묶어 가져오게 한다(Project.owner는 JOIN FETCH를 못 쓰는 native query).
+@BatchSize(size = 25)
 public class User extends BaseTimeEntity {
 
     @Id

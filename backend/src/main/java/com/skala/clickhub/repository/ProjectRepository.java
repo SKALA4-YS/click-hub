@@ -33,6 +33,16 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
     List<Project> findAllByOwnerIdAndStatus(@Param("ownerId") UUID ownerId,
                                              @Param("status") ProjectStatus status);
 
+    /** 관리자 승인 대기 목록 — 오래 대기한 항목부터 검토하도록 등록순으로 정렬한다. */
+    @Query("""
+            SELECT project FROM Project project
+            JOIN FETCH project.owner
+            LEFT JOIN FETCH project.primaryCategory
+            WHERE project.status = :status
+            ORDER BY project.createdAt ASC
+            """)
+    List<Project> findAllByStatus(@Param("status") ProjectStatus status);
+
     /**
      * 통합 검색 — 기획서 5장 기준으로 "AI 없이도 항상 동작"하는 키워드 + 메타데이터 필터.
      *

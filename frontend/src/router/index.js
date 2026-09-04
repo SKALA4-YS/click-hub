@@ -110,6 +110,18 @@ export const routes = [
     name: 'insights',
     component: () => import('../views/InsightsView.vue'),
   },
+  {
+    path: '/admin/projects',
+    name: 'admin-project-approval',
+    component: () => import('../views/AdminApprovalView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/projects/:id',
+    name: 'admin-project-detail',
+    component: () => import('../views/AdminProjectDetailView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({

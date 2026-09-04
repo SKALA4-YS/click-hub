@@ -11,6 +11,7 @@ import com.skala.clickhub.service.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,9 +33,10 @@ public class ProjectController {
 
     // 인증: 로그인 — 항상 DRAFT로 생성된다(스키마 트리거 규칙)
     @PostMapping
-    public ApiResponse<CreateResponse> createProject(@AuthenticationPrincipal UUID userId,
+    public ResponseEntity<ApiResponse<CreateResponse>> createProject(@AuthenticationPrincipal UUID userId,
                                                      @Valid @RequestBody CreateRequest request) {
-        return ApiResponse.success(HttpStatus.CREATED, "생성되었습니다.", projectService.create(userId, request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(HttpStatus.CREATED, "생성되었습니다.", projectService.create(userId, request)));
     }
 
     // 인증: 선택 - 로그인 시 likedByMe/favoritedByMe 개인화 필드 채움

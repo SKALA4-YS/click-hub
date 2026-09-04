@@ -10,6 +10,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.OffsetDateTime;
@@ -20,6 +21,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "categories")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+// User와 같은 이유 — Project.primaryCategory 지연로딩을 건마다 SELECT 대신 IN (...) 1번으로 묶는다.
+@BatchSize(size = 25)
 public class Category {
 
     @Id

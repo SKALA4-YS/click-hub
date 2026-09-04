@@ -1,4 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const api = vi.hoisted(() => ({ searchProjects: vi.fn(), getCategories: vi.fn() }))
@@ -6,6 +7,28 @@ vi.mock('@/api/search', () => ({ searchProjects: api.searchProjects }))
 vi.mock('@/api/catalog', () => ({ getCategories: api.getCategories }))
 
 import SearchBar from '@/components/layout/SearchBar.vue'
+
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/', component: { template: '<div>홈</div>' } },
+      { path: '/rankings', component: { template: '<div>랭킹</div>' } },
+      { path: '/projects/:id', component: { template: '<div>상세</div>' } },
+    ],
+  })
+}
+
+async function mountSearchBar(options = {}) {
+  const router = createTestRouter()
+  await router.push('/')
+  await router.isReady()
+  const wrapper = mount(SearchBar, {
+    ...options,
+    global: { plugins: [router], ...options.global },
+  })
+  return { wrapper, router }
+}
 
 describe('SearchBar', () => {
   beforeEach(() => {
@@ -33,7 +56,7 @@ describe('SearchBar', () => {
   }
 
   it('queries the backend and renders project suggestions', async () => {
-    const wrapper = mount(SearchBar, { attachTo: document.body })
+    const { wrapper } = await mountSearchBar({ attachTo: document.body })
     await search(wrapper, 'Dev')
     expect(api.searchProjects).toHaveBeenCalledWith({ q: 'Dev', category: undefined })
     expect(wrapper.findAll('[role="option"]')).toHaveLength(2)
@@ -41,19 +64,31 @@ describe('SearchBar', () => {
     wrapper.unmount()
   })
 
-  it('selects the active API result with the keyboard', async () => {
-    const wrapper = mount(SearchBar, { attachTo: document.body })
+  it('navigates to the selected project with the keyboard', async () => {
+    const { wrapper, router } = await mountSearchBar({ attachTo: document.body })
     const input = wrapper.get('input[type="search"]')
     await search(wrapper, 'Dev')
     await input.trigger('keydown', { key: 'ArrowDown' })
     await input.trigger('keydown', { key: 'Enter' })
-    expect(input.element.value).toBe('DevFlow Analytics')
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/projects/p1')
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
     wrapper.unmount()
   })
 
+  it('navigates to the search results page on Enter with no suggestion selected', async () => {
+    const { wrapper, router } = await mountSearchBar({ attachTo: document.body })
+    const input = wrapper.get('input[type="search"]')
+    await search(wrapper, 'Dev')
+    await input.trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/rankings')
+    expect(router.currentRoute.value.query.q).toBe('Dev')
+    wrapper.unmount()
+  })
+
   it('loads category filters and includes the selected category', async () => {
-    const wrapper = mount(SearchBar, { attachTo: document.body })
+    const { wrapper } = await mountSearchBar({ attachTo: document.body })
     await flushPromises()
     await wrapper.get('input[type="search"]').trigger('focus')
     await wrapper
@@ -67,7 +102,7 @@ describe('SearchBar', () => {
   })
 
   it('closes on Escape and restores focus', async () => {
-    const wrapper = mount(SearchBar, { attachTo: document.body })
+    const { wrapper } = await mountSearchBar({ attachTo: document.body })
     const input = wrapper.get('input[type="search"]')
     await input.trigger('focus')
     await input.trigger('keydown', { key: 'Escape' })
@@ -79,7 +114,7 @@ describe('SearchBar', () => {
 
   it('shows API failures without fixture fallback', async () => {
     api.searchProjects.mockRejectedValue(new Error('검색 연결 실패'))
-    const wrapper = mount(SearchBar)
+    const { wrapper } = await mountSearchBar()
     await search(wrapper, 'error')
     expect(wrapper.get('[role="alert"]').text()).toBe('검색 연결 실패')
   })

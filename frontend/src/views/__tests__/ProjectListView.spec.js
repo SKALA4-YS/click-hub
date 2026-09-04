@@ -6,10 +6,11 @@ const api = vi.hoisted(() => ({
   getProjectRankings: vi.fn(),
   searchProjects: vi.fn(),
 }))
+const route = vi.hoisted(() => ({ query: {} }))
 
 vi.mock('vue-router', () => ({
   RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
-  useRoute: () => ({ query: {} }),
+  useRoute: () => route,
 }))
 vi.mock('@/api/catalog', () => ({ getCategories: api.getCategories }))
 vi.mock('@/api/rankings', () => ({ getProjectRankings: api.getProjectRankings }))
@@ -46,6 +47,7 @@ function mountProjectList() {
 
 describe('ProjectListView', () => {
   beforeEach(() => {
+    route.query = {}
     api.getCategories.mockReset().mockResolvedValue([
       { id: 'category-1', slug: 'developer-tools', name: '개발자 도구' },
       { id: 'category-2', slug: 'ai-service', name: 'AI 서비스' },
@@ -81,7 +83,11 @@ describe('ProjectListView', () => {
     await wrapper.get('button[aria-label="AI 서비스 카테고리"]').trigger('click')
     await flushPromises()
 
-    expect(api.searchProjects).toHaveBeenCalledWith({ category: 'ai-service', cursor: undefined })
+    expect(api.searchProjects).toHaveBeenCalledWith({
+      q: '',
+      category: 'ai-service',
+      cursor: undefined,
+    })
   })
 
   it('sorts loaded API results by publication date', async () => {
@@ -109,7 +115,33 @@ describe('ProjectListView', () => {
       .trigger('click')
     await flushPromises()
 
-    expect(api.searchProjects).toHaveBeenLastCalledWith({ category: null, cursor: 'next' })
+    expect(api.searchProjects).toHaveBeenLastCalledWith({ q: '', category: null, cursor: 'next' })
     expect(wrapper.findAll('.project-grid h3')).toHaveLength(2)
+  })
+
+  it('honors ?sort=latest from the route instead of falling back to popular', async () => {
+    route.query = { sort: 'latest' }
+    const wrapper = mountProjectList()
+    await flushPromises()
+
+    expect(wrapper.get('[aria-label="프로젝트 정렬"]').element.value).toBe('latest')
+    expect(wrapper.text()).toContain('최신 프로젝트 전체보기')
+    expect(wrapper.findAll('.project-grid h3').map((card) => card.text())).toEqual([
+      '프로젝트 B',
+      '프로젝트 A',
+    ])
+  })
+
+  it('searches using ?q= from the route and reflects it in the title', async () => {
+    route.query = { q: '분석' }
+    const wrapper = mountProjectList()
+    await flushPromises()
+
+    expect(api.searchProjects).toHaveBeenCalledWith({
+      q: '분석',
+      category: null,
+      cursor: undefined,
+    })
+    expect(wrapper.text()).toContain("'분석' 검색 결과")
   })
 })
