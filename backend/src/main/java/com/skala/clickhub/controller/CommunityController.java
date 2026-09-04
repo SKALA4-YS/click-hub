@@ -14,6 +14,7 @@ import com.skala.clickhub.service.CommunityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,13 +60,13 @@ public class CommunityController {
 
     // 인증: 로그인
     @PostMapping("/boards/{boardSlug}/posts")
-    public ApiResponse<PostCreateResponse> createPost(
+    public ResponseEntity<ApiResponse<PostCreateResponse>> createPost(
             @PathVariable String boardSlug,
             @AuthenticationPrincipal UUID userId,
             @Valid @RequestBody PostCreateRequest request
     ) {
-        return ApiResponse.success(HttpStatus.CREATED, "등록되었습니다.",
-                communityService.createPost(boardSlug, userId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(HttpStatus.CREATED, "등록되었습니다.",
+                communityService.createPost(boardSlug, userId, request)));
     }
 
     // 인증: 로그인
@@ -100,12 +101,12 @@ public class CommunityController {
 
     // 인증: 로그인 (1단계 대댓글까지 허용)
     @PostMapping("/posts/{postId}/comments")
-    public ApiResponse<CommentResponse> createComment(
+    public ResponseEntity<ApiResponse<CommentResponse>> createComment(
             @PathVariable UUID postId,
             @AuthenticationPrincipal UUID userId,
             @Valid @RequestBody CommentCreateRequest request
     ) {
-        return ApiResponse.success(HttpStatus.CREATED, "등록되었습니다.",
-                communityService.createComment(postId, userId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(HttpStatus.CREATED, "등록되었습니다.",
+                communityService.createComment(postId, userId, request)));
     }
 }

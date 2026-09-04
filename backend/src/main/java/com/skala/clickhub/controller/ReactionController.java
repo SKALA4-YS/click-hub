@@ -7,6 +7,8 @@ import com.skala.clickhub.dto.reaction.ReactionDtos.LikeResponse;
 import com.skala.clickhub.service.EngagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,10 +42,10 @@ public class ReactionController {
 
     // 인증: 로그인
     @PostMapping("/comments")
-    public ApiResponse<CommentResponse> createComment(@PathVariable UUID id,
+    public ResponseEntity<ApiResponse<CommentResponse>> createComment(@PathVariable UUID id,
                                                        @AuthenticationPrincipal UUID userId,
                                                        @Valid @RequestBody CommentCreateRequest request) {
-        return ApiResponse.success(org.springframework.http.HttpStatus.CREATED, "등록되었습니다.",
-                engagementService.createComment(userId, id, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(HttpStatus.CREATED, "등록되었습니다.",
+                engagementService.createComment(userId, id, request)));
     }
 }
