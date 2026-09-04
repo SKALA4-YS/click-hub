@@ -5,20 +5,15 @@ import CategoryTabs from '@/components/layout/CategoryTabs.vue'
 import SiteCard from '@/components/card/SiteCard.vue'
 import { toSiteCardProject } from '@/api/adapters/projects'
 import { getCategories } from '@/api/catalog'
-import { getProjectRankings } from '@/api/rankings'
 import { searchProjects } from '@/api/search'
 
 const route = useRoute()
 
-const SORT_OPTIONS = ['popular', 'latest', 'recommended']
-
 const selectedCategory = ref(route.query.category ?? null)
 const searchQuery = ref(route.query.q ?? '')
-const sortOption = ref(SORT_OPTIONS.includes(route.query.sort) ? route.query.sort : 'popular')
 const viewMode = ref('grid')
 const categories = ref([{ slug: null, label: '전체' }])
 const projects = ref([])
-const rankings = ref([])
 const nextCursor = ref(null)
 const hasNext = ref(false)
 const isLoading = ref(true)
@@ -26,23 +21,12 @@ const errorMessage = ref('')
 
 const pageTitle = computed(() => {
   if (searchQuery.value.trim()) return `'${searchQuery.value.trim()}' 검색 결과`
-  if (sortOption.value === 'recommended') return '맞춤 추천 전체보기'
-  if (sortOption.value === 'latest') return '최신 프로젝트 전체보기'
-  return 'Top 100 사이트 전체보기'
+  return '프로젝트 둘러보기'
 })
 
-const visibleProjects = computed(() => {
-  const items = [...projects.value]
-  if (sortOption.value === 'latest') {
-    return items.sort((a, b) => (b.published_at ?? '').localeCompare(a.published_at ?? ''))
-  }
-  const rankById = new Map(rankings.value.map((item) => [item.projectId, item.rank]))
-  return items.sort(
-    (a, b) =>
-      (rankById.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
-      (rankById.get(b.id) ?? Number.MAX_SAFE_INTEGER),
-  )
-})
+const visibleProjects = computed(() =>
+  [...projects.value].sort((a, b) => (b.published_at ?? '').localeCompare(a.published_at ?? '')),
+)
 
 async function loadProjects({ append = false } = {}) {
   isLoading.value = true
@@ -73,17 +57,13 @@ watch(
 )
 
 onMounted(async () => {
-  const [catalogResult, rankingResult] = await Promise.allSettled([
-    getCategories(),
-    getProjectRankings(),
-  ])
+  const [catalogResult] = await Promise.allSettled([getCategories()])
   if (catalogResult.status === 'fulfilled') {
     categories.value = [
       { slug: null, label: '전체' },
       ...catalogResult.value.map((category) => ({ slug: category.slug, label: category.name })),
     ]
   }
-  if (rankingResult.status === 'fulfilled') rankings.value = rankingResult.value
   await loadProjects()
 })
 </script>
@@ -96,7 +76,7 @@ onMounted(async () => {
     >
       <RouterLink to="/" class="hover:text-primary-600">홈</RouterLink>
       <span aria-hidden="true">›</span>
-      <span>Top 100</span>
+      <span>프로젝트</span>
     </nav>
 
     <div>
@@ -106,7 +86,7 @@ onMounted(async () => {
         {{ pageTitle }}
       </h1>
       <p class="mt-1.5 text-sm text-body-light dark:text-body-dark">
-        개발자들의 인기 프로덕트를 한눈에 탐색해보세요.
+        메이커들이 공개한 새로운 프로젝트를 한눈에 탐색해보세요.
       </p>
     </div>
 
@@ -152,14 +132,6 @@ onMounted(async () => {
               그리드
             </button>
           </div>
-          <select
-            v-model="sortOption"
-            aria-label="프로젝트 정렬"
-            class="rounded-md border border-divider/20 bg-surface-light-1 px-3 py-1.5 text-xs font-medium text-body-light outline-none focus:border-primary-500 dark:border-divider/30 dark:bg-surface-dark-1 dark:text-body-dark"
-          >
-            <option value="popular">인기순 (Top 100)</option>
-            <option value="latest">최신순</option>
-          </select>
         </div>
       </div>
     </div>
@@ -169,12 +141,7 @@ onMounted(async () => {
       class="project-grid grid gap-6"
       :class="viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'"
     >
-      <SiteCard
-        v-for="(item, index) in visibleProjects"
-        :key="item.id"
-        :project="item"
-        :rank="sortOption === 'popular' ? index + 1 : null"
-      />
+      <SiteCard v-for="item in visibleProjects" :key="item.id" :project="item" />
     </div>
 
     <p v-if="isLoading" class="py-16 text-center text-sm text-body-light dark:text-body-dark">
