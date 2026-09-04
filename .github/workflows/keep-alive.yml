@@ -1,0 +1,20 @@
+name: Keep Render Backend Awake
+
+# Render Free 플랜은 15분 동안 inbound 요청이 없으면 서비스가 슬립되고,
+# 다음 요청에서 약 1분의 재기동 지연이 발생한다. 10분 간격으로 헬스체크를
+# 호출해 슬립을 막는다. (팀원 요청, 2026-09-04)
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: Ping health check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call backend health check
+        run: curl -fsS --max-time 20 "https://click-hub-backend.onrender.com/actuator/health"
