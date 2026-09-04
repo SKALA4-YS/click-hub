@@ -112,4 +112,19 @@ public final class ProjectDtos {
             UUID id,
             String status
     ) {}
+
+    /** 관리자 승인 대기 목록 — 이름/설명/URL/현재 상태만 보여주면 되는 요약. */
+    public record AdminPendingItem(
+            UUID id,
+            String title,
+            String description,
+            String siteUrl,
+            String status,
+            String ownerName,
+            OffsetDateTime createdAt
+    ) {}
+
+    public record AdminRejectRequest(
+            @NotBlank String reason
+    ) {}
 }

@@ -44,6 +44,17 @@ describe('auth store', () => {
     expect(window.sessionStorage.getItem('clickhub.accessToken')).toBe('signed.jwt.token')
     expect(auth.isLoggedIn).toBe(true)
     expect(auth.onboarding).toEqual({ completed: true })
+    expect(auth.isAdmin).toBe(false)
+  })
+
+  it('exposes isAdmin only for users with the ADMIN role', () => {
+    const auth = useAuthStore()
+
+    auth.$patch({ user: { id: 'user-id', role: 'ADMIN' } })
+    expect(auth.isAdmin).toBe(true)
+
+    auth.$patch({ user: { id: 'user-id', role: 'USER' } })
+    expect(auth.isAdmin).toBe(false)
   })
 
   it('rejects OAuth errors without retaining a token', async () => {

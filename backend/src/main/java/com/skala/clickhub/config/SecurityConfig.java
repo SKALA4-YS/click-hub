@@ -82,6 +82,9 @@ public class SecurityConfig {
                                 "/v1/insights/weekly", "/v1/tutorials"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/projects/{id}/outbound-clicks").permitAll()
+                        // 관리자 게시물 승인 심사 — ROLE_ADMIN만 접근 가능 (JwtAuthenticationFilter가
+                        // 로그인 시 user.role 기준으로 "ROLE_" + role authority를 이미 부여한다)
+                        .requestMatchers("/v1/admin/**").hasRole("ADMIN")
                         // 커뮤니티 게시판은 목록/상세/댓글 조회까지 전부 로그인 사용자 전용이다
                         // (2026-09-03 확정). 그래서 아래 anyRequest().authenticated()에 그대로 걸린다 —
                         // 이전에 있던 GET /v1/community/** permitAll 규칙은 이 방침에 맞춰 제거했다.
