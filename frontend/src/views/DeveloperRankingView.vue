@@ -32,9 +32,9 @@ onMounted(loadRankings)
 </script>
 
 <template>
-  <section class="mx-auto max-w-[1120px] pb-10" aria-labelledby="developer-ranking-heading">
+  <section class="mx-auto max-w-[1120px] pb-10" aria-labelledby="maker-ranking-heading">
     <nav class="mb-4 text-xs text-body-light dark:text-body-dark" aria-label="현재 위치">
-      홈 <span class="px-1">›</span> 랭킹 <span class="px-1">›</span> 개발자 랭킹
+      홈 <span class="px-1">›</span> 메이커 랭킹
     </nav>
     <header class="border-b border-divider/20 pb-7 dark:border-divider/30">
       <p
@@ -43,13 +43,13 @@ onMounted(loadRankings)
         최근 7일 유효 활동 기준
       </p>
       <h1
-        id="developer-ranking-heading"
+        id="maker-ranking-heading"
         class="font-headline text-3xl font-extrabold tracking-tight text-heading-light dark:text-heading-dark"
       >
-        개발자 랭킹 <span class="text-blue-500">Top Indie Makers</span>
+        메이커 랭킹 <span class="text-blue-500">Top Makers</span>
       </h1>
       <p class="mt-2 text-sm text-body-light dark:text-body-dark">
-        실제 프로젝트 활동 데이터로 집계한 메이커 순위입니다.
+        프로젝트를 공급하는 사용자의 실제 활동 데이터로 집계한 순위입니다.
       </p>
     </header>
 
@@ -77,9 +77,9 @@ onMounted(loadRankings)
       v-else-if="visibleDevelopers.length === 0"
       class="py-16 text-center text-sm text-body-light dark:text-body-dark"
     >
-      집계된 개발자가 없습니다.
+      집계된 메이커가 없습니다.
     </p>
-    <ol v-else class="mt-8 space-y-3" aria-label="개발자 순위">
+    <ol v-else class="mt-8 space-y-3" aria-label="메이커 순위">
       <li
         v-for="developer in visibleDevelopers"
         :key="developer.creatorId"
@@ -97,9 +97,12 @@ onMounted(loadRankings)
           </RouterLink>
           <p class="mt-1 text-xs text-body-light dark:text-body-dark">Click HUB 메이커</p>
         </div>
-        <span class="text-sm font-bold text-primary-700 dark:text-primary-200">{{
-          developer.score.toFixed(2)
-        }}</span>
+        <span class="text-right text-sm font-bold text-primary-700 dark:text-primary-200">
+          <span class="block text-[10px] font-medium text-body-light dark:text-body-dark"
+            >활동 점수</span
+          >
+          {{ developer.score.toFixed(2) }}
+        </span>
       </li>
     </ol>
   </section>

@@ -13,7 +13,7 @@ function createTestRouter() {
     history: createMemoryHistory(),
     routes: [
       { path: '/', component: { template: '<div>홈</div>' } },
-      { path: '/rankings', component: { template: '<div>랭킹</div>' } },
+      { path: '/projects', component: { template: '<div>프로젝트</div>' } },
       { path: '/projects/:id', component: { template: '<div>상세</div>' } },
     ],
   })
@@ -82,7 +82,7 @@ describe('SearchBar', () => {
     await search(wrapper, 'Dev')
     await input.trigger('keydown', { key: 'Enter' })
     await flushPromises()
-    expect(router.currentRoute.value.path).toBe('/rankings')
+    expect(router.currentRoute.value.path).toBe('/projects')
     expect(router.currentRoute.value.query.q).toBe('Dev')
     wrapper.unmount()
   })

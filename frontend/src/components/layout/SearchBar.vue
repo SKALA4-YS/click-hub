@@ -82,7 +82,7 @@ function goToSearchResults() {
   if (!searchTerm) return
   close('button')
   router.push({
-    path: '/rankings',
+    path: '/projects',
     query: { q: searchTerm, category: categoryFilter.value || undefined },
   })
 }

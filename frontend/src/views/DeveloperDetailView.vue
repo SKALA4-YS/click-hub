@@ -4,7 +4,6 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { toSiteCardProject } from '@/api/adapters/projects'
 import { deleteProject, submitProject } from '@/api/projects'
-import { getProjectRankings } from '@/api/rankings'
 import { getCreator, getMyProjects, toggleCreatorSubscription } from '@/api/users'
 import SiteCard from '@/components/card/SiteCard.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -14,7 +13,6 @@ const router = useRouter()
 const auth = useAuthStore()
 const creator = ref(null)
 const projects = ref([])
-const rankByProjectId = ref(new Map())
 const isLoading = ref(true)
 const errorMessage = ref('')
 const isSaving = ref(false)
@@ -101,11 +99,6 @@ async function loadCreator() {
     creator.value = await getCreator(creatorId.value)
     const items = isMine.value ? await getMyProjects() : creator.value.projects
     projects.value = items
-
-    if (isMine.value) {
-      const rankings = await getProjectRankings()
-      rankByProjectId.value = new Map(rankings.map((entry) => [entry.projectId, entry.rank]))
-    }
   } catch (error) {
     errorMessage.value = error.message
   } finally {
@@ -411,12 +404,6 @@ watch(creatorId, loadCreator)
                           :class="statusMeta(project.status).badgeClass"
                         >
                           {{ statusMeta(project.status).label }}
-                        </span>
-                        <span
-                          v-if="rankByProjectId.get(project.id)"
-                          class="rounded-full bg-rank-gold/20 px-2 py-0.5 text-xs font-semibold text-heading-light dark:text-heading-dark"
-                        >
-                          랭킹 {{ rankByProjectId.get(project.id) }}위
                         </span>
                         <span
                           v-if="project.categoryName"

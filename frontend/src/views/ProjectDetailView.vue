@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import SiteCard from '@/components/card/SiteCard.vue'
 import { toProjectDetailViewModel, toSiteCardProject } from '@/api/adapters/projects'
@@ -137,15 +137,6 @@ const techGroupLabels = {
   INFRA_DEPLOY: 'Infra/Deploy',
   AI_DATA: 'AI/Data',
 }
-
-const RANK_BADGE_STYLE = {
-  1: 'bg-rank-gold text-heading-light',
-  2: 'bg-rank-silver text-heading-light',
-  3: 'bg-rank-bronze text-heading-light',
-}
-const rankBadgeClass = computed(
-  () => RANK_BADGE_STYLE[project.value?.rank] ?? 'bg-primary-600 text-white',
-)
 </script>
 
 <template>
@@ -164,7 +155,7 @@ const rankBadgeClass = computed(
     <nav class="text-xs text-body-light dark:text-body-dark" aria-label="현재 위치">
       <RouterLink to="/" class="hover:text-primary-600">홈</RouterLink>
       <span class="mx-2">›</span
-      ><RouterLink to="/rankings" class="hover:text-primary-600">프로젝트</RouterLink
+      ><RouterLink to="/projects" class="hover:text-primary-600">프로젝트</RouterLink
       ><span class="mx-2">›</span>
       <span>{{ project.title }}</span>
     </nav>
@@ -205,13 +196,6 @@ const rankBadgeClass = computed(
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div class="flex flex-col gap-2">
           <div class="flex items-center gap-2">
-            <span
-              v-if="project.rank"
-              class="rounded-md px-2 py-0.5 text-xs font-bold"
-              :class="rankBadgeClass"
-            >
-              {{ project.rank }}위
-            </span>
             <span
               class="rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-body-light dark:bg-surface-dark-2 dark:text-body-dark"
             >

@@ -59,7 +59,7 @@ async function mountView({ loggedIn = false } = {}) {
     routes: [
       { path: '/projects/:id', component: ProjectDetailView },
       { path: '/login', name: 'login', component: { template: '<div>로그인</div>' } },
-      { path: '/rankings', component: { template: '<div>프로젝트</div>' } },
+      { path: '/projects', component: { template: '<div>프로젝트</div>' } },
       { path: '/', component: { template: '<div>홈</div>' } },
     ],
   })
