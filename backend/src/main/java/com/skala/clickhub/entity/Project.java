@@ -38,6 +38,8 @@ public class Project extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    // 홈피드/검색은 native query라 JOIN FETCH를 못 쓴다. User/Category 쪽에 걸어둔
+    // 클래스 레벨 @BatchSize(엔티티 자체 배치 로딩)가 이 지연로딩을 묶어준다.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;

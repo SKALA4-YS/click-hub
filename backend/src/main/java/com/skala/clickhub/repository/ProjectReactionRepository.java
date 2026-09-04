@@ -20,6 +20,25 @@ public interface ProjectReactionRepository extends JpaRepository<ProjectReaction
 
     boolean existsByIdUserIdAndIdProjectIdAndIdType(UUID userId, UUID projectId, ReactionType type);
 
+    /**
+     * 피드처럼 여러 프로젝트를 한 번에 나열할 때, 행마다 countByIdProjectIdAndIdType를
+     * 부르면 N+1이 된다. 페이지 단위로 한 번에 묶어 세기 위한 배치 조회.
+     */
+    @Query("""
+            SELECT reaction.id.projectId AS projectId, COUNT(reaction) AS count
+            FROM ProjectReaction reaction
+            WHERE reaction.id.projectId IN :projectIds AND reaction.id.type = :type
+            GROUP BY reaction.id.projectId
+            """)
+    List<ProjectReactionCount> countGroupedByProjectIds(@Param("projectIds") List<UUID> projectIds,
+                                                          @Param("type") ReactionType type);
+
+    interface ProjectReactionCount {
+        UUID getProjectId();
+
+        long getCount();
+    }
+
     @Query("""
             SELECT reaction FROM ProjectReaction reaction
             JOIN FETCH reaction.project project
