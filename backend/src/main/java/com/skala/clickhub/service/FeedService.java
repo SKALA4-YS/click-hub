@@ -6,12 +6,16 @@ import com.skala.clickhub.dto.feed.FeedDtos.FeedItem;
 import com.skala.clickhub.entity.Project;
 import com.skala.clickhub.entity.ReactionType;
 import com.skala.clickhub.repository.ProjectReactionRepository;
+import com.skala.clickhub.repository.ProjectReactionRepository.ProjectReactionCount;
 import com.skala.clickhub.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * 홈 종합 피드 (기획서 4장).
@@ -36,15 +40,30 @@ public class FeedService {
         List<Project> rows = projectRepository.findHomeFeed(PAGE_SIZE + 1, offset);
 
         boolean hasNext = rows.size() > PAGE_SIZE;
-        List<FeedItem> items = rows.stream()
-                .limit(PAGE_SIZE)
-                .map(this::toItem)
+        List<Project> pageRows = rows.stream().limit(PAGE_SIZE).toList();
+        Map<UUID, Long> likeCounts = batchLikeCounts(pageRows);
+
+        List<FeedItem> items = pageRows.stream()
+                .map(project -> toItem(project, likeCounts.getOrDefault(project.getId(), 0L)))
                 .toList();
 
         return CursorPageResponse.of(items, hasNext ? CursorCodec.encode(offset + PAGE_SIZE) : null);
     }
 
-    private FeedItem toItem(Project project) {
+    /**
+     * 프로젝트 하나마다 countByIdProjectIdAndIdType를 부르면 페이지당 N번의 COUNT 쿼리가
+     * 나간다(N+1). 현재 페이지의 project_id를 모아 한 번의 GROUP BY로 묶어 가져온다.
+     */
+    private Map<UUID, Long> batchLikeCounts(List<Project> projects) {
+        if (projects.isEmpty()) {
+            return Map.of();
+        }
+        List<UUID> projectIds = projects.stream().map(Project::getId).toList();
+        return projectReactionRepository.countGroupedByProjectIds(projectIds, ReactionType.LIKE).stream()
+                .collect(Collectors.toMap(ProjectReactionCount::getProjectId, ProjectReactionCount::getCount));
+    }
+
+    private FeedItem toItem(Project project, long likeCount) {
         return new FeedItem(
                 project.getId(),
                 project.getTitle(),
@@ -55,7 +74,7 @@ public class FeedService {
                 List.of(project.getTags()),
                 project.getOwner().getDisplayName(),
                 project.getPublishedAt(),
-                projectReactionRepository.countByIdProjectIdAndIdType(project.getId(), ReactionType.LIKE)
+                likeCount
         );
     }
 }
