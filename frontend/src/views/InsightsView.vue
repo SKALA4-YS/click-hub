@@ -61,7 +61,10 @@ onMounted(loadInsight)
         <h2 class="font-headline text-xl font-bold text-heading-light dark:text-heading-dark">
           이번 주 변화
         </h2>
-        <p v-if="insight.trends.length === 0" class="mt-5 text-sm text-body-light dark:text-body-dark">
+        <p
+          v-if="insight.trends.length === 0"
+          class="mt-5 text-sm text-body-light dark:text-body-dark"
+        >
           집계된 트렌드가 없습니다.
         </p>
         <ol v-else class="mt-5 space-y-3">

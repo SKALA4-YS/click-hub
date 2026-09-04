@@ -57,7 +57,11 @@ onMounted(loadRankings)
       class="mt-6 flex max-w-sm rounded-lg border border-divider/20 bg-white px-3 py-2 text-sm dark:border-divider/30 dark:bg-surface-dark-1 dark:text-heading-dark"
     >
       <span class="sr-only">메이커 검색</span>
-      <input v-model="query" class="w-full bg-transparent outline-none" placeholder="메이커 검색..." />
+      <input
+        v-model="query"
+        class="w-full bg-transparent outline-none"
+        placeholder="메이커 검색..."
+      />
     </label>
 
     <p v-if="isLoading" class="py-16 text-center text-sm text-body-light dark:text-body-dark">

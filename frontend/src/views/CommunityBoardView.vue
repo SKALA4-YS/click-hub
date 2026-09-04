@@ -79,17 +79,12 @@ onMounted(loadBoards)
 </script>
 
 <template>
-  <section
-    class="mx-auto w-full max-w-[1120px] py-4 sm:py-8"
-    aria-labelledby="community-heading"
-  >
+  <section class="mx-auto w-full max-w-[1120px] py-4 sm:py-8" aria-labelledby="community-heading">
     <header
       class="mb-4 rounded-2xl border border-divider/15 bg-gradient-to-br from-surface-light-1 via-surface-light-1 to-primary-50 px-5 py-6 shadow-[0_10px_28px_rgba(15,14,71,0.04)] dark:border-blue-500/15 dark:from-surface-dark-1 dark:via-surface-dark-1 dark:to-primary-950 sm:flex sm:items-center sm:justify-between sm:px-7"
     >
       <div>
-        <p class="mb-2 text-xs font-semibold text-primary-600 dark:text-blue-300">
-          MAKER COMMONS
-        </p>
+        <p class="mb-2 text-xs font-semibold text-primary-600 dark:text-blue-300">MAKER COMMONS</p>
         <h1
           id="community-heading"
           class="font-headline text-2xl font-extrabold tracking-tight text-heading-light dark:text-heading-dark"

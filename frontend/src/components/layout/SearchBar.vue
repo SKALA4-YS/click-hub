@@ -81,7 +81,10 @@ function goToSearchResults() {
   const searchTerm = query.value.trim()
   if (!searchTerm) return
   close('button')
-  router.push({ path: '/rankings', query: { q: searchTerm, category: categoryFilter.value || undefined } })
+  router.push({
+    path: '/rankings',
+    query: { q: searchTerm, category: categoryFilter.value || undefined },
+  })
 }
 
 function selectSuggestion(item) {

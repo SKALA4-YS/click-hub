@@ -128,7 +128,11 @@ onMounted(async () => {
               aria-label="목록 보기"
               :aria-pressed="viewMode === 'list'"
               class="rounded px-2 py-1 text-xs"
-              :class="viewMode === 'list' ? 'bg-primary-600 text-white' : 'text-body-light dark:text-body-dark'"
+              :class="
+                viewMode === 'list'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-body-light dark:text-body-dark'
+              "
               @click="viewMode = 'list'"
             >
               목록
@@ -138,7 +142,11 @@ onMounted(async () => {
               aria-label="그리드 보기"
               :aria-pressed="viewMode === 'grid'"
               class="rounded px-2 py-1 text-xs"
-              :class="viewMode === 'grid' ? 'bg-primary-600 text-white' : 'text-body-light dark:text-body-dark'"
+              :class="
+                viewMode === 'grid'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-body-light dark:text-body-dark'
+              "
               @click="viewMode = 'grid'"
             >
               그리드

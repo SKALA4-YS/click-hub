@@ -106,13 +106,17 @@ onMounted(load)
           </button>
         </template>
         <template v-else>
-          <h1 class="font-headline text-2xl font-extrabold text-heading-light dark:text-heading-dark">
+          <h1
+            class="font-headline text-2xl font-extrabold text-heading-light dark:text-heading-dark"
+          >
             {{ post.title }}
           </h1>
           <p class="mt-2 text-xs text-body-light dark:text-body-dark">
             {{ post.authorName }} · 조회 {{ post.viewCount }}
           </p>
-          <p class="mt-6 whitespace-pre-wrap text-sm leading-7 text-heading-light dark:text-heading-dark">
+          <p
+            class="mt-6 whitespace-pre-wrap text-sm leading-7 text-heading-light dark:text-heading-dark"
+          >
             {{ post.body }}
           </p>
           <div v-if="post.mine" class="mt-5 flex gap-2">

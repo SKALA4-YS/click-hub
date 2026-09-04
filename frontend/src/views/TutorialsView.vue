@@ -100,7 +100,10 @@ onMounted(async () => {
         다시 시도
       </button>
     </div>
-    <p v-else-if="tutorials.length === 0" class="py-16 text-center text-sm text-body-light dark:text-body-dark">
+    <p
+      v-else-if="tutorials.length === 0"
+      class="py-16 text-center text-sm text-body-light dark:text-body-dark"
+    >
       조건에 맞는 튜토리얼이 없습니다.
     </p>
     <div v-else class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

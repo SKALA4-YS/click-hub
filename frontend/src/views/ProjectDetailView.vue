@@ -199,7 +199,9 @@ const rankBadgeClass = computed(
       </template>
     </div>
 
-    <section class="rounded-2xl border border-divider/20 bg-white p-6 shadow-sm dark:border-divider/30 dark:bg-surface-dark-1">
+    <section
+      class="rounded-2xl border border-divider/20 bg-white p-6 shadow-sm dark:border-divider/30 dark:bg-surface-dark-1"
+    >
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div class="flex flex-col gap-2">
           <div class="flex items-center gap-2">
@@ -333,7 +335,9 @@ const rankBadgeClass = computed(
       </div>
     </section>
 
-    <section class="rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1">
+    <section
+      class="rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1"
+    >
       <h2 class="font-headline text-lg font-bold text-heading-light dark:text-heading-dark">
         기술 스택
       </h2>
@@ -358,7 +362,9 @@ const rankBadgeClass = computed(
       </div>
     </section>
 
-    <section class="rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1">
+    <section
+      class="rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1"
+    >
       <h2 class="font-headline text-lg font-bold text-heading-light dark:text-heading-dark">
         프로젝트 소개
       </h2>
@@ -377,7 +383,9 @@ const rankBadgeClass = computed(
       </button>
     </section>
 
-    <section class="rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1">
+    <section
+      class="rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1"
+    >
       <h2 class="font-headline text-lg font-bold text-heading-light dark:text-heading-dark">
         도움이 되는 피드백
         <span class="ml-1 text-sm font-medium text-body-light dark:text-body-dark">{{
