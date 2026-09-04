@@ -63,7 +63,9 @@ watch(() => auth.isLoggedIn, loadFollowedProjects, { immediate: true })
   <div class="flex flex-col gap-10">
     <CategoryTabs v-model="selectedCategory" />
 
-    <p v-if="isLoading" class="py-12 text-center text-sm text-body-light">피드를 불러오는 중...</p>
+    <p v-if="isLoading" class="py-12 text-center text-sm text-body-light dark:text-body-dark">
+      피드를 불러오는 중...
+    </p>
     <section v-else-if="errorMessage" class="rounded-xl border border-danger/20 p-8 text-center">
       <p role="alert" class="text-sm text-danger">{{ errorMessage }}</p>
       <button

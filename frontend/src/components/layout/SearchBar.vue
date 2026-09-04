@@ -1,5 +1,6 @@
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { getCategories } from '@/api/catalog'
 import { searchProjects } from '@/api/search'
 import clearIcon from '@/assets/figma/clear.svg'
@@ -11,6 +12,7 @@ import searchIcon from '@/assets/figma/search.svg'
 import slidersIcon from '@/assets/figma/sliders.svg'
 import suggestionSearchIcon from '@/assets/figma/suggestion-search.svg'
 
+const router = useRouter()
 const query = ref('')
 const isOpen = ref(false)
 const showAdvanced = ref(false)
@@ -75,9 +77,16 @@ function handleEndControl() {
   close('button')
 }
 
-function applySuggestion(title) {
-  query.value = title
+function goToSearchResults() {
+  const searchTerm = query.value.trim()
+  if (!searchTerm) return
+  close('button')
+  router.push({ path: '/rankings', query: { q: searchTerm, category: categoryFilter.value || undefined } })
+}
+
+function selectSuggestion(item) {
   close('selection')
+  router.push(`/projects/${item.id}`)
 }
 
 function close(reason) {
@@ -115,10 +124,14 @@ function handleKeydown(event) {
     return
   }
 
-  if (event.key === 'Enter' && activeIndex.value >= 0) {
+  if (event.key === 'Enter') {
     event.preventDefault()
-    const selectedSuggestion = suggestions.value[activeIndex.value]
-    if (selectedSuggestion) applySuggestion(selectedSuggestion.title)
+    if (activeIndex.value >= 0) {
+      const selectedSuggestion = suggestions.value[activeIndex.value]
+      if (selectedSuggestion) selectSuggestion(selectedSuggestion)
+      return
+    }
+    goToSearchResults()
   }
 }
 
@@ -206,7 +219,7 @@ onBeforeUnmount(() => {
                 :aria-label="item.title"
                 :aria-selected="activeIndex === index"
                 class="flex w-full items-center justify-between px-4 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-surface-dark-2"
-                @click="applySuggestion(item.title)"
+                @click="selectSuggestion(item)"
               >
                 <span class="flex min-w-0 items-center gap-2">
                   <img
@@ -245,6 +258,14 @@ onBeforeUnmount(() => {
           >
             검색어를 입력하세요.
           </p>
+          <button
+            v-if="query.trim()"
+            type="button"
+            class="w-full border-t border-divider/15 px-4 py-3 text-left text-sm font-semibold text-primary-600 hover:bg-neutral-100 dark:border-divider/25 dark:hover:bg-surface-dark-2"
+            @click="goToSearchResults"
+          >
+            '{{ query.trim() }}' 전체 검색결과 보기
+          </button>
         </div>
 
         <div

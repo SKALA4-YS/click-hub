@@ -55,7 +55,9 @@ onMounted(loadFavorites)
 
 <template>
   <section v-if="!auth.isLoggedIn" class="mx-auto max-w-[1120px] py-28 text-center">
-    <p class="text-sm text-body-light">즐겨찾기 보관함을 확인하려면 로그인이 필요합니다.</p>
+    <p class="text-sm text-body-light dark:text-body-dark">
+      즐겨찾기 보관함을 확인하려면 로그인이 필요합니다.
+    </p>
     <RouterLink
       to="/login"
       class="mt-5 inline-flex rounded-lg bg-primary-600 px-6 py-3 text-sm font-bold text-white"
@@ -64,35 +66,41 @@ onMounted(loadFavorites)
   </section>
 
   <section v-else class="mx-auto max-w-[1120px] pb-14" aria-labelledby="favorites-heading">
-    <header class="rounded-2xl border border-divider/20 bg-white p-6 shadow-sm">
+    <header
+      class="rounded-2xl border border-divider/20 bg-white p-6 shadow-sm dark:border-divider/30 dark:bg-surface-dark-1"
+    >
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 id="favorites-heading" class="font-headline text-2xl font-extrabold">
+          <h1
+            id="favorites-heading"
+            class="font-headline text-2xl font-extrabold text-heading-light dark:text-heading-dark"
+          >
             즐겨찾기 보관함
           </h1>
-          <p class="mt-2 text-sm text-body-light">
+          <p class="mt-2 text-sm text-body-light dark:text-body-dark">
             다시 보고 싶은 프로젝트를 서버에 저장하고 관리합니다.
           </p>
         </div>
-        <span class="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700"
+        <span
+          class="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700 dark:bg-primary-900 dark:text-primary-100"
           >★ {{ favorites.length }}개 저장됨</span
         >
       </div>
     </header>
 
     <label
-      class="mt-6 flex items-center rounded-xl border border-divider/20 bg-white px-4 py-3 text-sm"
+      class="mt-6 flex items-center rounded-xl border border-divider/20 bg-white px-4 py-3 text-sm text-heading-light dark:border-divider/30 dark:bg-surface-dark-1 dark:text-heading-dark"
     >
       <span class="mr-2">⌕</span>
       <input
         v-model="query"
         name="favorite-search"
-        class="w-full outline-none"
+        class="w-full bg-transparent outline-none"
         placeholder="저장한 프로젝트 검색..."
       />
     </label>
 
-    <p v-if="isLoading" class="py-16 text-center text-sm text-body-light">
+    <p v-if="isLoading" class="py-16 text-center text-sm text-body-light dark:text-body-dark">
       즐겨찾기를 불러오는 중입니다.
     </p>
     <div v-else-if="errorMessage" class="py-16 text-center">
@@ -101,7 +109,10 @@ onMounted(loadFavorites)
         다시 시도
       </button>
     </div>
-    <p v-else-if="visibleFavorites.length === 0" class="py-16 text-center text-sm text-body-light">
+    <p
+      v-else-if="visibleFavorites.length === 0"
+      class="py-16 text-center text-sm text-body-light dark:text-body-dark"
+    >
       저장된 프로젝트가 없습니다.
     </p>
     <div v-else class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -109,7 +120,7 @@ onMounted(loadFavorites)
         v-for="project in visibleFavorites"
         :key="project.id"
         data-testid="favorite-card"
-        class="rounded-xl border border-divider/20 bg-white p-4"
+        class="rounded-xl border border-divider/20 bg-white p-4 dark:border-divider/30 dark:bg-surface-dark-1"
       >
         <SiteCard :project="project" />
         <button

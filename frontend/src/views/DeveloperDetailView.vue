@@ -89,7 +89,7 @@ watch(creatorId, loadCreator)
 
 <template>
   <section class="mx-auto max-w-[1120px] pb-14" aria-labelledby="developer-detail-heading">
-    <p v-if="isLoading" class="py-24 text-center text-sm text-body-light">
+    <p v-if="isLoading" class="py-24 text-center text-sm text-body-light dark:text-body-dark">
       프로필을 불러오는 중입니다.
     </p>
     <div v-else-if="errorMessage" class="py-24 text-center">
@@ -99,7 +99,9 @@ watch(creatorId, loadCreator)
       >
     </div>
     <template v-else>
-      <header class="rounded-2xl border border-divider/20 bg-white p-6 shadow-sm">
+      <header
+        class="rounded-2xl border border-divider/20 bg-white p-6 shadow-sm dark:border-divider/30 dark:bg-surface-dark-1"
+      >
         <div class="flex flex-wrap items-center gap-5">
           <img
             v-if="creator.avatarUrl"
@@ -109,15 +111,18 @@ watch(creatorId, loadCreator)
           />
           <span
             v-else
-            class="grid h-20 w-20 place-items-center rounded-full bg-primary-50 text-xl font-bold text-primary-700"
+            class="grid h-20 w-20 place-items-center rounded-full bg-primary-50 text-xl font-bold text-primary-700 dark:bg-primary-900 dark:text-primary-100"
           >
             {{ creator.displayName.slice(0, 1) }}
           </span>
           <div class="min-w-0 flex-1">
-            <h1 id="developer-detail-heading" class="font-headline text-2xl font-extrabold">
+            <h1
+              id="developer-detail-heading"
+              class="font-headline text-2xl font-extrabold text-heading-light dark:text-heading-dark"
+            >
               {{ creator.displayName }}
             </h1>
-            <p class="mt-2 text-sm text-body-light">
+            <p class="mt-2 text-sm text-body-light dark:text-body-dark">
               구독자 {{ creator.subscriberCount }}명 · 공개 프로젝트 {{ creator.projects.length }}개
             </p>
           </div>
@@ -141,11 +146,11 @@ watch(creatorId, loadCreator)
       </header>
 
       <section class="mt-8">
-        <h2 class="font-headline text-xl font-extrabold">
+        <h2 class="font-headline text-xl font-extrabold text-heading-light dark:text-heading-dark">
           {{ isMine ? '내 프로젝트' : '공개 프로젝트' }}
-          <span class="text-sm text-primary-700">{{ projects.length }}건</span>
+          <span class="text-sm text-primary-700 dark:text-primary-200">{{ projects.length }}건</span>
         </h2>
-        <p v-if="projects.length === 0" class="py-16 text-center text-sm text-body-light">
+        <p v-if="projects.length === 0" class="py-16 text-center text-sm text-body-light dark:text-body-dark">
           등록된 프로젝트가 없습니다.
         </p>
         <div v-else class="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

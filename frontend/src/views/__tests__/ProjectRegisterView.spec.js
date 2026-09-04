@@ -75,4 +75,17 @@ describe('ProjectRegisterView', () => {
     expect(wrapper.text()).toContain('PENDING_REVIEW')
     expect(wrapper.get('a[href="/projects/project-id"]')).toBeTruthy()
   })
+
+  it('removes a tag after it was added', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+    const tagInput = wrapper.get('input[placeholder="입력 후 Enter"]')
+    await tagInput.setValue('Analytics')
+    await tagInput.trigger('keydown.enter')
+    expect(wrapper.text()).toContain('#Analytics')
+
+    await wrapper.get('button[aria-label="Analytics 태그 삭제"]').trigger('click')
+
+    expect(wrapper.text()).not.toContain('#Analytics')
+  })
 })

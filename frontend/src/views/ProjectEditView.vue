@@ -91,15 +91,17 @@ onMounted(load)
 
 <template>
   <section class="mx-auto max-w-[800px] pb-14">
-    <p v-if="isLoading" class="py-20 text-center text-sm text-body-light">
+    <p v-if="isLoading" class="py-20 text-center text-sm text-body-light dark:text-body-dark">
       프로젝트를 불러오는 중입니다.
     </p>
     <form
       v-else
-      class="space-y-5 rounded-2xl border border-divider/20 bg-white p-6"
+      class="space-y-5 rounded-2xl border border-divider/20 bg-white p-6 dark:border-divider/30 dark:bg-surface-dark-1"
       @submit.prevent="save"
     >
-      <h1 class="font-headline text-2xl font-extrabold">프로젝트 수정</h1>
+      <h1 class="font-headline text-2xl font-extrabold text-heading-light dark:text-heading-dark">
+        프로젝트 수정
+      </h1>
       <p v-if="errorMessage" role="alert" class="text-sm text-danger">{{ errorMessage }}</p>
       <p v-if="saved" role="status" class="text-sm text-emerald-700">저장되었습니다.</p>
       <label class="block text-sm font-semibold"
