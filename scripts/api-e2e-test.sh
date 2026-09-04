@@ -41,13 +41,13 @@ printf "  %-10s %s\n" "Java"    "$java_version"
 printf "  %-10s %s\n" "Gradle"  "$gradle_version"
 printf "  %-10s %s\n" "Started" "$run_started_at"
 echo ""
-echo "${dim}▶ cd backend && ./gradlew test --tests \"${test_class}\"${reset}"
+echo "${dim}▶ cd backend && ./gradlew test --tests \"${test_class}\" --rerun${reset}"
 echo ""
 
 # ---------- 테스트 실행 ----------
 start_ts=$(date +%s)
 cd "$backend_dir"
-if ./gradlew test --tests "$test_class"; then
+if ./gradlew test --tests "$test_class" --rerun; then
   gradle_status=0
 else
   gradle_status=$?
