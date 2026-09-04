@@ -43,7 +43,7 @@ class DatabaseMigrationTests {
 
 	@Test
 	void appliesMigrationsWithExtensionsTablesAndSeedData() {
-		assertEquals(3, count("SELECT count(*) FROM flyway_schema_history WHERE version IN ('1', '2', '3') AND success"));
+		assertEquals(5, count("SELECT count(*) FROM flyway_schema_history WHERE version IN ('1', '2', '3', '4', '5') AND success"));
 		assertEquals(2, count("SELECT count(*) FROM pg_extension WHERE extname IN ('pgcrypto', 'vector')"));
 		// V1 22개 + V2 관심 카테고리 1개 + V3 온보딩 프로필/관심 기술 2개 = 25개
 		assertEquals(25, count("SELECT count(*) FROM pg_tables "
@@ -52,6 +52,9 @@ class DatabaseMigrationTests {
 		assertEquals(15, count("SELECT count(*) FROM technologies"));
 		// V2가 users.auth_provider를 NOT NULL로 확정할 수 있는지 (백필 로직) 확인
 		assertEquals(0, count("SELECT count(*) FROM users WHERE auth_provider IS NULL"));
+		assertEquals(1, count("SELECT count(*) FROM pg_enum e "
+				+ "JOIN pg_type t ON t.oid = e.enumtypid "
+				+ "WHERE t.typname = 'social_login_provider' AND e.enumlabel = 'LOCAL'"));
 	}
 
 	private int count(String sql) {

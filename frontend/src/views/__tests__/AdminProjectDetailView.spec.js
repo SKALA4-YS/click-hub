@@ -108,7 +108,7 @@ describe('AdminProjectDetailView', () => {
     expect(wrapper.findAll('button').find((button) => button.text() === '승인')).toBeUndefined()
   })
 
-  it('redirects to the home page when the backend forbids access', async () => {
+  it('redirects to the admin login when the backend forbids access', async () => {
     api.getAdminProjectDetail.mockReset().mockRejectedValue({
       message: '접근 권한이 없습니다.',
       status: 403,
@@ -117,6 +117,6 @@ describe('AdminProjectDetailView', () => {
     mount(AdminProjectDetailView)
     await flushPromises()
 
-    expect(replace).toHaveBeenCalledWith('/')
+    expect(replace).toHaveBeenCalledWith('/admin')
   })
 })

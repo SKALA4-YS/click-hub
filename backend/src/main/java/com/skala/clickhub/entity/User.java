@@ -21,8 +21,7 @@ import java.util.UUID;
 
 /**
  * db/migration/V1__initial_schema.sql: users.
- * authProvider/googleSubject 두 필드는 V1이 아니라
- * db/migration/V2__add_social_login_and_onboarding.sql이 추가하는 컬럼이다.
+ * authProvider/googleSubject 두 필드는 V2, localLoginId는 V5가 추가하는 컬럼이다.
  */
 @Getter
 @Entity
@@ -42,8 +41,11 @@ public class User extends BaseTimeEntity {
     @Column(columnDefinition = "social_login_provider", nullable = false)
     private SocialLoginProvider authProvider;
 
-    /** GOOGLE 로그인 사용자의 OIDC subject — GITHUB 로그인 사용자는 null (V2 CHECK 참고) */
+    /** GOOGLE 로그인 사용자의 OIDC subject — GITHUB/LOCAL 로그인 사용자는 null */
     private String googleSubject;
+
+    /** 환경변수 기반 관리자 로그인 ID — LOCAL 사용자에만 존재 */
+    private String localLoginId;
 
     private Long githubUserId;
 
@@ -72,12 +74,13 @@ public class User extends BaseTimeEntity {
     private OffsetDateTime deletedAt;
 
     @Builder
-    private User(SocialLoginProvider authProvider, String googleSubject, Long githubUserId,
+    private User(SocialLoginProvider authProvider, String googleSubject, String localLoginId, Long githubUserId,
                  String githubLogin, OffsetDateTime githubConnectedAt,
                  String displayName, String avatarUrl, UserRole role, Theme theme,
                  boolean newProjectNotifications) {
         this.authProvider = authProvider;
         this.googleSubject = googleSubject;
+        this.localLoginId = localLoginId;
         this.githubUserId = githubUserId;
         this.githubLogin = githubLogin;
         this.githubConnectedAt = githubConnectedAt;

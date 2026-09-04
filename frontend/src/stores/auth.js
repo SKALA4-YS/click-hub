@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import { getMe } from '@/api/auth'
+import { getMe, loginAdmin } from '@/api/auth'
 import { updateOnboarding, updateProfile } from '@/api/users'
 import {
   clearAccessToken,
@@ -75,6 +75,26 @@ export const useAuthStore = defineStore('auth', {
     },
     prepareOAuthLogin(returnPath) {
       saveOAuthReturnPath(returnPath || '/')
+    },
+    async loginAsAdmin({ username, password }) {
+      this.loading = true
+      this.error = null
+      try {
+        const { accessToken } = await loginAdmin({ username, password })
+        setAccessToken(accessToken)
+        const user = await this.restoreSession()
+        if (user?.role !== 'ADMIN') {
+          this.clearSession()
+          throw new Error('관리자 권한이 없는 계정입니다.')
+        }
+        return user
+      } catch (error) {
+        this.clearSession()
+        this.error = error.message
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
     async completeOnboarding({ goals, categories, techStacks }) {
       const onboarding = await updateOnboarding({

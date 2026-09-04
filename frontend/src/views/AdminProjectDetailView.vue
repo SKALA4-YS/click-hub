@@ -31,7 +31,7 @@ async function loadDetail() {
     project.value = await getAdminProjectDetail(route.params.id)
   } catch (error) {
     if (error.status === 403) {
-      router.replace('/')
+      router.replace('/admin')
       return
     }
     errorMessage.value = error.message

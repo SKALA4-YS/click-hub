@@ -73,7 +73,7 @@ describe('AdminApprovalView', () => {
     expect(wrapper.text()).not.toContain('검토 대기 프로젝트')
   })
 
-  it('redirects to the home page when the backend forbids access', async () => {
+  it('redirects to the admin login when the backend forbids access', async () => {
     api.getPendingProjects
       .mockReset()
       .mockRejectedValue({ message: '접근 권한이 없습니다.', status: 403 })
@@ -81,6 +81,6 @@ describe('AdminApprovalView', () => {
     mount(AdminApprovalView)
     await flushPromises()
 
-    expect(replace).toHaveBeenCalledWith('/')
+    expect(replace).toHaveBeenCalledWith('/admin')
   })
 })
