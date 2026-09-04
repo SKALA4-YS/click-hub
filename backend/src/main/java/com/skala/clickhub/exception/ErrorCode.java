@@ -21,6 +21,8 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_002", "유효하지 않거나 만료된 토큰입니다."),
     ACCOUNT_DELETED(HttpStatus.FORBIDDEN, "AUTH_003", "삭제된 계정입니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH_004", "사용자를 찾을 수 없습니다."),
+    ADMIN_LOGIN_DISABLED(HttpStatus.NOT_FOUND, "AUTH_005", "관리자 로그인이 활성화되지 않았습니다."),
+    INVALID_ADMIN_CREDENTIALS(HttpStatus.UNAUTHORIZED, "AUTH_006", "관리자 ID 또는 비밀번호가 올바르지 않습니다."),
 
     // 프로젝트 - 3장 "실제로 접속 가능한 웹서비스만 허용"
     PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "PROJECT_001", "프로젝트를 찾을 수 없습니다."),
