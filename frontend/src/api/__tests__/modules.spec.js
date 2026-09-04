@@ -19,7 +19,7 @@ import {
   getPendingProjects,
   rejectProject,
 } from '@/api/admin'
-import { getGoogleLoginUrl, getMe } from '@/api/auth'
+import { getGoogleLoginUrl, getMe, loginAdmin } from '@/api/auth'
 import { getCategories, getTechnologies } from '@/api/catalog'
 import {
   createCommunityComment,
@@ -59,7 +59,12 @@ describe('domain API modules', () => {
 
   it('uses the backend authentication contract', () => {
     expect(getGoogleLoginUrl()).toBe('https://api.clickhub.test/v1/auth/google')
+    loginAdmin({ username: 'admin', password: 'secret' })
     getMe()
+    expect(client.post).toHaveBeenCalledWith('/v1/admin/session', {
+      auth: 'none',
+      body: { username: 'admin', password: 'secret' },
+    })
     expect(client.get).toHaveBeenCalledWith('/v1/users/me', { auth: 'required' })
   })
 

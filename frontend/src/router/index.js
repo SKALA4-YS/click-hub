@@ -116,16 +116,22 @@ export const routes = [
     component: () => import('../views/InsightsView.vue'),
   },
   {
+    path: '/admin',
+    name: 'admin-login',
+    component: () => import('../views/AdminLoginView.vue'),
+    meta: { standalone: true },
+  },
+  {
     path: '/admin/projects',
     name: 'admin-project-approval',
     component: () => import('../views/AdminApprovalView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresAdmin: true },
   },
   {
     path: '/admin/projects/:id',
     name: 'admin-project-detail',
     component: () => import('../views/AdminProjectDetailView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresAdmin: true },
   },
 ]
 
@@ -135,6 +141,9 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
+  if (to.meta.requiresAdmin && !getAccessToken()) {
+    return { name: 'admin-login', query: { redirect: to.fullPath } }
+  }
   if (to.meta.requiresAuth && !getAccessToken()) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }

@@ -4,14 +4,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '@/stores/auth'
 
 const getMe = vi.hoisted(() => vi.fn())
+const loginAdmin = vi.hoisted(() => vi.fn())
 
-vi.mock('@/api/auth', () => ({ getMe }))
+vi.mock('@/api/auth', () => ({ getMe, loginAdmin }))
 
 describe('auth store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     window.sessionStorage.clear()
     getMe.mockReset()
+    loginAdmin.mockReset()
   })
 
   it('stays signed out without a stored access token', async () => {
@@ -55,6 +57,47 @@ describe('auth store', () => {
 
     auth.$patch({ user: { id: 'user-id', role: 'USER' } })
     expect(auth.isAdmin).toBe(false)
+  })
+
+  it('stores the admin token and restores an ADMIN session', async () => {
+    loginAdmin.mockResolvedValue({ accessToken: 'admin.jwt.token' })
+    getMe.mockResolvedValue({
+      id: 'admin-id',
+      displayName: '관리자',
+      role: 'ADMIN',
+      authProvider: 'LOCAL',
+      onboardingCompleted: false,
+    })
+    const auth = useAuthStore()
+
+    await expect(
+      auth.loginAsAdmin({ username: 'admin', password: 'admin' }),
+    ).resolves.toMatchObject({
+      id: 'admin-id',
+      role: 'ADMIN',
+    })
+
+    expect(loginAdmin).toHaveBeenCalledWith({ username: 'admin', password: 'admin' })
+    expect(window.sessionStorage.getItem('clickhub.accessToken')).toBe('admin.jwt.token')
+    expect(auth.isAdmin).toBe(true)
+  })
+
+  it('does not retain a token when the restored user is not an admin', async () => {
+    loginAdmin.mockResolvedValue({ accessToken: 'user.jwt.token' })
+    getMe.mockResolvedValue({
+      id: 'user-id',
+      displayName: '일반 사용자',
+      role: 'USER',
+      onboardingCompleted: false,
+    })
+    const auth = useAuthStore()
+
+    await expect(auth.loginAsAdmin({ username: 'admin', password: 'admin' })).rejects.toThrow(
+      '관리자 권한이 없는 계정입니다.',
+    )
+
+    expect(window.sessionStorage.getItem('clickhub.accessToken')).toBeNull()
+    expect(auth.isLoggedIn).toBe(false)
   })
 
   it('rejects OAuth errors without retaining a token', async () => {

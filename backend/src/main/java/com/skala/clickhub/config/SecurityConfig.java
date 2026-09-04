@@ -74,6 +74,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/admin/session").permitAll()
                         // §12 "인증: 선택" — 토큰이 있으면 개인화, 없어도 접근은 허용해야 하는 조회 API
                         .requestMatchers(HttpMethod.GET,
                                 "/v1/projects/{id}", "/v1/search", "/v1/feed",
