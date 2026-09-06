@@ -1,0 +1,65 @@
+name: click-hub-gcp
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: click-hub-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    volumes:
+      - clickhub_pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+    networks:
+      - clickhub-network
+
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+
+    container_name: click-hub-backend
+    restart: unless-stopped
+
+    env_file:
+      - .env.gcp
+
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      PORT: "8080"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    networks:
+      - clickhub-network
+
+
+volumes:
+  clickhub_pgdata:
+
+
+networks:
+  clickhub-network:
+    driver: bridge
